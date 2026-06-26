@@ -430,34 +430,77 @@ function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; 
 function save(list){ localStorage.setItem(STORE_KEY, JSON.stringify(list)); }
 let crosses = load();
 
-/* --- Ilustraciones SVG por estadio (estilo BioRender pastel) --- */
+/* --- Ilustraciones SVG por estadio (estilo BioRender pastel, morfología real) --- */
+function larvaArt(scale, fill, spiracles){
+  return `<svg viewBox="0 0 80 80"><g transform="translate(40 38) scale(${scale}) translate(-40 -38)">
+    <!-- cuerpo segmentado, ahusado hacia la cabeza (derecha) -->
+    <path d="M16 40 C14 30 27 26 40 26 C53 26 62 31 63 39 C63 43 58 45 53 43 C49 47 41 49 33 48 C23 47 18 47 16 40 Z"
+      fill="${fill}" stroke="#e2c374" stroke-width="1.8" stroke-linejoin="round"/>
+    <!-- segmentos -->
+    <path d="M28 28 Q31 38 29 47 M37 27 Q39 38 38 49 M46 27 Q47 38 46 47 M54 30 Q55 38 54 44"
+      stroke="#e2c374" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".8"/>
+    <!-- brillo -->
+    <path d="M24 33 Q34 30 44 31" stroke="#fffdf3" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".6"/>
+    <!-- ganchos bucales (cabeza, derecha) -->
+    <path d="M61 37 l3.5 1.2 M61 41 l3.5 -1.2" stroke="#b07f2e" stroke-width="1.7" stroke-linecap="round"/>
+    ${spiracles?`<!-- espiráculos posteriores (cola, izquierda) -->
+    <circle cx="18" cy="37" r="1.5" fill="#b8902f"/><circle cx="19" cy="42" r="1.5" fill="#b8902f"/>`:''}
+  </g></svg>`;
+}
 function art(key){
   switch(key){
+    /* Huevos: ovalados, color crema, con filamentos dorsales (corion) */
     case 'egg': return `<svg viewBox="0 0 80 80">
-      <g fill="#fff" stroke="#cdd9e8" stroke-width="1.5">
-        <ellipse cx="34" cy="42" rx="8" ry="16" transform="rotate(-18 34 42)"/>
-        <ellipse cx="46" cy="38" rx="8" ry="16" transform="rotate(14 46 38)"/>
-        <ellipse cx="40" cy="50" rx="7.5" ry="15" transform="rotate(-2 40 50)"/>
+      <g transform="rotate(-13 36 44)">
+        <ellipse cx="34" cy="46" rx="8.5" ry="18" fill="#fff6e3" stroke="#e7d49d" stroke-width="1.7"/>
+        <ellipse cx="31" cy="40" rx="2.6" ry="7" fill="#fffdf6" opacity=".8"/>
+        <path d="M28 29 Q26 22 22 19 M34 28 Q33 21 31 17" stroke="#e7d49d" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      </g>
+      <g transform="rotate(15 50 45)">
+        <ellipse cx="51" cy="45" rx="8" ry="17" fill="#fff6e3" stroke="#e7d49d" stroke-width="1.7"/>
+        <ellipse cx="48" cy="39" rx="2.4" ry="6.4" fill="#fffdf6" opacity=".8"/>
+        <path d="M48 29 Q47 22 44 19 M54 29 Q55 21 54 17" stroke="#e7d49d" stroke-width="1.6" fill="none" stroke-linecap="round"/>
       </g></svg>`;
-    case 'l1': case 'l2': case 'l3': {
-      const scale = key==='l1'?0.7:key==='l2'?0.85:1;
-      return `<svg viewBox="0 0 80 80"><g transform="translate(40 40) scale(${scale}) translate(-40 -40)">
-        <path d="M22 46 q-4 -14 8 -18 q12 -4 22 4 q10 8 4 18 q-6 10 -18 8 q-14 -2 -16 -12 z" fill="#fcefc7" stroke="#e7cf8a" stroke-width="1.6"/>
-        <path d="M28 34 q14 -6 24 2 M26 42 q16 -4 26 4 M28 50 q14 0 22 -2" stroke="#e7cf8a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-        <circle cx="52" cy="42" r="2.2" fill="#caa44e"/>
-      </g></svg>`;
-    }
+    /* Larvas L1/L2/L3: crecen en tamaño; L3 muestra espiráculos */
+    case 'l1': return larvaArt(0.6, '#fdf7e6', false);
+    case 'l2': return larvaArt(0.82, '#fbefcc', false);
+    case 'l3': return larvaArt(1.0, '#f8e7ba', true);
+    /* Pupa (puparium): cápsula ambarina, segmentada, con cuernos espiraculares */
     case 'pupa': return `<svg viewBox="0 0 80 80">
-      <path d="M40 18 q12 2 12 22 q0 22 -12 24 q-12 -2 -12 -24 q0 -20 12 -22z" fill="#f3cbb6" stroke="#dd9b7d" stroke-width="1.8"/>
-      <path d="M30 32 h20 M29 40 h22 M30 48 h20 M32 56 h16" stroke="#dd9b7d" stroke-width="1.4" stroke-linecap="round"/>
-      <path d="M40 18 q3 -6 0 -10 q-3 4 0 10z" fill="#dd9b7d"/></svg>`;
+      <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f7d4b1"/><stop offset="1" stop-color="#e2a374"/></linearGradient></defs>
+      <path d="M33 19 Q30 13 27 11 M47 19 Q50 13 53 11" stroke="#cf8b5f" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M40 17 C30 17 25 28 26 42 C27 56 33 65 40 65 C47 65 53 56 54 42 C55 28 50 17 40 17 Z"
+        fill="url(#pg)" stroke="#cf8b5f" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M27 32 Q40 36 53 32 M27 41 Q40 46 53 41 M29 50 Q40 54 51 50 M32 58 Q40 61 48 58"
+        stroke="#cf8b5f" stroke-width="1.3" fill="none" opacity=".75"/>
+      <ellipse cx="33" cy="31" rx="3" ry="9" fill="#fff" opacity=".35"/></svg>`;
+    /* Adulto: vista superior — ojos rojos, tórax, abdomen con bandas, alas y patas */
     case 'adult': return `<svg viewBox="0 0 80 80">
-      <ellipse cx="20" cy="38" rx="18" ry="9" fill="#eef3fa" stroke="#cdd9e8" stroke-width="1.4" transform="rotate(-22 20 38)"/>
-      <ellipse cx="60" cy="38" rx="18" ry="9" fill="#eef3fa" stroke="#cdd9e8" stroke-width="1.4" transform="rotate(22 60 38)"/>
-      <ellipse cx="40" cy="50" rx="9" ry="15" fill="#caa98f" stroke="#a07e63" stroke-width="1.6"/>
-      <path d="M34 46 h12 M33 52 h14 M34 58 h12" stroke="#a07e63" stroke-width="1.2"/>
-      <circle cx="40" cy="30" rx="7" r="7.5" fill="#b89377" stroke="#a07e63" stroke-width="1.4"/>
-      <circle cx="36.5" cy="28.5" r="3" fill="#f5a3a3"/><circle cx="43.5" cy="28.5" r="3" fill="#f5a3a3"/>
+      <!-- alas -->
+      <ellipse cx="25" cy="44" rx="20" ry="10" fill="#eef3fb" stroke="#cfdcec" stroke-width="1.4" opacity=".92" transform="rotate(-23 25 44)"/>
+      <ellipse cx="55" cy="44" rx="20" ry="10" fill="#eef3fb" stroke="#cfdcec" stroke-width="1.4" opacity=".92" transform="rotate(23 55 44)"/>
+      <!-- patas -->
+      <g stroke="#9c7550" stroke-width="1.6" stroke-linecap="round" fill="none">
+        <path d="M35 37 l-12 -5 -4 4"/><path d="M35 44 l-13 1 -3 5"/><path d="M35 51 l-11 7 -2 5"/>
+        <path d="M45 37 l12 -5 4 4"/><path d="M45 44 l13 1 3 5"/><path d="M45 51 l11 7 2 5"/>
+      </g>
+      <!-- abdomen con bandas -->
+      <path d="M40 35 C49 35 51 46 48 56 C46 62 42 66 40 66 C38 66 34 62 32 56 C29 46 31 35 40 35 Z"
+        fill="#cba37c" stroke="#9c7550" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M33 43 Q40 47 47 43 M32 50 Q40 55 48 50 M34 58 Q40 61 46 58" stroke="#8a6543" stroke-width="1.7" fill="none"/>
+      <!-- tórax -->
+      <ellipse cx="40" cy="31" rx="9" ry="8" fill="#bd9068" stroke="#9c7550" stroke-width="1.6"/>
+      <ellipse cx="36.5" cy="28" rx="2.4" ry="3.4" fill="#fff" opacity=".3"/>
+      <!-- cabeza -->
+      <ellipse cx="40" cy="19" rx="7.6" ry="6" fill="#b8895f" stroke="#9c7550" stroke-width="1.4"/>
+      <!-- ojos compuestos rojos -->
+      <ellipse cx="34.4" cy="18.5" rx="3.7" ry="4.3" fill="#ef8a8a"/>
+      <ellipse cx="45.6" cy="18.5" rx="3.7" ry="4.3" fill="#ef8a8a"/>
+      <circle cx="33.2" cy="16.8" r="1.2" fill="#fff" opacity=".75"/>
+      <circle cx="44.4" cy="16.8" r="1.2" fill="#fff" opacity=".75"/>
+      <!-- antenas -->
+      <path d="M37 13 Q35 9 33 8 M43 13 Q45 9 47 8" stroke="#9c7550" stroke-width="1.4" fill="none" stroke-linecap="round"/>
       </svg>`;
   }
   return '';
