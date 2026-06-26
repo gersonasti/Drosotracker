@@ -175,6 +175,42 @@
   .tl-item.now .tl-name{color:var(--ink)}
   .tl-item.done{opacity:.55}
 
+  /* ---------- Header actions ---------- */
+  .header-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+  /* ---------- Tareas pendientes ---------- */
+  .tasks{
+    background:var(--card);border-radius:var(--radius);padding:18px 20px;
+    box-shadow:var(--shadow-sm);border:1px solid var(--line);margin-bottom:26px;
+  }
+  .tasks h3{font-size:1rem;font-family:'Poppins';margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .tasks h3 .badge{background:var(--lav-soft);color:var(--lav);font-size:.75rem;padding:2px 9px;border-radius:999px}
+  .task-list{display:flex;flex-direction:column;gap:8px}
+  .task{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:var(--bg-1);cursor:pointer;transition:background .12s}
+  .task:hover{background:var(--lav-soft)}
+  .task .tname{font-weight:700;font-size:.84rem;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .task .chip{margin-left:auto}
+
+  /* ---------- Panel envejecimiento ---------- */
+  .aging-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
+  .aging-panel.open{max-height:1000px}
+  .aging-inner{padding-top:14px}
+  .aging-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .aging-metrics .m{background:var(--bg-1);border-radius:12px;padding:9px 6px;text-align:center}
+  .aging-metrics .m b{display:block;font-family:'Poppins';font-size:1.05rem;color:var(--ink)}
+  .aging-metrics .m span{font-size:.68rem;color:var(--ink-soft)}
+  .surv-chart{background:var(--bg-1);border-radius:12px;padding:10px 10px 4px;margin-bottom:12px}
+  .aging-ev{display:flex;align-items:center;gap:8px;font-size:.8rem;padding:6px 4px;border-bottom:1px dashed var(--line)}
+  .aging-ev:last-child{border-bottom:none}
+  .aging-ev .d{flex:1;color:var(--ink-soft)}
+  .cohort-set{display:flex;gap:8px;align-items:center}
+  .cohort-set input{flex:1;padding:9px 12px;border-radius:11px;border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;background:var(--bg-2);color:var(--ink)}
+  .mini-btn{border:none;cursor:pointer;background:var(--lav);color:#fff;font-weight:700;padding:9px 14px;border-radius:11px;font-family:'Nunito';font-size:.82rem;white-space:nowrap}
+  .mini-btn:hover{filter:brightness(.96)}
+  .checkbox-row{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+  .checkbox-row input{width:auto}
+  .checkbox-row label{margin:0;font-weight:600}
+
   /* ---------- Empty state ---------- */
   .empty{
     text-align:center;padding:70px 20px;background:var(--card);
@@ -242,19 +278,25 @@
         <div class="brand-sub">Ciclo de vida de <i>Drosophila melanogaster</i></div>
       </div>
     </div>
-    <button class="btn" onclick="openForm()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
-      <span class="lbl">Nueva cruza</span>
-    </button>
+    <div class="header-actions">
+      <button class="btn ghost" id="notifBtn" onclick="toggleNotif()">🔔 Activar recordatorios</button>
+      <button class="btn" onclick="openForm()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span class="lbl">Nueva cruza</span>
+      </button>
+    </div>
   </header>
 
   <div class="stats" id="stats"></div>
+
+  <div id="tasks"></div>
 
   <div id="content"></div>
 
   <div class="footer-note">
     Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10&nbsp;°C · ~148 grados-día).
-    Tiempos estimados · Datos guardados localmente en tu navegador.
+    Tiempos estimados · Datos guardados localmente en tu navegador.<br>
+    Los recordatorios se notifican mientras esta pestaña esté abierta.
   </div>
 </div>
 
@@ -275,9 +317,9 @@
         <input id="genotype" placeholder="ej. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
       </div>
       <div class="field">
-        <label for="crossDate">Fecha de cruza *</label>
-        <input id="crossDate" type="date" required />
-        <div class="hint">Día en que se montó la cruza (puesta de huevos).</div>
+        <label for="crossDate">Fecha y hora de cruza *</label>
+        <input id="crossDate" type="datetime-local" required />
+        <div class="hint">Momento en que se montó la cruza (puesta de huevos). La hora afina los cálculos y la ventana de vírgenes.</div>
       </div>
       <div class="field">
         <label for="temp">Temperatura de incubación (°C) *</label>
@@ -293,6 +335,37 @@
       <div class="modal-actions">
         <button type="button" class="btn ghost" onclick="closeForm()">Cancelar</button>
         <button type="submit" class="btn">Guardar cruza</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal envejecimiento -->
+<div class="overlay" id="agingOverlay">
+  <div class="modal">
+    <h2>Registrar pase / conteo</h2>
+    <div class="sub" id="agingSub"></div>
+    <form id="agingForm" onsubmit="saveAgingEntry(event)">
+      <input type="hidden" id="agingId" />
+      <div class="field">
+        <label for="agingDate">Fecha y hora del control</label>
+        <input id="agingDate" type="datetime-local" required />
+      </div>
+      <div class="field">
+        <label for="agingDeaths">Moscas muertas en este control</label>
+        <input id="agingDeaths" type="number" min="0" step="1" value="0" />
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="agingFlip" checked />
+        <label for="agingFlip">Pasé la cohorte a comida fresca</label>
+      </div>
+      <div class="field">
+        <label for="agingNote">Nota (opcional)</label>
+        <input id="agingNote" maxlength="80" placeholder="ej. hembras, 2 viales" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" onclick="closeAging()">Cancelar</button>
+        <button type="submit" class="btn">Guardar</button>
       </div>
     </form>
   </div>
@@ -342,7 +415,7 @@ function stageBounds(temp){
 
 /* --- Cálculo del estado actual de una cruza --- */
 function computeState(cross, now=new Date()){
-  const start = new Date(cross.crossDate + 'T00:00:00');
+  const start = parseCross(cross);
   const elapsedMs = now - start;
   const elapsedDays = elapsedMs / 86400000;
   const total = totalDays(cross.temp);
@@ -375,7 +448,7 @@ function addDays(d, days){ return new Date(d.getTime() + days*86400000); }
 /* --- Recordatorios automáticos --- */
 function buildReminders(cross, st, now=new Date()){
   const out = [];
-  const start = new Date(cross.crossDate + 'T00:00:00');
+  const start = parseCross(cross);
 
   if(!st.isAdult){
     // próxima transición
@@ -424,6 +497,21 @@ function fmtH(h){
 function fmtDate(d){
   return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'}).replace('.','');
 }
+/* fecha + hora corta, ej. "23 jun 09:30" */
+function fmtDT(d){
+  return d.toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})
+          .replace('.','').replace(',','');
+}
+/* parsea crossDate aceptando datetime-local nuevo y fechas antiguas (solo día) */
+function parseCross(cross){
+  const s = cross.crossDate;
+  return new Date(s.includes('T') ? s : s + 'T00:00:00');
+}
+/* datetime-local local (no UTC) a partir de un Date */
+function toLocalInput(d){
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 /* --- Persistencia --- */
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }catch(e){ return []; } }
@@ -432,7 +520,7 @@ let crosses = load();
 
 /* --- Ilustraciones SVG por estadio (estilo BioRender pastel, morfología real) --- */
 function larvaArt(scale, fill, spiracles){
-  return `<svg viewBox="0 0 80 80"><g transform="translate(40 38) scale(${scale}) translate(-40 -38)">
+  return `<svg viewBox="8.8 6.1 62.7 62.7"><g transform="translate(40 38) scale(${scale}) translate(-40 -38)">
     <!-- cuerpo segmentado, ahusado hacia la cabeza (derecha) -->
     <path d="M16 40 C14 30 27 26 40 26 C53 26 62 31 63 39 C63 43 58 45 53 43 C49 47 41 49 33 48 C23 47 18 47 16 40 Z"
       fill="${fill}" stroke="#e2c374" stroke-width="1.8" stroke-linejoin="round"/>
@@ -450,7 +538,7 @@ function larvaArt(scale, fill, spiracles){
 function art(key){
   switch(key){
     /* Huevos: ovalados, color crema, con filamentos dorsales (corion) */
-    case 'egg': return `<svg viewBox="0 0 80 80">
+    case 'egg': return `<svg viewBox="8.9 9.1 64.5 64.5">
       <g transform="rotate(-13 36 44)">
         <ellipse cx="34" cy="46" rx="8.5" ry="18" fill="#fff6e3" stroke="#e7d49d" stroke-width="1.7"/>
         <ellipse cx="31" cy="40" rx="2.6" ry="7" fill="#fffdf6" opacity=".8"/>
@@ -466,7 +554,7 @@ function art(key){
     case 'l2': return larvaArt(0.82, '#fbefcc', false);
     case 'l3': return larvaArt(1.0, '#f8e7ba', true);
     /* Pupa (puparium): cápsula ambarina, segmentada, con cuernos espiraculares */
-    case 'pupa': return `<svg viewBox="0 0 80 80">
+    case 'pupa': return `<svg viewBox="6.0 4.0 68.0 68.0">
       <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="#f7d4b1"/><stop offset="1" stop-color="#e2a374"/></linearGradient></defs>
       <path d="M33 19 Q30 13 27 11 M47 19 Q50 13 53 11" stroke="#cf8b5f" stroke-width="2" fill="none" stroke-linecap="round"/>
@@ -476,7 +564,7 @@ function art(key){
         stroke="#cf8b5f" stroke-width="1.3" fill="none" opacity=".75"/>
       <ellipse cx="33" cy="31" rx="3" ry="9" fill="#fff" opacity=".35"/></svg>`;
     /* Adulto: vista superior — ojos rojos, tórax, abdomen con bandas, alas y patas */
-    case 'adult': return `<svg viewBox="0 0 80 80">
+    case 'adult': return `<svg viewBox="-4.3 -7.3 88.6 88.6">
       <!-- alas -->
       <ellipse cx="25" cy="44" rx="20" ry="10" fill="#eef3fb" stroke="#cfdcec" stroke-width="1.4" opacity=".92" transform="rotate(-23 25 44)"/>
       <ellipse cx="55" cy="44" rx="20" ry="10" fill="#eef3fb" stroke="#cfdcec" stroke-width="1.4" opacity=".92" transform="rotate(23 55 44)"/>
@@ -543,7 +631,7 @@ function tempColor(t){
 function card(cross){
   const st = computeState(cross);
   const reminders = buildReminders(cross, st);
-  const start = new Date(cross.crossDate+'T00:00:00');
+  const start = parseCross(cross);
 
   const dayLine = st.isAdult
     ? `<div class="day-line"><b>${Math.floor(st.adultAge)}</b> días post-eclosión</div>`
@@ -560,15 +648,15 @@ function card(cross){
     return `<div class="tl-item ${done?'done':''} ${nowS?'now':''}">
       <div class="tl-dot" style="background:${b.color}"></div>
       <div class="tl-body"><div class="tl-name">${b.name}</div>
-      <div class="tl-date">${fmtDate(date)}${nowS?' · en curso':''}</div></div></div>`;
+      <div class="tl-date">${fmtDT(date)}${nowS?' · en curso':''}</div></div></div>`;
   }).join('');
   const eclDate = addDays(start, st.total);
   const tlAdult = `<div class="tl-item ${st.isAdult?'now':''}">
     <div class="tl-dot" style="background:var(--pink)"></div>
     <div class="tl-body"><div class="tl-name">Eclosión → Adulto</div>
-    <div class="tl-date">${fmtDate(eclDate)}${st.isAdult?` · día ${Math.floor(st.adultAge)} de envejecimiento`:''}</div></div></div>`;
+    <div class="tl-date">${fmtDT(eclDate)}${st.isAdult?` · día ${Math.floor(st.adultAge)} de envejecimiento`:''}</div></div></div>`;
 
-  return `<div class="card">
+  return `<div class="card" id="card-${cross.id}">
     <div class="card-top">
       <div>
         <div class="card-title">${esc(cross.name || 'Cruza')}</div>
@@ -589,8 +677,8 @@ function card(cross){
         <span class="stage-badge" style="background:${st.stage.soft};color:${st.stage.txt}">
           <span class="dot" style="background:${st.stage.txt}"></span>${st.stage.name}</span>
         ${dayLine}
-        <div class="meta-row"><span class="k">Cruza</span><span class="v">${fmtDate(start)}</span></div>
-        <div class="meta-row"><span class="k">${st.isAdult?'Eclosionó':'Eclosión est.'}</span><span class="v">${fmtDate(eclDate)}</span></div>
+        <div class="meta-row"><span class="k">Cruza</span><span class="v">${fmtDT(start)}</span></div>
+        <div class="meta-row"><span class="k">${st.isAdult?'Eclosionó':'Eclosión est.'}</span><span class="v">${fmtDT(eclDate)}</span></div>
       </div>
     </div>
 
@@ -601,7 +689,89 @@ function card(cross){
 
     <button class="timeline-btn" onclick="toggleTL(this)">Ver cronología ▾</button>
     <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
+
+    ${st.isAdult ? agingPanel(cross, st) : ''}
   </div>`;
+}
+
+/* --- Panel de envejecimiento (cohortes adultas) --- */
+function ensureAging(c){
+  if(!c.aging) c.aging = { startN:null, events:[] };
+  if(!Array.isArray(c.aging.events)) c.aging.events = [];
+  return c.aging;
+}
+function survivalMedian(cross){
+  const a = ensureAging(cross); if(a.startN==null || a.startN<=0) return null;
+  const ecl = computeState(cross).eclosionDate;
+  const sorted = a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date));
+  let dead=0, prevDay=0, prevPct=100;
+  for(const e of sorted){
+    dead += e.deaths||0;
+    const day=(new Date(e.date)-ecl)/86400000;
+    const pct=(a.startN-dead)/a.startN*100;
+    if(pct<=50){
+      if(prevPct===pct) return Math.round(day);
+      const f=(prevPct-50)/(prevPct-pct);
+      return Math.round(prevDay + f*(day-prevDay));
+    }
+    prevDay=day; prevPct=pct;
+  }
+  return null;
+}
+function survChart(cross, st){
+  const a = ensureAging(cross);
+  const ecl = st.eclosionDate;
+  const pts=[{day:0,pct:100}];
+  const sorted=a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date));
+  let dead=0;
+  sorted.forEach(e=>{ dead+=e.deaths||0; const day=Math.max((new Date(e.date)-ecl)/86400000,0);
+    pts.push({day, pct:Math.max((a.startN-dead)/a.startN*100,0)}); });
+  const curDay=Math.max(st.adultAge,0);
+  if(curDay>pts[pts.length-1].day) pts.push({day:curDay, pct:pts[pts.length-1].pct});
+  const W=300,H=82,pad=8;
+  const maxDay=Math.max(...pts.map(p=>p.day),1);
+  const X=d=> pad + d/maxDay*(W-2*pad);
+  const Y=p=> pad + (100-p)/100*(H-2*pad-10);
+  const poly=pts.map(p=>`${X(p.day).toFixed(1)},${Y(p.pct).toFixed(1)}`).join(' ');
+  const y50=Y(50);
+  return `<div class="surv-chart"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:82px">
+    <line x1="${pad}" y1="${y50.toFixed(1)}" x2="${W-pad}" y2="${y50.toFixed(1)}" stroke="var(--line)" stroke-dasharray="4 4"/>
+    <text x="${W-pad}" y="${(y50-3).toFixed(1)}" font-size="7.5" fill="#8b86a3" text-anchor="end">50%</text>
+    <polyline points="${poly}" fill="none" stroke="#d96fa0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map(p=>`<circle cx="${X(p.day).toFixed(1)}" cy="${Y(p.pct).toFixed(1)}" r="2.6" fill="#d96fa0"/>`).join('')}
+    <text x="${pad}" y="${H-1}" font-size="8" fill="#8b86a3">día 0</text>
+    <text x="${W-pad}" y="${H-1}" font-size="8" fill="#8b86a3" text-anchor="end">día ${Math.round(maxDay)}</text>
+  </svg></div>`;
+}
+function agingPanel(cross, st){
+  const a = ensureAging(cross);
+  let body;
+  if(a.startN==null){
+    body = `<div class="cohort-set">
+      <input type="number" min="1" step="1" id="cohort-${cross.id}" placeholder="N.º de adultos en la cohorte" />
+      <button class="mini-btn" onclick="setCohort('${cross.id}')">Definir cohorte</button>
+      </div>
+      <div class="hint" style="margin-top:8px">Registrá cuántos adultos pusiste a envejecer para seguir la curva de supervivencia.</div>`;
+  } else {
+    const deaths = a.events.reduce((s,e)=>s+(e.deaths||0),0);
+    const alive = Math.max(a.startN-deaths,0);
+    const pct = a.startN ? Math.round(alive/a.startN*100) : 0;
+    const median = survivalMedian(cross);
+    const evs = a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date));
+    body = `<div class="aging-metrics">
+        <div class="m"><b>${alive}/${a.startN}</b><span>vivos</span></div>
+        <div class="m"><b>${pct}%</b><span>supervivencia</span></div>
+        <div class="m"><b>${Math.floor(st.adultAge)} d</b><span>edad cohorte</span></div>
+      </div>
+      ${survChart(cross, st)}
+      ${median!=null?`<div class="hint" style="margin-bottom:10px">Mediana de supervivencia estimada: <b>${median} d</b></div>`:''}
+      <div class="aging-events">${evs.length ? evs.map(e=>`
+        <div class="aging-ev"><span class="d">${fmtDT(new Date(e.date))} · ${e.deaths||0} muertos${e.flipped?' · 🔄 comida':''}${e.note?' · '+esc(e.note):''}</span>
+        <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="Borrar" onclick="delAging('${cross.id}',${a.events.indexOf(e)})">✕</button></div>`).join('') : '<div class="hint">Sin registros todavía.</div>'}</div>
+      <button class="mini-btn" style="margin-top:12px;width:100%" onclick="openAging('${cross.id}')">+ Registrar pase / conteo</button>`;
+  }
+  return `<button class="timeline-btn" onclick="toggleAging(this)">🧬 Envejecimiento ▾</button>
+    <div class="aging-panel"><div class="aging-inner">${body}</div></div>`;
 }
 
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -614,7 +784,7 @@ function renderStats(){
   crosses.forEach(c=>{
     const st=computeState(c);
     if(!st.isAdult){
-      const d=addDays(new Date(c.crossDate+'T00:00:00'), st.total);
+      const d=addDays(parseCross(c), st.total);
       if(!next || d<next) next=d;
     }
   });
@@ -623,9 +793,38 @@ function renderStats(){
     <div class="stat"><div class="num">${next?fmtDate(next):'—'}</div><div class="lbl">próxima eclosión</div></div>`;
 }
 
+/* --- Panel "Tareas pendientes" (agrega acciones de todas las cruzas) --- */
+function renderTasks(){
+  const el = document.getElementById('tasks');
+  const tasks = [];
+  crosses.forEach(c=>{
+    const st = computeState(c);
+    buildReminders(c, st).forEach(r=>{
+      if(r.c==='action' || r.c==='warn' || /comida fresca/i.test(r.t)) tasks.push({c, r});
+    });
+  });
+  if(tasks.length===0){ el.innerHTML=''; return; }
+  const order={warn:0, action:1, info:2, success:3};
+  tasks.sort((a,b)=> (order[a.r.c]??9)-(order[b.r.c]??9));
+  el.innerHTML = `<div class="tasks">
+    <h3>📋 Tareas pendientes <span class="badge">${tasks.length}</span></h3>
+    <div class="task-list">${tasks.map(t=>`
+      <div class="task" onclick="scrollToCard('${t.c.id}')">
+        <span class="tname">${esc(t.c.name||t.c.genotype)}</span>
+        <span class="chip ${t.r.c}">${t.r.pulse?'<span class="pulse"></span>':''}${t.r.t}</span>
+      </div>`).join('')}</div></div>`;
+}
+function scrollToCard(id){
+  const el=document.getElementById('card-'+id);
+  if(el){ el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.style.boxShadow='0 0 0 3px var(--lav)';
+    setTimeout(()=>{ el.style.boxShadow=''; }, 1300); }
+}
+
 /* --- Render principal --- */
 function render(){
   renderStats();
+  renderTasks();
   const content = document.getElementById('content');
   if(crosses.length===0){
     content.innerHTML = `<div class="empty">
@@ -637,14 +836,100 @@ function render(){
     return;
   }
   // ordenar por fecha de cruza descendente
-  const sorted = [...crosses].sort((a,b)=> new Date(b.crossDate)-new Date(a.crossDate));
+  const sorted = [...crosses].sort((a,b)=> parseCross(b)-parseCross(a));
   content.innerHTML = `<div class="grid">${sorted.map(card).join('')}</div>`;
+  checkNotifications();
 }
 
 function toggleTL(btn){
   const tl = btn.nextElementSibling;
   tl.classList.toggle('open');
   btn.textContent = tl.classList.contains('open') ? 'Ocultar cronología ▴' : 'Ver cronología ▾';
+}
+function toggleAging(btn){
+  const p = btn.nextElementSibling;
+  p.classList.toggle('open');
+  btn.textContent = p.classList.contains('open') ? '🧬 Envejecimiento ▴' : '🧬 Envejecimiento ▾';
+}
+
+/* --- Acciones de envejecimiento --- */
+function setCohort(id){
+  const v = parseInt(document.getElementById('cohort-'+id).value);
+  if(!v || v<1){ alert('Ingresá un número válido de adultos.'); return; }
+  const c = crosses.find(x=>x.id===id); ensureAging(c);
+  c.aging.startN = v; save(crosses); render();
+}
+let agingOpenId = null;
+function openAging(id){
+  agingOpenId = id;
+  const c = crosses.find(x=>x.id===id);
+  document.getElementById('agingForm').reset();
+  document.getElementById('agingId').value = id;
+  document.getElementById('agingSub').textContent = c.name || c.genotype;
+  document.getElementById('agingDate').value = toLocalInput(new Date());
+  document.getElementById('agingDeaths').value = 0;
+  document.getElementById('agingFlip').checked = true;
+  document.getElementById('agingOverlay').classList.add('open');
+}
+function closeAging(){ document.getElementById('agingOverlay').classList.remove('open'); }
+function saveAgingEntry(e){
+  e.preventDefault();
+  const id = document.getElementById('agingId').value;
+  const c = crosses.find(x=>x.id===id); ensureAging(c);
+  c.aging.events.push({
+    date: document.getElementById('agingDate').value,
+    deaths: parseInt(document.getElementById('agingDeaths').value)||0,
+    flipped: document.getElementById('agingFlip').checked,
+    note: document.getElementById('agingNote').value.trim(),
+  });
+  save(crosses); render(); closeAging();
+}
+function delAging(id, idx){
+  const c = crosses.find(x=>x.id===id);
+  if(c && c.aging && c.aging.events[idx]!==undefined){ c.aging.events.splice(idx,1); save(crosses); render(); }
+}
+
+/* --- Notificaciones del navegador --- */
+const NOTIF_KEY = 'drosotrack.notified.v1';
+function getNotified(){ try{ return JSON.parse(localStorage.getItem(NOTIF_KEY))||{}; }catch(e){ return {}; } }
+function setNotified(o){ localStorage.setItem(NOTIF_KEY, JSON.stringify(o)); }
+function updateNotifBtn(){
+  const b = document.getElementById('notifBtn'); if(!b) return;
+  if(!('Notification' in window)){ b.style.display='none'; return; }
+  const p = Notification.permission;
+  b.textContent = p==='granted' ? '🔔 Recordatorios activos' : '🔔 Activar recordatorios';
+  b.style.opacity = p==='denied' ? .6 : 1;
+}
+function toggleNotif(){
+  if(!('Notification' in window)){ alert('Tu navegador no soporta notificaciones.'); return; }
+  if(Notification.permission==='granted'){ new Notification('DrosoTrack', {body:'Los recordatorios ya están activos ✓'}); return; }
+  if(Notification.permission==='denied'){ alert('Las notificaciones están bloqueadas. Habilitalas para este sitio desde la configuración del navegador.'); return; }
+  Notification.requestPermission().then(updateNotifBtn);
+}
+function fireNotif(key, title, body){
+  const seen = getNotified(); if(seen[key]) return;
+  new Notification(title, {body, tag:key});
+  seen[key]=Date.now(); setNotified(seen);
+}
+function checkNotifications(){
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  crosses.forEach(c=>{
+    const st = computeState(c); const label = c.name || c.genotype;
+    if(st.isAdult){
+      fireNotif(`${c.id}:eclosion`, 'Eclosión 🪰', `Eclosionaron los adultos de "${label}".`);
+      const windowH = 8*(st.total/REF_TOTAL);
+      if(st.adultAge*24 < windowH) fireNotif(`${c.id}:virgin`, 'Recolectar vírgenes ⏳', `Ventana de recolección de vírgenes abierta para "${label}".`);
+    } else {
+      const next = st.bounds.find(b=>b.start>st.elapsedDays);
+      const hN = (st.nextBoundaryDays-st.elapsedDays)*24;
+      if(st.stage.key==='pupa'){
+        const hE=(st.total-st.elapsedDays)*24;
+        if(hE<=24) fireNotif(`${c.id}:ecl-soon`, 'Eclosión inminente', `"${label}" eclosiona en ~${fmtH(hE)}.`);
+      } else if(next && hN<=8){
+        fireNotif(`${c.id}:molt-${next.key}`, 'Muda próxima', `"${label}" muda a ${next.short} en ~${fmtH(hN)}.`);
+      }
+    }
+  });
 }
 
 /* --- Acciones --- */
@@ -658,12 +943,12 @@ function openForm(id){
     document.getElementById('editId').value=c.id;
     document.getElementById('name').value=c.name||'';
     document.getElementById('genotype').value=c.genotype;
-    document.getElementById('crossDate').value=c.crossDate;
+    document.getElementById('crossDate').value = c.crossDate.includes('T') ? c.crossDate : c.crossDate + 'T09:00';
     document.getElementById('temp').value=c.temp;
   } else {
     document.getElementById('modalTitle').textContent='Nueva cruza';
     document.getElementById('editId').value='';
-    document.getElementById('crossDate').value = new Date().toISOString().slice(0,10);
+    document.getElementById('crossDate').value = toLocalInput(new Date());
     document.getElementById('temp').value = 25;
     document.querySelector('#presets button[data-t="25"]').classList.add('on');
   }
@@ -711,13 +996,17 @@ function markParents(id){
   save(crosses); render();
 }
 
-/* cerrar modal al click fuera */
+/* cerrar modales al click fuera */
 document.getElementById('overlay').addEventListener('click',e=>{
   if(e.target.id==='overlay') closeForm();
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeForm(); });
+document.getElementById('agingOverlay').addEventListener('click',e=>{
+  if(e.target.id==='agingOverlay') closeAging();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); } });
 
 /* refrescar periódicamente para que los recordatorios estén al día */
+updateNotifBtn();
 render();
 setInterval(render, 60000);
 </script>
