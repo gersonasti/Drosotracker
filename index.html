@@ -230,6 +230,32 @@
   }
   .menu-pop button:hover{background:var(--lav-soft)}
 
+  /* ---------- Bitácora ---------- */
+  .notes-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
+  .notes-panel.open{max-height:640px}
+  .notes-inner{padding-top:14px}
+  .note-add{display:flex;gap:8px;margin-bottom:12px}
+  .note-add input{flex:1;padding:9px 12px;border-radius:11px;border:1.5px solid var(--line);font-family:'Nunito';font-size:.88rem;background:var(--bg-2);color:var(--ink)}
+  .note-add input:focus{outline:none;border-color:var(--lav)}
+  .note-item{display:flex;align-items:flex-start;gap:8px;justify-content:space-between;padding:8px 4px;border-bottom:1px dashed var(--line)}
+  .note-item:last-child{border-bottom:none}
+  .note-text{font-size:.85rem;color:var(--ink)}
+  .note-date{font-size:.72rem;color:var(--ink-soft);margin-top:2px}
+
+  /* ---------- Planificación ---------- */
+  .field select{
+    width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);
+    font-family:'Nunito';font-size:.95rem;color:var(--ink);background:var(--bg-2);
+  }
+  .field select:focus{outline:none;border-color:var(--lav)}
+  .agenda{display:flex;flex-direction:column;gap:6px;max-height:230px;overflow:auto}
+  .agenda-item{display:flex;gap:10px;padding:8px 10px;background:var(--bg-1);border-radius:10px;font-size:.83rem;align-items:baseline}
+  .agenda-item .ad{font-weight:700;color:var(--ink);flex:none;width:108px}
+  .agenda-item .al{color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .plan-result{background:var(--mint-soft);border-radius:14px;padding:14px;margin-top:16px;text-align:center}
+  .plan-result .pr-main{font-size:.9rem;color:var(--ink);margin-bottom:6px}
+  .plan-result .pr-main b{font-family:'Poppins';font-size:1.15rem}
+
   /* ---------- Empty state ---------- */
   .empty{
     text-align:center;padding:70px 20px;background:var(--card);
@@ -299,6 +325,7 @@
     </div>
     <div class="header-actions">
       <button class="btn ghost" id="notifBtn" onclick="toggleNotif()">🔔 Activar recordatorios</button>
+      <button class="btn ghost" onclick="openPlan()">🗓 Planificar</button>
       <div class="menu">
         <button class="btn ghost" onclick="toggleMenu()">⋯ Datos</button>
         <div class="menu-pop" id="dataMenu">
@@ -365,6 +392,36 @@
         <button type="submit" class="btn">Guardar cruza</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal planificación -->
+<div class="overlay" id="planOverlay">
+  <div class="modal">
+    <h2>Planificación</h2>
+    <div class="sub">Agenda de próximos eventos y cálculo inverso de cruzas.</div>
+    <h3 style="font-size:1rem;margin:6px 0 10px">📆 Próximos eventos</h3>
+    <div id="agendaBox"></div>
+    <h3 style="font-size:1rem;margin:18px 0 6px">⏪ Planificar hacia atrás</h3>
+    <div class="sub" style="margin-bottom:14px">¿Cuándo montar la cruza para llegar a un estadio en una fecha objetivo?</div>
+    <form id="planForm" onsubmit="computePlan(event)">
+      <div class="field">
+        <label for="planStage">Quiero llegar a</label>
+        <select id="planStage">
+          <option value="egg">Embrión (puesta)</option>
+          <option value="l1">Larva L1</option>
+          <option value="l2">Larva L2</option>
+          <option value="l3">Larva L3</option>
+          <option value="pupa">Pupa</option>
+          <option value="adult" selected>Adultos / vírgenes (eclosión)</option>
+        </select>
+      </div>
+      <div class="field"><label for="planDate">El día</label><input id="planDate" type="datetime-local" required /></div>
+      <div class="field"><label for="planTemp">Temperatura (°C)</label><input id="planTemp" type="number" min="12" max="30" step="0.5" value="25" required /></div>
+      <button class="btn" type="submit" style="width:100%;justify-content:center">Calcular fecha de cruza</button>
+    </form>
+    <div id="planResult"></div>
+    <div class="modal-actions"><button type="button" class="btn ghost" onclick="closePlan()" style="flex:1;justify-content:center">Cerrar</button></div>
   </div>
 </div>
 
@@ -699,6 +756,9 @@ function card(cross){
       </div>
       <div class="card-tools">
         <span class="temp-pill" style="background:${tempColor(cross.temp)}">${cross.temp} °C</span>
+        <button class="icon-btn clone" title="Duplicar / nueva generación" onclick="cloneCross('${cross.id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
         <button class="icon-btn edit" title="Editar" onclick="openForm('${cross.id}')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 6l4 4" stroke="currentColor" stroke-width="2"/></svg>
         </button>
@@ -726,7 +786,25 @@ function card(cross){
     <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
 
     ${st.isAdult ? agingPanel(cross, st) : ''}
+    ${notesPanel(cross)}
   </div>`;
+}
+
+/* --- Bitácora de notas (todas las cruzas) --- */
+function ensureNotes(c){ if(!Array.isArray(c.notes)) c.notes=[]; return c.notes; }
+function notesPanel(cross){
+  const notes = ensureNotes(cross).slice().sort((a,b)=> new Date(b.date)-new Date(a.date));
+  return `<button class="timeline-btn" onclick="toggleNotes('${cross.id}', this)">📝 Bitácora${notes.length?` (${notes.length})`:''} ▾</button>
+    <div class="notes-panel"><div class="notes-inner">
+      <div class="note-add">
+        <input id="note-${cross.id}" placeholder="Agregar observación…" maxlength="200"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addNote('${cross.id}');}" />
+        <button class="mini-btn" onclick="addNote('${cross.id}')">Agregar</button>
+      </div>
+      <div class="note-list">${notes.length ? notes.map(n=>`
+        <div class="note-item"><div><div class="note-text">${esc(n.text)}</div><div class="note-date">${fmtDT(new Date(n.date))}</div></div>
+        <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="Borrar" onclick="delNote('${cross.id}','${n.id}')">✕</button></div>`).join('') : '<div class="hint">Sin notas todavía.</div>'}</div>
+    </div></div>`;
 }
 
 /* --- Panel de envejecimiento (cohortes adultas, Kaplan-Meier) --- */
@@ -899,7 +977,7 @@ function render(){
   // ordenar por fecha de cruza descendente
   const sorted = [...crosses].sort((a,b)=> parseCross(b)-parseCross(a));
   content.innerHTML = `<div class="grid">${sorted.map(card).join('')}</div>`;
-  restoreAgingPanels();
+  restorePanels();
   checkNotifications();
 }
 
@@ -909,20 +987,45 @@ function toggleTL(btn){
   btn.textContent = tl.classList.contains('open') ? 'Ocultar cronología ▴' : 'Ver cronología ▾';
 }
 const openAgingIds = new Set();
+const openNotesIds = new Set();
 function toggleAging(id, btn){
-  const p = btn.nextElementSibling;
-  const willOpen = !p.classList.contains('open');
-  p.classList.toggle('open');
-  btn.textContent = willOpen ? '🧬 Envejecimiento ▴' : '🧬 Envejecimiento ▾';
-  if(willOpen) openAgingIds.add(id); else openAgingIds.delete(id);
+  const open = btn.nextElementSibling.classList.toggle('open');
+  btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
+  if(open) openAgingIds.add(id); else openAgingIds.delete(id);
 }
-/* re-aplica el estado abierto de los paneles de envejecimiento tras un render */
-function restoreAgingPanels(){
-  openAgingIds.forEach(id=>{
-    const card = document.getElementById('card-'+id); if(!card) return;
-    const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>b.textContent.includes('Envejecimiento'));
-    if(btn){ btn.nextElementSibling.classList.add('open'); btn.textContent='🧬 Envejecimiento ▴'; }
-  });
+function toggleNotes(id, btn){
+  const open = btn.nextElementSibling.classList.toggle('open');
+  btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
+  if(open) openNotesIds.add(id); else openNotesIds.delete(id);
+}
+function reopenPanel(id, keyword){
+  const card = document.getElementById('card-'+id); if(!card) return;
+  const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>b.textContent.includes(keyword));
+  if(btn){ btn.nextElementSibling.classList.add('open'); btn.textContent = btn.textContent.replace('▾','▴'); }
+}
+/* re-aplica el estado abierto de los paneles colapsables tras un render */
+function restorePanels(){
+  openAgingIds.forEach(id=>reopenPanel(id,'Envejecimiento'));
+  openNotesIds.forEach(id=>reopenPanel(id,'Bitácora'));
+}
+function addNote(id){
+  const inp = document.getElementById('note-'+id); const t = inp.value.trim(); if(!t) return;
+  const c = crosses.find(x=>x.id===id); ensureNotes(c);
+  c.notes.push({ id:'n'+Date.now()+Math.random().toString(36).slice(2,4), date:toLocalInput(new Date()), text:t });
+  openNotesIds.add(id); save(crosses); render();
+}
+function delNote(id, nid){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  c.notes = (c.notes||[]).filter(n=>n.id!==nid); save(crosses); render();
+}
+function cloneCross(id){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  openForm();
+  document.getElementById('modalTitle').textContent = 'Duplicar / nueva generación';
+  document.getElementById('name').value = (c.name||'Cruza')+' (copia)';
+  document.getElementById('genotype').value = c.genotype;
+  document.getElementById('temp').value = c.temp;
+  document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on', b.dataset.t==String(c.temp)));
 }
 
 /* --- Acciones de envejecimiento --- */
@@ -1025,6 +1128,56 @@ function exportSurvivalCSV(){
 }
 function toggleMenu(){ document.getElementById('dataMenu').classList.toggle('open'); }
 function closeMenu(){ document.getElementById('dataMenu').classList.remove('open'); }
+
+/* --- Planificación: agenda + cálculo inverso de cruzas --- */
+function openPlan(){
+  renderAgenda();
+  document.getElementById('planForm').reset();
+  document.getElementById('planStage').value = 'adult';
+  document.getElementById('planDate').value = toLocalInput(addDays(new Date(), 7));
+  document.getElementById('planTemp').value = 25;
+  document.getElementById('planResult').innerHTML = '';
+  document.getElementById('planOverlay').classList.add('open');
+}
+function closePlan(){ document.getElementById('planOverlay').classList.remove('open'); }
+function renderAgenda(){
+  const now = new Date(); const items = [];
+  crosses.forEach(c=>{
+    const st = computeState(c); const start = parseCross(c); const label = c.name||c.genotype;
+    st.bounds.forEach(b=>{ const d = addDays(start, b.start); if(d>now) items.push({d, label:`${b.name} — ${label}`}); });
+    const ecl = addDays(start, st.total); if(ecl>now) items.push({d:ecl, label:`Eclosión — ${label}`});
+  });
+  items.sort((a,b)=> a.d-b.d);
+  const box = document.getElementById('agendaBox');
+  box.innerHTML = items.length
+    ? `<div class="agenda">${items.slice(0,15).map(it=>`<div class="agenda-item"><span class="ad">${fmtDT(it.d)}</span><span class="al">${esc(it.label)}</span></div>`).join('')}</div>`
+    : '<div class="hint" style="margin-bottom:6px">No hay eventos próximos.</div>';
+}
+function computePlan(e){
+  e.preventDefault();
+  const stage = document.getElementById('planStage').value;
+  const target = new Date(document.getElementById('planDate').value);
+  const temp = parseFloat(document.getElementById('planTemp').value);
+  const bounds = stageBounds(temp); const total = totalDays(temp);
+  const stObj = stage==='adult' ? ADULT : STAGES.find(s=>s.key===stage);
+  const offsetDays = stage==='adult' ? total : bounds.find(b=>b.key===stage).start;
+  const crossDate = new Date(target.getTime() - offsetDays*86400000);
+  const local = toLocalInput(crossDate);
+  const past = crossDate < new Date();
+  const virginNote = stage==='adult' ? ` Ventana de vírgenes ~${Math.round(8*(total/REF_TOTAL))} h tras la eclosión.` : '';
+  document.getElementById('planResult').innerHTML = `<div class="plan-result">
+    <div class="pr-main">Montá la cruza el<br><b>${fmtDT(crossDate)}</b></div>
+    <div class="hint">A ${temp} °C, llegar a <b>${stObj.name}</b> tarda ~${offsetDays.toFixed(1)} d desde la puesta.${virginNote}</div>
+    ${past ? '<div class="hint" style="color:#d98162;margin-top:6px">⚠ Esa fecha ya pasó: no llegás a tiempo a esa temperatura.</div>' : ''}
+    <button class="mini-btn" style="width:100%;margin-top:10px" onclick="createFromPlan('${local}',${temp})">+ Crear cruza con esta fecha</button>
+  </div>`;
+}
+function createFromPlan(dateStr, temp){
+  closePlan(); openForm();
+  document.getElementById('crossDate').value = dateStr;
+  document.getElementById('temp').value = temp;
+  document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on', b.dataset.t==String(temp)));
+}
 
 /* --- Notificaciones del navegador --- */
 const NOTIF_KEY = 'drosotrack.notified.v1';
@@ -1140,7 +1293,10 @@ document.getElementById('overlay').addEventListener('click',e=>{
 document.getElementById('agingOverlay').addEventListener('click',e=>{
   if(e.target.id==='agingOverlay') closeAging();
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closeMenu(); } });
+document.getElementById('planOverlay').addEventListener('click',e=>{
+  if(e.target.id==='planOverlay') closePlan();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeMenu(); } });
 /* cerrar el menú de datos al click fuera */
 document.addEventListener('click',e=>{ if(!e.target.closest('.menu')) closeMenu(); });
 
