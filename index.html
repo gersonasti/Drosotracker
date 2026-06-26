@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DrosoTrack — Ciclo de vida de Drosophila melanogaster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Paleta pastel estilo BioRender */
+    --bg-1:#f7f5fc;
+    --bg-2:#fdfbff;
+    --ink:#4b4763;
+    --ink-soft:#8b86a3;
+    --card:#ffffff;
+    --line:#efecf6;
+
+    --lav:#c9bdf0;
+    --lav-soft:#ece6fb;
+    --mint:#9fe0c9;
+    --mint-soft:#e1f7ef;
+    --peach:#f7c5b4;
+    --peach-soft:#fde8e1;
+    --blue:#a9cdf0;
+    --blue-soft:#e4f0fc;
+    --yellow:#f6e0a0;
+    --yellow-soft:#fcf4dc;
+    --pink:#f3b6cd;
+    --pink-soft:#fce5ee;
+    --coral:#f5a3a3;
+
+    --shadow:0 10px 30px -12px rgba(99,86,150,.28);
+    --shadow-sm:0 4px 14px -8px rgba(99,86,150,.35);
+    --radius:22px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Nunito',system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, var(--lav-soft), transparent 60%),
+      radial-gradient(1000px 600px at 110% 10%, var(--mint-soft), transparent 55%),
+      linear-gradient(180deg,var(--bg-1),var(--bg-2));
+    background-attachment:fixed;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand-name,.btn{font-family:'Poppins',sans-serif}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 20px 80px}
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;margin-bottom:22px;
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand .logo{
+    width:52px;height:52px;border-radius:16px;flex:none;
+    background:conic-gradient(from 140deg,var(--lav),var(--pink),var(--peach),var(--yellow),var(--mint),var(--lav));
+    display:grid;place-items:center;box-shadow:var(--shadow-sm);
+  }
+  .brand .logo svg{width:30px;height:30px}
+  .brand-name{font-size:1.5rem;font-weight:700;line-height:1;color:var(--ink)}
+  .brand-sub{font-size:.86rem;color:var(--ink-soft);margin-top:3px}
+  .brand-sub i{font-style:italic}
+
+  .btn{
+    border:none;cursor:pointer;font-weight:600;font-size:.95rem;
+    padding:12px 20px;border-radius:14px;color:#fff;
+    background:linear-gradient(135deg,var(--mint),#7fcfb5);
+    box-shadow:0 8px 20px -8px rgba(120,200,175,.9);
+    transition:transform .12s ease, box-shadow .12s ease;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  .btn.ghost{background:#fff;color:var(--ink);box-shadow:var(--shadow-sm)}
+  .btn.danger{background:linear-gradient(135deg,#f6a8a8,var(--coral));box-shadow:0 8px 20px -8px rgba(245,120,120,.8)}
+
+  /* ---------- Stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:26px}
+  .stat{
+    background:var(--card);border-radius:18px;padding:18px 22px;
+    box-shadow:var(--shadow-sm);text-align:center;border:1px solid var(--line);
+  }
+  .stat .num{font-family:'Poppins';font-size:1.7rem;font-weight:700;color:var(--ink)}
+  .stat .lbl{font-size:.82rem;color:var(--ink-soft);margin-top:2px}
+
+  /* ---------- Cards grid ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:20px}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:20px;
+    box-shadow:var(--shadow);border:1px solid var(--line);
+    position:relative;overflow:hidden;animation:pop .35s ease;
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .card-title{font-family:'Poppins';font-weight:600;font-size:1.12rem;color:var(--ink);line-height:1.15}
+  .card-geno{font-size:.82rem;color:var(--ink-soft);margin-top:3px;word-break:break-word}
+  .card-tools{display:flex;align-items:center;gap:6px;flex:none}
+  .temp-pill{
+    font-size:.78rem;font-weight:700;padding:5px 11px;border-radius:999px;color:#fff;white-space:nowrap;
+  }
+  .icon-btn{
+    width:30px;height:30px;border-radius:10px;border:none;cursor:pointer;
+    background:var(--line);color:var(--ink-soft);display:grid;place-items:center;
+    transition:background .12s, color .12s;font-size:1rem;line-height:1;
+  }
+  .icon-btn:hover{background:var(--peach-soft);color:var(--coral)}
+  .icon-btn.edit:hover{background:var(--lav-soft);color:var(--lav)}
+
+  .card-mid{display:flex;align-items:center;gap:18px;margin:16px 0 6px}
+
+  /* Ring */
+  .ring-wrap{position:relative;width:128px;height:128px;flex:none}
+  .ring-wrap svg{display:block;transform:rotate(-90deg)}
+  .stage-art{
+    position:absolute;inset:18px;border-radius:50%;
+    display:grid;place-items:center;
+  }
+  .stage-art svg{width:62px;height:62px;transform:none}
+
+  .card-info{flex:1;min-width:0}
+  .stage-badge{
+    display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:.92rem;
+    padding:6px 13px;border-radius:999px;margin-bottom:8px;
+  }
+  .stage-badge .dot{width:9px;height:9px;border-radius:50%}
+  .day-line{font-size:.95rem;color:var(--ink-soft);margin-bottom:12px}
+  .day-line b{font-family:'Poppins';font-size:1.25rem;color:var(--ink)}
+
+  .meta-row{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;padding:5px 0;border-bottom:1px dashed var(--line)}
+  .meta-row:last-child{border-bottom:none}
+  .meta-row .k{color:var(--ink-soft)}
+  .meta-row .v{font-weight:700;color:var(--ink)}
+
+  /* Reminders */
+  .reminders{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .chip{
+    font-size:.78rem;font-weight:700;padding:7px 12px;border-radius:12px;
+    display:inline-flex;align-items:center;gap:6px;line-height:1;
+  }
+  .chip.warn{background:var(--peach-soft);color:#d98162}
+  .chip.action{background:var(--blue-soft);color:#5b8fc7}
+  .chip.success{background:var(--mint-soft);color:#3fae8c}
+  .chip.info{background:var(--lav-soft);color:#8a76c9}
+  .chip .pulse{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+  /* Timeline toggle */
+  .timeline-btn{
+    width:100%;margin-top:16px;padding:11px;border:none;cursor:pointer;
+    background:var(--bg-1);color:var(--ink-soft);font-weight:600;font-family:'Nunito';
+    border-radius:14px;font-size:.88rem;transition:background .12s;
+  }
+  .timeline-btn:hover{background:var(--lav-soft);color:var(--lav)}
+  .timeline{max-height:0;overflow:hidden;transition:max-height .35s ease}
+  .timeline.open{max-height:640px}
+  .tl-inner{padding-top:14px}
+  .tl-item{display:flex;gap:12px;position:relative;padding-bottom:14px}
+  .tl-item:last-child{padding-bottom:0}
+  .tl-item::before{content:"";position:absolute;left:8px;top:20px;bottom:-2px;width:2px;background:var(--line)}
+  .tl-item:last-child::before{display:none}
+  .tl-dot{width:18px;height:18px;border-radius:50%;flex:none;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);z-index:1}
+  .tl-body{flex:1}
+  .tl-name{font-weight:700;font-size:.88rem}
+  .tl-date{font-size:.78rem;color:var(--ink-soft)}
+  .tl-item.now .tl-name{color:var(--ink)}
+  .tl-item.done{opacity:.55}
+
+  /* ---------- Empty state ---------- */
+  .empty{
+    text-align:center;padding:70px 20px;background:var(--card);
+    border-radius:var(--radius);box-shadow:var(--shadow-sm);border:1px dashed var(--lav);
+  }
+  .empty svg{width:90px;height:90px;opacity:.85;margin-bottom:14px}
+  .empty h3{font-size:1.2rem;margin-bottom:6px;color:var(--ink)}
+  .empty p{color:var(--ink-soft);max-width:420px;margin:0 auto 18px}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(75,71,99,.35);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;padding:18px;z-index:50;
+  }
+  .overlay.open{display:flex;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{
+    background:var(--card);border-radius:24px;box-shadow:var(--shadow);
+    width:100%;max-width:460px;padding:26px;animation:pop .25s ease;
+    max-height:92vh;overflow:auto;
+  }
+  .modal h2{font-size:1.3rem;margin-bottom:4px}
+  .modal .sub{color:var(--ink-soft);font-size:.86rem;margin-bottom:20px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--ink)}
+  .field input{
+    width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);
+    font-family:'Nunito';font-size:.95rem;color:var(--ink);background:var(--bg-2);transition:border .12s;
+  }
+  .field input:focus{outline:none;border-color:var(--lav)}
+  .field .hint{font-size:.74rem;color:var(--ink-soft);margin-top:5px}
+  .temp-presets{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+  .temp-presets button{
+    border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;
+    cursor:pointer;font-family:'Nunito';font-weight:700;font-size:.82rem;color:var(--ink-soft);transition:all .12s;
+  }
+  .temp-presets button.on,.temp-presets button:hover{border-color:var(--lav);background:var(--lav-soft);color:var(--lav)}
+  .modal-actions{display:flex;gap:10px;margin-top:24px}
+  .modal-actions .btn{flex:1;justify-content:center}
+
+  .footer-note{text-align:center;color:var(--ink-soft);font-size:.78rem;margin-top:40px}
+  .footer-note b{color:var(--ink)}
+
+  @media (max-width:560px){
+    .wrap{padding:16px 14px 70px}
+    .brand-name{font-size:1.3rem}
+    .btn{padding:11px 16px;font-size:.9rem}
+    .card-mid{flex-direction:row}
+    .ring-wrap{width:112px;height:112px}
+    .stage-art svg{width:54px;height:54px}
+    header .btn span.lbl{display:inline}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">
+        <!-- fly logo -->
+        <svg viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="14" rx="3.4" ry="5.2" fill="#fff"/><ellipse cx="12" cy="7.5" rx="2.4" ry="2.4" fill="#fff"/><ellipse cx="6" cy="11" rx="4.2" ry="2.6" fill="#fff" opacity=".7" transform="rotate(-25 6 11)"/><ellipse cx="18" cy="11" rx="4.2" ry="2.6" fill="#fff" opacity=".7" transform="rotate(25 18 11)"/><circle cx="10.7" cy="7" r="1" fill="#f5a3a3"/><circle cx="13.3" cy="7" r="1" fill="#f5a3a3"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">DrosoTrack</div>
+        <div class="brand-sub">Ciclo de vida de <i>Drosophila melanogaster</i></div>
+      </div>
+    </div>
+    <button class="btn" onclick="openForm()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <span class="lbl">Nueva cruza</span>
+    </button>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div id="content"></div>
+
+  <div class="footer-note">
+    Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10&nbsp;°C · ~148 grados-día).
+    Tiempos estimados · Datos guardados localmente en tu navegador.
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Nueva cruza</h2>
+    <div class="sub">Registrá el genotipo, la fecha de cruza y la temperatura de incubación.</div>
+    <form id="crossForm" onsubmit="saveCross(event)">
+      <input type="hidden" id="editId" />
+      <div class="field">
+        <label for="name">Nombre / etiqueta de la cruza</label>
+        <input id="name" placeholder="ej. Cruza A · vial 1" maxlength="40" />
+        <div class="hint">Opcional. Para identificar el vial o el experimento.</div>
+      </div>
+      <div class="field">
+        <label for="genotype">Genotipo *</label>
+        <input id="genotype" placeholder="ej. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
+      </div>
+      <div class="field">
+        <label for="crossDate">Fecha de cruza *</label>
+        <input id="crossDate" type="date" required />
+        <div class="hint">Día en que se montó la cruza (puesta de huevos).</div>
+      </div>
+      <div class="field">
+        <label for="temp">Temperatura de incubación (°C) *</label>
+        <input id="temp" type="number" min="12" max="30" step="0.5" placeholder="25" required />
+        <div class="temp-presets" id="presets">
+          <button type="button" data-t="18">18 °C</button>
+          <button type="button" data-t="21">21 °C</button>
+          <button type="button" data-t="25">25 °C</button>
+          <button type="button" data-t="29">29 °C</button>
+        </div>
+        <div class="hint">Acelera o ralentiza todo el ciclo. Rango útil: 18–29 °C.</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" onclick="closeForm()">Cancelar</button>
+        <button type="submit" class="btn">Guardar cruza</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DrosoTrack — modelo de ciclo de vida de D. melanogaster
+   ============================================================ */
+
+const STORE_KEY = 'drosotrack.crosses.v1';
+
+/* --- Modelo de desarrollo dependiente de temperatura ---
+   Suma térmica (degree-days): D(T) = DD / (T - T0)
+   Anclado a datos clásicos: 25°C≈10 d, 29°C≈8 d, 18°C≈19 d (huevo→eclosión)
+   => T0 ≈ 10.2 °C,  DD ≈ 148 grados-día                                    */
+const T0 = 10.2;
+const DEGREE_DAYS = 148;
+
+/* Estadios y su duración (en días) a la referencia de 25°C (total = 10 d) */
+const STAGES = [
+  { key:'egg',  name:'Embrión',  short:'Embrión',  dur:1, color:'var(--blue)',  soft:'var(--blue-soft)',  txt:'#5b8fc7' },
+  { key:'l1',   name:'Larva L1', short:'L1',       dur:1, color:'var(--mint)',  soft:'var(--mint-soft)',  txt:'#3fae8c' },
+  { key:'l2',   name:'Larva L2', short:'L2',       dur:1, color:'#7fd1ba',      soft:'var(--mint-soft)',  txt:'#3fae8c' },
+  { key:'l3',   name:'Larva L3', short:'L3',       dur:2, color:'var(--yellow)',soft:'var(--yellow-soft)',txt:'#c79a2e' },
+  { key:'pupa', name:'Pupa',     short:'Pupa',     dur:5, color:'var(--peach)', soft:'var(--peach-soft)', txt:'#d98162' },
+];
+const ADULT = { key:'adult', name:'Adulto', short:'Adulto', color:'var(--pink)', soft:'var(--pink-soft)', txt:'#d96fa0' };
+const REF_TOTAL = STAGES.reduce((s,x)=>s+x.dur,0); // 10 días
+
+function totalDays(temp){
+  const t = Math.max(temp, T0 + 1.5); // evitar división extrema
+  return DEGREE_DAYS / (t - T0);
+}
+
+/* Devuelve límites cumulativos de cada estadio (en días) para una temperatura */
+function stageBounds(temp){
+  const scale = totalDays(temp) / REF_TOTAL;
+  let acc = 0;
+  return STAGES.map(s=>{
+    const start = acc * scale;
+    acc += s.dur;
+    const end = acc * scale;
+    return { ...s, start, end };
+  });
+}
+
+/* --- Cálculo del estado actual de una cruza --- */
+function computeState(cross, now=new Date()){
+  const start = new Date(cross.crossDate + 'T00:00:00');
+  const elapsedMs = now - start;
+  const elapsedDays = elapsedMs / 86400000;
+  const total = totalDays(cross.temp);
+  const bounds = stageBounds(cross.temp);
+
+  if(elapsedDays >= total){
+    const adultAge = elapsedDays - total;            // días post-eclosión
+    return {
+      stageKey:'adult', stage:ADULT, elapsedDays, total, bounds,
+      isAdult:true, adultAge, fraction:1,
+      eclosionDate: addDays(start, total),
+    };
+  }
+  // buscar estadio
+  let cur = bounds[0];
+  for(const b of bounds){ if(elapsedDays >= b.start) cur = b; }
+  const inStageDay = Math.floor(elapsedDays - cur.start) + 1;
+  const stageLen = cur.end - cur.start;
+  return {
+    stageKey:cur.key, stage:cur, elapsedDays, total, bounds,
+    isAdult:false, fraction: Math.min(elapsedDays/total, 1),
+    inStageDay, stageLen,
+    eclosionDate: addDays(start, total),
+    nextBoundaryDays: cur.end, // días desde cruza hasta próxima muda
+  };
+}
+
+function addDays(d, days){ return new Date(d.getTime() + days*86400000); }
+
+/* --- Recordatorios automáticos --- */
+function buildReminders(cross, st, now=new Date()){
+  const out = [];
+  const start = new Date(cross.crossDate + 'T00:00:00');
+
+  if(!st.isAdult){
+    // próxima transición
+    const next = st.bounds.find(b => b.start > st.elapsedDays) ;
+    const hoursToNext = (st.nextBoundaryDays - st.elapsedDays)*24;
+    if(st.stage.key === 'pupa'){
+      if(hoursToNext <= 48) out.push({t:`Eclosión en ${fmtH(hoursToNext)}`, c:'warn', pulse:hoursToNext<=24});
+    } else if(next){
+      if(hoursToNext <= 24) out.push({t:`Muda a ${next.short} en ${fmtH(hoursToNext)}`, c:'warn', pulse:hoursToNext<=8});
+    }
+    // retirar parentales: durante estadios larvales, si no se removieron
+    if(['l1','l2','l3'].includes(st.stage.key) && !cross.parentsRemoved){
+      out.push({t:'Retirar parentales pronto', c:'action'});
+    }
+    // eclosión próxima (genérico)
+    const hoursToEcl = (st.total - st.elapsedDays)*24;
+    if(st.stage.key==='l3' && hoursToEcl <= 96){
+      out.push({t:`Preparar para eclosión (${fmtH(hoursToEcl)})`, c:'info'});
+    }
+  } else {
+    out.push({t:'Adultos eclosionados', c:'success'});
+    // ventana de recolección de vírgenes (escala con temperatura)
+    const windowH = 8 * (st.total / REF_TOTAL); // ~8 h a 25°C, más a baja temp
+    const ageH = st.adultAge*24;
+    if(ageH < windowH){
+      out.push({t:`Recolectar vírgenes (${fmtH(windowH-ageH)})`, c:'action', pulse:true});
+    }
+    // envejecimiento: pasar a comida fresca cada ~2 días
+    const ageD = st.adultAge;
+    if(ageD >= 1){
+      const sinceFlip = ageD % 2;
+      if(sinceFlip >= 1.5 || ageD % 2 < 0.25){
+        out.push({t:'Pasar a comida fresca', c:'info'});
+      }
+      out.push({t:`Edad adulta: día ${Math.floor(ageD)}`, c:'success'});
+    }
+  }
+  return out;
+}
+
+function fmtH(h){
+  if(h<0) h=0;
+  if(h >= 48) return `${Math.round(h/24)} d`;
+  return `${Math.round(h)} h`;
+}
+function fmtDate(d){
+  return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'}).replace('.','');
+}
+
+/* --- Persistencia --- */
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }catch(e){ return []; } }
+function save(list){ localStorage.setItem(STORE_KEY, JSON.stringify(list)); }
+let crosses = load();
+
+/* --- Ilustraciones SVG por estadio (estilo BioRender pastel) --- */
+function art(key){
+  switch(key){
+    case 'egg': return `<svg viewBox="0 0 80 80">
+      <g fill="#fff" stroke="#cdd9e8" stroke-width="1.5">
+        <ellipse cx="34" cy="42" rx="8" ry="16" transform="rotate(-18 34 42)"/>
+        <ellipse cx="46" cy="38" rx="8" ry="16" transform="rotate(14 46 38)"/>
+        <ellipse cx="40" cy="50" rx="7.5" ry="15" transform="rotate(-2 40 50)"/>
+      </g></svg>`;
+    case 'l1': case 'l2': case 'l3': {
+      const scale = key==='l1'?0.7:key==='l2'?0.85:1;
+      return `<svg viewBox="0 0 80 80"><g transform="translate(40 40) scale(${scale}) translate(-40 -40)">
+        <path d="M22 46 q-4 -14 8 -18 q12 -4 22 4 q10 8 4 18 q-6 10 -18 8 q-14 -2 -16 -12 z" fill="#fcefc7" stroke="#e7cf8a" stroke-width="1.6"/>
+        <path d="M28 34 q14 -6 24 2 M26 42 q16 -4 26 4 M28 50 q14 0 22 -2" stroke="#e7cf8a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+        <circle cx="52" cy="42" r="2.2" fill="#caa44e"/>
+      </g></svg>`;
+    }
+    case 'pupa': return `<svg viewBox="0 0 80 80">
+      <path d="M40 18 q12 2 12 22 q0 22 -12 24 q-12 -2 -12 -24 q0 -20 12 -22z" fill="#f3cbb6" stroke="#dd9b7d" stroke-width="1.8"/>
+      <path d="M30 32 h20 M29 40 h22 M30 48 h20 M32 56 h16" stroke="#dd9b7d" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M40 18 q3 -6 0 -10 q-3 4 0 10z" fill="#dd9b7d"/></svg>`;
+    case 'adult': return `<svg viewBox="0 0 80 80">
+      <ellipse cx="20" cy="38" rx="18" ry="9" fill="#eef3fa" stroke="#cdd9e8" stroke-width="1.4" transform="rotate(-22 20 38)"/>
+      <ellipse cx="60" cy="38" rx="18" ry="9" fill="#eef3fa" stroke="#cdd9e8" stroke-width="1.4" transform="rotate(22 60 38)"/>
+      <ellipse cx="40" cy="50" rx="9" ry="15" fill="#caa98f" stroke="#a07e63" stroke-width="1.6"/>
+      <path d="M34 46 h12 M33 52 h14 M34 58 h12" stroke="#a07e63" stroke-width="1.2"/>
+      <circle cx="40" cy="30" rx="7" r="7.5" fill="#b89377" stroke="#a07e63" stroke-width="1.4"/>
+      <circle cx="36.5" cy="28.5" r="3" fill="#f5a3a3"/><circle cx="43.5" cy="28.5" r="3" fill="#f5a3a3"/>
+      </svg>`;
+  }
+  return '';
+}
+
+/* --- Render del anillo de progreso --- */
+function ring(st){
+  const size=128, sw=11, r=(size-sw)/2-2, cx=size/2, cy=size/2;
+  const circ=2*Math.PI*r;
+  const frac = st.fraction;
+  const dash = circ*frac;
+  // posición del knob
+  const ang = frac*2*Math.PI - Math.PI/2;
+  const kx = cx + r*Math.cos(ang);
+  const ky = cy + r*Math.sin(ang);
+  const gid = 'g'+Math.random().toString(36).slice(2,7);
+  return `<div class="ring-wrap">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#c9bdf0"/><stop offset=".4" stop-color="#f3b6cd"/>
+        <stop offset=".7" stop-color="#f7c5b4"/><stop offset="1" stop-color="#9fe0c9"/>
+      </linearGradient></defs>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${sw}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#${gid})" stroke-width="${sw}"
+        stroke-linecap="round" stroke-dasharray="${dash} ${circ}"/>
+      <circle cx="${kx}" cy="${ky}" r="${sw/2+2}" fill="#fff" stroke="${st.stage.txt}" stroke-width="3"/>
+    </svg>
+    <div class="stage-art" style="background:radial-gradient(circle at 50% 45%, ${st.stage.soft}, #fff 75%)">${art(st.stageKey)}</div>
+  </div>`;
+}
+
+/* --- Render de una tarjeta --- */
+function tempColor(t){
+  if(t<=19) return 'linear-gradient(135deg,#a9cdf0,#7fb0e0)';
+  if(t<=23) return 'linear-gradient(135deg,#9fe0c9,#7fcfb5)';
+  if(t<=26) return 'linear-gradient(135deg,#f6e0a0,#e9c662)';
+  return 'linear-gradient(135deg,#f7c5b4,#f5a3a3)';
+}
+
+function card(cross){
+  const st = computeState(cross);
+  const reminders = buildReminders(cross, st);
+  const start = new Date(cross.crossDate+'T00:00:00');
+
+  const dayLine = st.isAdult
+    ? `<div class="day-line"><b>${Math.floor(st.adultAge)}</b> días post-eclosión</div>`
+    : `<div class="day-line">Día <b>${st.inStageDay}</b> de ${Math.ceil(st.total)} · estadio ${st.stage.short}</div>`;
+
+  const remHtml = reminders.map(r=>
+    `<span class="chip ${r.c}">${r.pulse?'<span class="pulse"></span>':''}${r.t}</span>`).join('');
+
+  // timeline
+  const tl = st.bounds.map((b,i)=>{
+    const date = addDays(start, b.start);
+    const done = st.elapsedDays >= b.end;
+    const nowS = st.stageKey===b.key && !st.isAdult;
+    return `<div class="tl-item ${done?'done':''} ${nowS?'now':''}">
+      <div class="tl-dot" style="background:${b.color}"></div>
+      <div class="tl-body"><div class="tl-name">${b.name}</div>
+      <div class="tl-date">${fmtDate(date)}${nowS?' · en curso':''}</div></div></div>`;
+  }).join('');
+  const eclDate = addDays(start, st.total);
+  const tlAdult = `<div class="tl-item ${st.isAdult?'now':''}">
+    <div class="tl-dot" style="background:var(--pink)"></div>
+    <div class="tl-body"><div class="tl-name">Eclosión → Adulto</div>
+    <div class="tl-date">${fmtDate(eclDate)}${st.isAdult?` · día ${Math.floor(st.adultAge)} de envejecimiento`:''}</div></div></div>`;
+
+  return `<div class="card">
+    <div class="card-top">
+      <div>
+        <div class="card-title">${esc(cross.name || 'Cruza')}</div>
+        <div class="card-geno">${esc(cross.genotype)}</div>
+      </div>
+      <div class="card-tools">
+        <span class="temp-pill" style="background:${tempColor(cross.temp)}">${cross.temp} °C</span>
+        <button class="icon-btn edit" title="Editar" onclick="openForm('${cross.id}')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 6l4 4" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <button class="icon-btn" title="Eliminar" onclick="delCross('${cross.id}')">✕</button>
+      </div>
+    </div>
+
+    <div class="card-mid">
+      ${ring(st)}
+      <div class="card-info">
+        <span class="stage-badge" style="background:${st.stage.soft};color:${st.stage.txt}">
+          <span class="dot" style="background:${st.stage.txt}"></span>${st.stage.name}</span>
+        ${dayLine}
+        <div class="meta-row"><span class="k">Cruza</span><span class="v">${fmtDate(start)}</span></div>
+        <div class="meta-row"><span class="k">${st.isAdult?'Eclosionó':'Eclosión est.'}</span><span class="v">${fmtDate(eclDate)}</span></div>
+      </div>
+    </div>
+
+    <div class="reminders">${remHtml}</div>
+
+    ${(['l1','l2','l3'].includes(st.stageKey) && !cross.parentsRemoved)
+      ? `<button class="timeline-btn" style="margin-top:10px" onclick="markParents('${cross.id}')">✓ Marcar parentales retirados</button>` : ''}
+
+    <button class="timeline-btn" onclick="toggleTL(this)">Ver cronología ▾</button>
+    <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
+  </div>`;
+}
+
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* --- Stats superiores --- */
+function renderStats(){
+  const active = crosses.length;
+  // próxima eclosión entre las que aún no son adultas
+  let next=null;
+  crosses.forEach(c=>{
+    const st=computeState(c);
+    if(!st.isAdult){
+      const d=addDays(new Date(c.crossDate+'T00:00:00'), st.total);
+      if(!next || d<next) next=d;
+    }
+  });
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${active}</div><div class="lbl">cruzas activas</div></div>
+    <div class="stat"><div class="num">${next?fmtDate(next):'—'}</div><div class="lbl">próxima eclosión</div></div>`;
+}
+
+/* --- Render principal --- */
+function render(){
+  renderStats();
+  const content = document.getElementById('content');
+  if(crosses.length===0){
+    content.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 80 80">${art('adult')}</svg>
+      <h3>Todavía no hay cruzas registradas</h3>
+      <p>Agregá tu primera cruza con su genotipo, fecha y temperatura de incubación. DrosoTrack calculará el estadio actual y te avisará de cada transición.</p>
+      <button class="btn" onclick="openForm()" style="margin:0 auto">+ Nueva cruza</button>
+    </div>`;
+    return;
+  }
+  // ordenar por fecha de cruza descendente
+  const sorted = [...crosses].sort((a,b)=> new Date(b.crossDate)-new Date(a.crossDate));
+  content.innerHTML = `<div class="grid">${sorted.map(card).join('')}</div>`;
+}
+
+function toggleTL(btn){
+  const tl = btn.nextElementSibling;
+  tl.classList.toggle('open');
+  btn.textContent = tl.classList.contains('open') ? 'Ocultar cronología ▴' : 'Ver cronología ▾';
+}
+
+/* --- Acciones --- */
+function openForm(id){
+  const ov=document.getElementById('overlay');
+  document.getElementById('crossForm').reset();
+  document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on'));
+  if(id){
+    const c = crosses.find(x=>x.id===id);
+    document.getElementById('modalTitle').textContent='Editar cruza';
+    document.getElementById('editId').value=c.id;
+    document.getElementById('name').value=c.name||'';
+    document.getElementById('genotype').value=c.genotype;
+    document.getElementById('crossDate').value=c.crossDate;
+    document.getElementById('temp').value=c.temp;
+  } else {
+    document.getElementById('modalTitle').textContent='Nueva cruza';
+    document.getElementById('editId').value='';
+    document.getElementById('crossDate').value = new Date().toISOString().slice(0,10);
+    document.getElementById('temp').value = 25;
+    document.querySelector('#presets button[data-t="25"]').classList.add('on');
+  }
+  ov.classList.add('open');
+}
+function closeForm(){ document.getElementById('overlay').classList.remove('open'); }
+
+document.getElementById('presets').addEventListener('click',e=>{
+  if(e.target.dataset.t){
+    document.getElementById('temp').value=e.target.dataset.t;
+    document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on'));
+    e.target.classList.add('on');
+  }
+});
+
+function saveCross(e){
+  e.preventDefault();
+  const id = document.getElementById('editId').value;
+  const data = {
+    name: document.getElementById('name').value.trim(),
+    genotype: document.getElementById('genotype').value.trim(),
+    crossDate: document.getElementById('crossDate').value,
+    temp: parseFloat(document.getElementById('temp').value),
+  };
+  if(id){
+    const c = crosses.find(x=>x.id===id);
+    Object.assign(c, data);
+  } else {
+    crosses.push({ id:'c'+Date.now()+Math.random().toString(36).slice(2,5), parentsRemoved:false, ...data });
+  }
+  save(crosses); render(); closeForm();
+}
+
+function delCross(id){
+  const c = crosses.find(x=>x.id===id);
+  if(confirm(`¿Eliminar la cruza "${c.name||c.genotype}"? Esta acción no se puede deshacer.`)){
+    crosses = crosses.filter(x=>x.id!==id);
+    save(crosses); render();
+  }
+}
+
+function markParents(id){
+  const c = crosses.find(x=>x.id===id);
+  c.parentsRemoved = true;
+  save(crosses); render();
+}
+
+/* cerrar modal al click fuera */
+document.getElementById('overlay').addEventListener('click',e=>{
+  if(e.target.id==='overlay') closeForm();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeForm(); });
+
+/* refrescar periódicamente para que los recordatorios estén al día */
+render();
+setInterval(render, 60000);
+</script>
+</body>
+</html>
