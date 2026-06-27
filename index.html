@@ -194,8 +194,9 @@
   .task-list{display:flex;flex-direction:column;gap:8px}
   .task{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:var(--bg-1);cursor:pointer;transition:background .12s}
   .task:hover{background:var(--lav-soft)}
-  .task .tname{font-weight:700;font-size:.84rem;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .task .chip{margin-left:auto}
+  .task .tname{font-weight:700;font-size:.84rem;max-width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:none}
+  .task .tgeno{font-size:.8rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .task .chip{margin-left:auto;flex:none}
 
   /* ---------- Panel envejecimiento ---------- */
   .aging-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
@@ -370,12 +371,15 @@
       <input type="hidden" id="editId" />
       <div class="field">
         <label for="name">Nombre / etiqueta de la cruza</label>
-        <input id="name" placeholder="ej. Cruza A · vial 1" maxlength="40" />
+        <input id="name" list="nameList" autocomplete="off" placeholder="ej. Cruza A · vial 1" maxlength="40" />
+        <datalist id="nameList"></datalist>
         <div class="hint">Opcional. Para identificar el vial o el experimento.</div>
       </div>
       <div class="field">
         <label for="genotype">Genotipo *</label>
-        <input id="genotype" placeholder="ej. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
+        <input id="genotype" list="genoList" autocomplete="off" placeholder="ej. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
+        <datalist id="genoList"></datalist>
+        <div class="hint">Sugiere genotipos que ya usaste. Empezá a escribir para ver coincidencias.</div>
       </div>
       <div class="field">
         <label for="crossDate">Fecha y hora de cruza *</label>
@@ -1005,7 +1009,8 @@ function renderTasks(){
     <h3>📋 Tareas pendientes <span class="badge">${tasks.length}</span></h3>
     <div class="task-list">${tasks.map(t=>`
       <div class="task" onclick="scrollToCard('${t.c.id}')">
-        <span class="tname">${esc(t.c.name||t.c.genotype)}</span>
+        ${t.c.name?`<span class="tname">${esc(t.c.name)}</span>`:''}
+        <span class="tgeno">${esc(t.c.genotype)}</span>
         <span class="chip ${t.r.c}">${t.r.pulse?'<span class="pulse"></span>':''}${t.r.t}</span>
       </div>`).join('')}</div></div>`;
 }
@@ -1301,10 +1306,19 @@ function checkNotifications(){
   });
 }
 
+/* --- Autocompletado: opciones a partir de cruzas anteriores --- */
+function populateDatalists(){
+  const uniq = arr => [...new Set(arr.filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  const fill = (id, arr) => { const dl=document.getElementById(id); if(dl) dl.innerHTML = arr.map(v=>`<option value="${esc(v)}"></option>`).join(''); };
+  fill('nameList', uniq(crosses.map(c=>c.name)));
+  fill('genoList', uniq(crosses.map(c=>c.genotype)));
+}
+
 /* --- Acciones --- */
 function openForm(id){
   const ov=document.getElementById('overlay');
   document.getElementById('crossForm').reset();
+  populateDatalists();
   document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on'));
   if(id){
     const c = crosses.find(x=>x.id===id);
