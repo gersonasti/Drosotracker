@@ -1159,7 +1159,21 @@ function importJSON(e){
     try{
       const data = JSON.parse(r.result);
       if(!Array.isArray(data)) throw new Error('El archivo no contiene una lista de cruzas.');
+      if(data.length===0) throw new Error('El archivo no contiene ninguna cruza.');
+      // validar cada entrada ANTES de reemplazar nada (evita romper la app con un backup dañado)
+      const isValid = c => c && typeof c==='object'
+        && typeof c.genotype==='string' && c.genotype.trim()!==''
+        && typeof c.crossDate==='string'
+        && !Number.isNaN(new Date(c.crossDate.includes('T') ? c.crossDate : c.crossDate+'T00:00:00').getTime())
+        && typeof c.temp==='number' && isFinite(c.temp);
+      const bad = data.filter(c=>!isValid(c)).length;
+      if(bad>0) throw new Error(`${bad} de ${data.length} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.`);
       if(crosses.length && !confirm(`Importar reemplazará las ${crosses.length} cruzas actuales por ${data.length}. ¿Continuar?`)) return;
+      // completar campos no críticos que pudieran faltar
+      data.forEach(c=>{
+        if(!c.id) c.id = 'c'+Date.now()+Math.random().toString(36).slice(2,5);
+        if(typeof c.parentsRemoved!=='boolean') c.parentsRemoved = false;
+      });
       crosses = data; save(crosses); render();
       alert(`Importadas ${data.length} cruzas.`);
     }catch(err){ alert('No se pudo importar: '+err.message); }
@@ -1341,6 +1355,10 @@ function delCross(id){
   const c = crosses.find(x=>x.id===id);
   if(confirm(`¿Eliminar la cruza "${c.name||c.genotype}"? Esta acción no se puede deshacer.`)){
     crosses = crosses.filter(x=>x.id!==id);
+    // limpiar los avisos ya notificados de esta cruza (no dejar basura en localStorage)
+    const seen = getNotified(); let changed = false;
+    Object.keys(seen).forEach(k=>{ if(k.startsWith(id+':')){ delete seen[k]; changed = true; } });
+    if(changed) setNotified(seen);
     save(crosses); render();
   }
 }
