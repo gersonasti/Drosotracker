@@ -120,10 +120,16 @@
 
   /* Ring */
   .ring-wrap{position:relative;width:128px;height:128px;flex:none}
-  .ring-wrap svg{display:block;transform:rotate(-90deg)}
+  .ring-track,.ring-fill{position:absolute;inset:0;border-radius:50%}
+  .ring-track{background:var(--line)}
+  .ring-knob{
+    position:absolute;width:16px;height:16px;border-radius:50%;
+    background:#fff;border:3px solid var(--ink-soft);
+    transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(75,71,99,.25);z-index:2;
+  }
   .stage-art{
     position:absolute;inset:18px;border-radius:50%;
-    display:grid;place-items:center;
+    display:grid;place-items:center;z-index:1;
   }
   .stage-art svg{width:62px;height:62px;transform:none}
 
@@ -475,6 +481,16 @@ const STORE_KEY = 'drosotrack.crosses.v1';
 const T0 = 10.2;
 const DEGREE_DAYS = 148;
 
+/* --- Vida adulta estimada (días), dependiente de temperatura ---
+   Ancla: ~70 d a 25°C; regla Q10≈2 (por cada 10°C menos, ~el doble de vida).
+   Sólo define cuándo el anillo de envejecimiento llega al extremo (negro):
+   el contador de "días post-eclosión" sigue sumando sin tope.                */
+const ADULT_LIFE_REF = 70; // días a 25°C
+function lifespanDays(temp){
+  const t = Math.max(temp, T0 + 1.5);
+  return ADULT_LIFE_REF * Math.pow(2, (25 - t) / 10);
+}
+
 /* Estadios y su duración (en días) a la referencia de 25°C (total = 10 d) */
 const STAGES = [
   { key:'egg',  name:'Embrión',  short:'Embrión',  dur:1, color:'var(--blue)',  soft:'var(--blue-soft)',  txt:'#5b8fc7' },
@@ -513,9 +529,12 @@ function computeState(cross, now=new Date()){
 
   if(elapsedDays >= total){
     const adultAge = elapsedDays - total;            // días post-eclosión
+    const adultLifespan = lifespanDays(cross.temp);
     return {
       stageKey:'adult', stage:ADULT, elapsedDays, total, bounds,
       isAdult:true, adultAge, fraction:1,
+      adultLifespan,
+      adultFraction: Math.min(adultAge / adultLifespan, 1), // anillo: tope en 1; la edad sí sigue
       eclosionDate: addDays(start, total),
     };
   }
@@ -686,28 +705,64 @@ function art(key){
   return '';
 }
 
-/* --- Render del anillo de progreso --- */
+/* --- Render del anillo de progreso ---
+   El color del anillo ES la información: en desarrollo, un degradé que recorre
+   los estadios (embrión→L1→L2→L3→pupa→eclosión); en adulto, un degradé de
+   envejecimiento (rosa claro→ciruela→casi negro). La perilla queda del mismo
+   color que el anillo en ese punto y marca el final de la carga.            */
+
+/* Paletas: posición (fracción 0..1 de la vuelta) → color */
+const DEV_RING = [
+  { at:0.00, col:'#a9cdf0' }, // Embrión
+  { at:0.10, col:'#a9cdf0' },
+  { at:0.15, col:'#9fe0c9' }, // L1
+  { at:0.25, col:'#7fd1ba' }, // L2
+  { at:0.40, col:'#f6e0a0' }, // L3
+  { at:0.75, col:'#f7c5b4' }, // Pupa
+  { at:1.00, col:'#f3b6cd' }, // eclosión → adulto
+];
+const AGE_RING = [
+  { at:0.00, col:'#f6c9d9' }, // recién eclosionado (rosa claro)
+  { at:0.45, col:'#c76b95' }, // rosa intenso
+  { at:0.80, col:'#6e3a5a' }, // ciruela
+  { at:1.00, col:'#1a1320' }, // casi negro (fin de vida estimada)
+];
+function hexToRgb(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+function rgbToHex(r){ return '#'+r.map(v=>Math.round(v).toString(16).padStart(2,'0')).join(''); }
+/* color interpolado de una paleta en la fracción f */
+function colorAt(pal, f){
+  f = Math.min(Math.max(f,0),1);
+  for(let i=1;i<pal.length;i++){
+    if(f <= pal[i].at){
+      const a=pal[i-1], b=pal[i], t=(f-a.at)/((b.at-a.at)||1);
+      const ca=hexToRgb(a.col), cb=hexToRgb(b.col);
+      return rgbToHex([0,1,2].map(j=>ca[j]+(cb[j]-ca[j])*t));
+    }
+  }
+  return pal[pal.length-1].col;
+}
+/* conic-gradient con los colores de la paleta, recortado al final de la carga */
+function conicFill(pal, frac){
+  const f = Math.min(Math.max(frac,0),1);
+  const fillDeg = f*360;
+  const stops = [];
+  for(const p of pal){ if(p.at*360 < fillDeg) stops.push(`${p.col} ${(p.at*360).toFixed(1)}deg`); }
+  stops.push(`${colorAt(pal,f)} ${fillDeg.toFixed(1)}deg`);
+  stops.push(`transparent ${fillDeg.toFixed(1)}deg`, `transparent 360deg`);
+  return `conic-gradient(from 0deg, ${stops.join(', ')})`;
+}
 function ring(st){
-  const size=128, sw=11, r=(size-sw)/2-2, cx=size/2, cy=size/2;
-  const circ=2*Math.PI*r;
-  const frac = st.fraction;
-  const dash = circ*frac;
-  // posición del knob
-  const ang = frac*2*Math.PI - Math.PI/2;
-  const kx = cx + r*Math.cos(ang);
-  const ky = cy + r*Math.sin(ang);
-  const gid = 'g'+Math.random().toString(36).slice(2,7);
+  const pal  = st.isAdult ? AGE_RING : DEV_RING;
+  const frac = st.isAdult ? st.adultFraction : st.fraction;
+  const ang  = frac*2*Math.PI - Math.PI/2;               // 0 = arriba, horario
+  const kx   = (50 + 45.7*Math.cos(ang)).toFixed(2);     // % (escala con el tamaño)
+  const ky   = (50 + 45.7*Math.sin(ang)).toFixed(2);
+  const knobCol = colorAt(pal, frac);
+  const mask = 'radial-gradient(farthest-side, #0000 calc(100% - 11px), #000 calc(100% - 11px))';
   return `<div class="ring-wrap">
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#c9bdf0"/><stop offset=".4" stop-color="#f3b6cd"/>
-        <stop offset=".7" stop-color="#f7c5b4"/><stop offset="1" stop-color="#9fe0c9"/>
-      </linearGradient></defs>
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${sw}"/>
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#${gid})" stroke-width="${sw}"
-        stroke-linecap="round" stroke-dasharray="${dash} ${circ}"/>
-      <circle cx="${kx}" cy="${ky}" r="${sw/2+2}" fill="#fff" stroke="${st.stage.txt}" stroke-width="3"/>
-    </svg>
+    <div class="ring-track"></div>
+    <div class="ring-fill" style="background:${conicFill(pal,frac)};-webkit-mask:${mask};mask:${mask}"></div>
+    <div class="ring-knob" style="left:${kx}%;top:${ky}%;border-color:${knobCol}"></div>
     <div class="stage-art" style="background:radial-gradient(circle at 50% 45%, ${st.stage.soft}, #fff 75%)">${art(st.stageKey)}</div>
   </div>`;
 }
@@ -726,8 +781,8 @@ function card(cross){
   const start = parseCross(cross);
 
   const dayLine = st.isAdult
-    ? `<div class="day-line"><b>${Math.floor(st.adultAge)}</b> días post-eclosión</div>`
-    : `<div class="day-line">Día <b>${st.inStageDay}</b> de ${Math.ceil(st.total)} · estadio ${st.stage.short}</div>`;
+    ? `<div class="day-line"><b>${Math.round(st.adultAge)}</b> días post-eclosión</div>`
+    : `<div class="day-line">Día <b>${Math.round(st.elapsedDays)}</b> de ${Math.ceil(st.total)} · estadio ${st.stage.short}</div>`;
 
   const remHtml = reminders.map(r=>
     `<span class="chip ${r.c}">${r.pulse?'<span class="pulse"></span>':''}${r.t}</span>`).join('');
@@ -884,7 +939,8 @@ function cohortForm(cross){
       <button class="mini-btn" style="flex:1" onclick="setCohort('${cross.id}')">${editing?'Guardar':'Definir cohorte'}</button>
       ${editing?`<button class="btn ghost" style="flex:1;padding:9px;font-size:.82rem" onclick="cancelEditCohort('${cross.id}')">Cancelar</button>`:''}
     </div>
-    <div class="hint" style="margin-top:8px">Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier).</div>`;
+    <div class="hint" style="margin-top:8px">Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier).</div>
+  </div>`;
 }
 
 function agingPanel(cross, st){
@@ -983,11 +1039,15 @@ function render(){
 
 function toggleTL(btn){
   const tl = btn.nextElementSibling;
-  tl.classList.toggle('open');
-  btn.textContent = tl.classList.contains('open') ? 'Ocultar cronología ▴' : 'Ver cronología ▾';
+  const open = tl.classList.toggle('open');
+  btn.textContent = open ? 'Ocultar cronología ▴' : 'Ver cronología ▾';
+  const card = btn.closest('.card');
+  const id = card ? card.id.replace('card-','') : null;
+  if(id){ if(open) openTLIds.add(id); else openTLIds.delete(id); }
 }
 const openAgingIds = new Set();
 const openNotesIds = new Set();
+const openTLIds = new Set();
 function toggleAging(id, btn){
   const open = btn.nextElementSibling.classList.toggle('open');
   btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
@@ -1007,6 +1067,11 @@ function reopenPanel(id, keyword){
 function restorePanels(){
   openAgingIds.forEach(id=>reopenPanel(id,'Envejecimiento'));
   openNotesIds.forEach(id=>reopenPanel(id,'Bitácora'));
+  openTLIds.forEach(id=>{
+    const card = document.getElementById('card-'+id); if(!card) return;
+    const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>b.textContent.includes('cronología'));
+    if(btn){ btn.nextElementSibling.classList.add('open'); btn.textContent='Ocultar cronología ▴'; }
+  });
 }
 function addNote(id){
   const inp = document.getElementById('note-'+id); const t = inp.value.trim(); if(!t) return;
@@ -1300,10 +1365,16 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); clos
 /* cerrar el menú de datos al click fuera */
 document.addEventListener('click',e=>{ if(!e.target.closest('.menu')) closeMenu(); });
 
-/* refrescar periódicamente para que los recordatorios estén al día */
+/* refrescar periódicamente para que los recordatorios estén al día,
+   sin redibujar (y borrar) lo que se está escribiendo en un campo */
+function autoRender(){
+  const el = document.activeElement;
+  if(el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+  render();
+}
 updateNotifBtn();
 render();
-setInterval(render, 60000);
+setInterval(autoRender, 60000);
 </script>
 </body>
 </html>
