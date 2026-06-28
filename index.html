@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>DrosoTrack — Ciclo de vida de Drosophila melanogaster</title>
+<title>DrosoTracker — Ciclo de vida de Drosophila melanogaster</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -352,7 +352,7 @@
         <svg viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="14" rx="3.4" ry="5.2" fill="#fff"/><ellipse cx="12" cy="7.5" rx="2.4" ry="2.4" fill="#fff"/><ellipse cx="6" cy="11" rx="4.2" ry="2.6" fill="#fff" opacity=".7" transform="rotate(-25 6 11)"/><ellipse cx="18" cy="11" rx="4.2" ry="2.6" fill="#fff" opacity=".7" transform="rotate(25 18 11)"/><circle cx="10.7" cy="7" r="1" fill="#f5a3a3"/><circle cx="13.3" cy="7" r="1" fill="#f5a3a3"/></svg>
       </div>
       <div>
-        <div class="brand-name">DrosoTrack</div>
+        <div class="brand-name">DrosoTracker</div>
         <div class="brand-sub">Ciclo de vida de <i>Drosophila melanogaster</i></div>
       </div>
     </div>
@@ -527,7 +527,7 @@
 
 <script>
 /* ============================================================
-   DrosoTrack — modelo de ciclo de vida de D. melanogaster
+   DrosoTracker — modelo de ciclo de vida de D. melanogaster
    ============================================================ */
 
 const STORE_KEY = 'drosotrack.crosses.v1';
@@ -1086,7 +1086,7 @@ function render(){
     content.innerHTML = `<div class="empty">
       <svg viewBox="0 0 80 80">${art('adult')}</svg>
       <h3>Todavía no hay cruzas registradas</h3>
-      <p>Agregá tu primera cruza con su genotipo, fecha y temperatura de incubación. DrosoTrack calculará el estadio actual y te avisará de cada transición.</p>
+      <p>Agregá tu primera cruza con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.</p>
       <button class="btn" onclick="openForm()" style="margin:0 auto">+ Nueva cruza</button>
     </div>`;
     return;
@@ -1210,7 +1210,7 @@ function downloadBlob(blob, name){
 function csvCell(s){ s = String(s); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }
 function exportJSON(){
   downloadBlob(new Blob([JSON.stringify(crosses,null,2)],{type:'application/json'}),
-    `drosotrack-backup-${new Date().toISOString().slice(0,10)}.json`);
+    `drosotracker-backup-${new Date().toISOString().slice(0,10)}.json`);
   closeMenu();
 }
 function importJSON(e){
@@ -1263,7 +1263,7 @@ function exportSurvivalCSV(){
   });
   if(!any){ alert('No hay cohortes de envejecimiento con datos para exportar.'); return; }
   downloadBlob(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}),
-    `drosotrack-supervivencia-${new Date().toISOString().slice(0,10)}.csv`);
+    `drosotracker-supervivencia-${new Date().toISOString().slice(0,10)}.csv`);
   closeMenu();
 }
 function toggleMenu(){ updateLabStatus(); document.getElementById('dataMenu').classList.toggle('open'); }
@@ -1332,7 +1332,7 @@ function updateNotifBtn(){
 }
 function toggleNotif(){
   if(!('Notification' in window)){ alert('Tu navegador no soporta notificaciones.'); return; }
-  if(Notification.permission==='granted'){ new Notification('DrosoTrack', {body:'Los recordatorios ya están activos ✓'}); return; }
+  if(Notification.permission==='granted'){ new Notification('DrosoTracker', {body:'Los recordatorios ya están activos ✓'}); return; }
   if(Notification.permission==='denied'){ alert('Las notificaciones están bloqueadas. Habilitalas para este sitio desde la configuración del navegador.'); return; }
   Notification.requestPermission().then(updateNotifBtn);
 }
