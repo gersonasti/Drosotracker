@@ -236,6 +236,32 @@
     font-family:'Nunito';font-weight:600;font-size:.88rem;color:var(--ink);transition:background .12s;
   }
   .menu-pop button:hover{background:var(--lav-soft)}
+  .menu-sep{height:1px;background:var(--line);margin:5px 4px}
+  .menu-fmt{font-size:.72rem;color:var(--ink-soft);padding:2px 12px 4px}
+  .menu-fmt b{color:var(--ink)}
+  #labStatus .lab-stat-line{font-size:.74rem;color:var(--ink-soft);padding:5px 12px;display:flex;align-items:center;gap:4px}
+  .lab-clear{margin-left:auto;border:none;background:var(--peach-soft);color:#d98162;font-weight:700;font-size:.72rem;padding:3px 9px;border-radius:8px;cursor:pointer;font-family:'Nunito'}
+  .lab-clear:hover{filter:brightness(.97)}
+
+  /* ---------- Autocompletado de genotipo ---------- */
+  .ac-wrap{position:relative}
+  .ac-pop{
+    position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--card);
+    border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+    max-height:230px;overflow:auto;z-index:60;display:none;padding:4px;
+  }
+  .ac-pop.open{display:block}
+  .ac-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;cursor:pointer;font-size:.88rem}
+  .ac-item:hover,.ac-item.active{background:var(--lav-soft)}
+  .ac-item .ac-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+  .ac-tag{flex:none;font-size:.64rem;font-weight:700;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.02em}
+  .ac-tag.stock{background:var(--mint-soft);color:#3fae8c}
+  .ac-tag.comp{background:var(--blue-soft);color:#5b8fc7}
+
+  /* ---------- Vista previa de importación del lab ---------- */
+  .lab-preview{background:var(--bg-1);border-radius:11px;padding:6px 10px;max-height:170px;overflow:auto}
+  .lab-pv-row{font-size:.82rem;color:var(--ink);padding:4px 0;border-bottom:1px dashed var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lab-pv-row:last-child{border-bottom:none}
 
   /* ---------- Bitácora ---------- */
   .notes-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
@@ -339,6 +365,10 @@
           <button onclick="exportJSON()">⬇ Exportar backup (JSON)</button>
           <button onclick="document.getElementById('importFile').click()">⬆ Importar backup</button>
           <button onclick="exportSurvivalCSV()">📊 Exportar supervivencia (CSV)</button>
+          <div class="menu-sep"></div>
+          <button onclick="document.getElementById('labFile').click()" title="Si tu base está en Excel, exportala como CSV (Guardar como → CSV)">🧬 Importar base de genotipos del lab</button>
+          <div class="menu-fmt">.csv · .tab · .tsv</div>
+          <div id="labStatus"></div>
         </div>
       </div>
       <button class="btn" onclick="openForm()">
@@ -346,6 +376,7 @@
         <span class="lbl">Nueva cruza</span>
       </button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(event)" />
+      <input type="file" id="labFile" accept=".csv,.tsv,.tab,.txt,text/csv,text/tab-separated-values,text/plain" style="display:none" onchange="importLabDB(event)" />
     </div>
   </header>
 
@@ -377,9 +408,11 @@
       </div>
       <div class="field">
         <label for="genotype">Genotipo *</label>
-        <input id="genotype" list="genoList" autocomplete="off" placeholder="ej. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
-        <datalist id="genoList"></datalist>
-        <div class="hint">Sugiere genotipos que ya usaste. Empezá a escribir para ver coincidencias.</div>
+        <div class="ac-wrap">
+          <input id="genotype" autocomplete="off" placeholder="ej. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
+          <div class="ac-pop" id="genoAC"></div>
+        </div>
+        <div class="hint">Autocompleta con tu historial, la base del laboratorio y componentes comunes (CyO, UAS-GFP, elav-GAL4…). Empezá a escribir.</div>
       </div>
       <div class="field">
         <label for="crossDate">Fecha y hora de cruza *</label>
@@ -468,6 +501,27 @@
         <button type="submit" class="btn">Guardar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal importar base de genotipos del laboratorio -->
+<div class="overlay" id="labOverlay">
+  <div class="modal">
+    <h2>Importar base de genotipos</h2>
+    <div class="sub" id="labSub"></div>
+    <div class="field">
+      <label for="labCol">¿Qué columna tiene el genotipo?</label>
+      <select id="labCol" onchange="renderLabPreview()"></select>
+      <div class="hint">Se asume que la primera fila son los títulos de las columnas.</div>
+    </div>
+    <div class="field">
+      <label>Vista previa</label>
+      <div class="lab-preview" id="labPreview"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" onclick="closeLabModal()">Cancelar</button>
+      <button type="button" class="btn" onclick="confirmLabImport()">Importar genotipos</button>
+    </div>
   </div>
 </div>
 
@@ -1210,7 +1264,7 @@ function exportSurvivalCSV(){
     `drosotrack-supervivencia-${new Date().toISOString().slice(0,10)}.csv`);
   closeMenu();
 }
-function toggleMenu(){ document.getElementById('dataMenu').classList.toggle('open'); }
+function toggleMenu(){ updateLabStatus(); document.getElementById('dataMenu').classList.toggle('open'); }
 function closeMenu(){ document.getElementById('dataMenu').classList.remove('open'); }
 
 /* --- Planificación: agenda + cálculo inverso de cruzas --- */
@@ -1306,19 +1360,212 @@ function checkNotifications(){
   });
 }
 
-/* --- Autocompletado: opciones a partir de cruzas anteriores --- */
+/* --- Autocompletado del campo Nombre (datalist nativo) a partir del historial --- */
 function populateDatalists(){
-  const uniq = arr => [...new Set(arr.filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
-  const fill = (id, arr) => { const dl=document.getElementById(id); if(dl) dl.innerHTML = arr.map(v=>`<option value="${esc(v)}"></option>`).join(''); };
-  fill('nameList', uniq(crosses.map(c=>c.name)));
-  fill('genoList', uniq(crosses.map(c=>c.genotype)));
+  const names = [...new Set(crosses.map(c=>c.name).filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  const dl = document.getElementById('nameList');
+  if(dl) dl.innerHTML = names.map(v=>`<option value="${esc(v)}"></option>`).join('');
 }
+
+/* ============================================================
+   Base de genotipos del laboratorio + autocompletado de genotipo (offline)
+   ============================================================ */
+const LABDB_KEY = 'drosotrack.labdb.v1';
+function loadLabDB(){ try{ return JSON.parse(localStorage.getItem(LABDB_KEY)) || null; }catch(e){ return null; } }
+let labDB = loadLabDB();
+function saveLabDB(db){ labDB = db; localStorage.setItem(LABDB_KEY, JSON.stringify(db)); rebuildAutocompleteCache(); }
+function clearLabDB(){
+  if(!labDB || !labDB.list || !labDB.list.length){ alert('No hay base del laboratorio cargada.'); return; }
+  if(confirm(`¿Borrar la base del laboratorio (${labDB.list.length} genotipos)?`)){
+    labDB = null; localStorage.removeItem(LABDB_KEY); rebuildAutocompleteCache(); updateLabStatus();
+  }
+}
+function updateLabStatus(){
+  const el = document.getElementById('labStatus'); if(!el) return;
+  el.innerHTML = (labDB && labDB.list && labDB.list.length)
+    ? `<div class="lab-stat-line">✓ Base del lab: <b>&nbsp;${labDB.list.length}&nbsp;</b> genotipos<button class="lab-clear" onclick="clearLabDB()">borrar</button></div>`
+    : `<div class="lab-stat-line">Sin base del lab cargada.</div>`;
+}
+
+/* Parser de CSV / tabulado con soporte de comillas; detecta el separador */
+function parseDelimited(text){
+  text = text.replace(/^﻿/, '');
+  const nl = text.indexOf('\n');
+  const head = nl>=0 ? text.slice(0,nl) : text;
+  const delim = (head.split('\t').length > head.split(',').length) ? '\t' : ',';
+  const rows=[]; let row=[], field='', inQ=false, i=0;
+  const endF=()=>{ row.push(field); field=''; };
+  const endR=()=>{ endF(); rows.push(row); row=[]; };
+  while(i<text.length){
+    const ch=text[i];
+    if(inQ){
+      if(ch==='"'){ if(text[i+1]==='"'){ field+='"'; i+=2; continue; } inQ=false; i++; continue; }
+      field+=ch; i++; continue;
+    }
+    if(ch==='"'){ inQ=true; i++; continue; }
+    if(ch===delim){ endF(); i++; continue; }
+    if(ch==='\r'){ i++; continue; }
+    if(ch==='\n'){ endR(); i++; continue; }
+    field+=ch; i++;
+  }
+  if(field.length || row.length){ endR(); }
+  return rows.filter(r=> r.some(c=> c.trim()!==''));
+}
+
+let labImportData = null;
+function importLabDB(e){
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const rows = parseDelimited(r.result);
+      if(rows.length < 2) throw new Error('Se espera una fila de títulos + al menos una fila de datos.');
+      const headers = rows[0].map(h=>h.trim());
+      const dataRows = rows.slice(1);
+      let gi = headers.findIndex(h=>/genot[iy]p/i.test(h));
+      if(gi<0 && headers.length===1) gi=0;
+      labImportData = { headers, dataRows, file: f.name };
+      openLabModal(gi);
+    }catch(err){ alert('No se pudo leer el archivo: '+err.message); }
+  };
+  r.readAsText(f);
+  e.target.value=''; closeMenu();
+}
+function openLabModal(gi){
+  const sel = document.getElementById('labCol');
+  sel.innerHTML = labImportData.headers.map((h,i)=>`<option value="${i}">${esc(h||('Columna '+(i+1)))}</option>`).join('');
+  sel.value = gi>=0 ? String(gi) : '0';
+  document.getElementById('labSub').textContent =
+    `${labImportData.file} · ${labImportData.dataRows.length} filas. Elegí la columna del genotipo y confirmá.`;
+  renderLabPreview();
+  document.getElementById('labOverlay').classList.add('open');
+}
+function renderLabPreview(){
+  if(!labImportData) return;
+  const gi = +document.getElementById('labCol').value;
+  const sample = labImportData.dataRows.map(r=>(r[gi]||'').trim()).filter(Boolean).slice(0,6);
+  document.getElementById('labPreview').innerHTML = sample.length
+    ? sample.map(s=>`<div class="lab-pv-row">${esc(s)}</div>`).join('')
+    : '<div class="hint">La columna elegida no tiene genotipos.</div>';
+}
+function confirmLabImport(){
+  if(!labImportData) return;
+  const gi = +document.getElementById('labCol').value;
+  const list = [...new Set(labImportData.dataRows.map(r=>(r[gi]||'').trim()).filter(Boolean))];
+  if(!list.length){ alert('La columna elegida no tiene genotipos.'); return; }
+  saveLabDB({ name: labImportData.file, date: new Date().toISOString(), list });
+  labImportData = null;
+  closeLabModal(); updateLabStatus();
+  alert(`Base del laboratorio importada: ${list.length} genotipos.`);
+}
+function closeLabModal(){ document.getElementById('labOverlay').classList.remove('open'); }
+
+/* Lista curada de componentes frecuentes de genotipos de Drosophila */
+const GENO_COMPONENTS = [
+  /* Balanceadores */
+  'CyO','CyO-GFP','SM6a','SM5','SM6b','TM3','TM3, Sb','TM3, Sb Ser','TM3, Ser','TM6B','TM6B, Tb','TM6B, Tb Hu','TM2','MKRS','FM7','FM7a','FM7c','FM6','TM1',
+  /* Marcadores dominantes */
+  'Sb','Tb','Hu','Cy','Dr','Ser','Gl','Ki','Pr','Bc','Sp','Hw',
+  /* Alelos / fondos comunes */
+  'w[1118]','w[*]','w[+]','w[-]','y[1]','y[1] w[1118]','y w','y[1] w[*]','+','+/+','cn bw','Canton-S','Oregon-R',
+  /* Drivers GAL4 */
+  'elav-GAL4','nSyb-GAL4','repo-GAL4','GMR-GAL4','tubP-GAL4','tub-GAL4','act5C-GAL4','da-GAL4','en-GAL4','ey-GAL4','Mef2-GAL4','OK107-GAL4','c155-GAL4','MS1096-GAL4','ppk-GAL4','arm-GAL4','hs-GAL4',
+  /* Reporteros / efectores UAS */
+  'UAS-GFP','UAS-mCD8::GFP','UAS-mCD8::RFP','UAS-GFP.nls','UAS-RFP','UAS-lacZ','UAS-Dcr-2','UAS-GCaMP6f','UAS-CD8-GFP','UAS-mCherry','UAS-CD4-tdGFP','UAS-Stinger','UAS-Kir2.1','UAS-TNT','10xUAS-IVS-mCD8::GFP',
+  /* Sistemas binarios / herramientas */
+  'LexAop-','QUAS-','QF2','LexA','tub-GAL80ts','GAL80ts','hs-FLP','UAS-FLP','FRT19A','FRT40A','FRT42D','FRT80B','FRT82B','FRT2A',
+];
+/* corta un genotipo en componentes por los separadores típicos */
+function genoTokens(g){ return String(g).split(/[\s;\/,+]+/).map(t=>t.trim()).filter(t=>t.length>=2); }
+
+/* caché de sugerencias (se reconstruye al abrir el formulario o cambiar la base) */
+let _acFull = [], _acComps = [];
+function rebuildAutocompleteCache(){
+  const fset=new Set(), cset=new Set();
+  const add = g => { const s=String(g).trim(); if(!s) return; fset.add(s); genoTokens(s).forEach(t=>cset.add(t)); };
+  (labDB && labDB.list || []).forEach(add);
+  crosses.forEach(c=> c.genotype && add(c.genotype));
+  GENO_COMPONENTS.forEach(t=> cset.add(t));
+  _acFull=[...fset]; _acComps=[...cset];
+}
+
+/* token actual = texto entre el último separador y el cursor */
+function genoCurToken(input){
+  const cur = input.selectionStart==null ? input.value.length : input.selectionStart;
+  const m = input.value.slice(0, cur).match(/[^\s;\/,+]*$/);
+  const token = m ? m[0] : '';
+  return { token, start: cur - token.length, cur };
+}
+const genoAC = { items: [], active: -1 };
+function buildGenoSuggestions(input){
+  const val = input.value.trim(), lc = val.toLowerCase();
+  const { token } = genoCurToken(input), tlc = token.toLowerCase();
+  const stocks=[];
+  if(val.length>=2){
+    for(const g of _acFull){ if(stocks.length>=4) break; const glc=g.toLowerCase(); if(glc!==lc && glc.startsWith(lc)) stocks.push({label:g,value:g,type:'stock',action:'full'}); }
+  }
+  const pref=[], sub=[];
+  if(token.length>=1){
+    for(const c of _acComps){ const clc=c.toLowerCase(); if(clc===tlc) continue; if(clc.startsWith(tlc)) pref.push(c); else if(clc.includes(tlc)) sub.push(c); }
+  }
+  const comps=[...pref,...sub].slice(0, 10-stocks.length).map(c=>({label:c,value:c,type:'comp',action:'token'}));
+  return [...stocks, ...comps];
+}
+function showGenoAC(){
+  const input = document.getElementById('genotype'), pop = document.getElementById('genoAC');
+  if(!input || !pop) return;
+  const items = buildGenoSuggestions(input);
+  genoAC.items = items; genoAC.active = -1;
+  if(!items.length){ pop.classList.remove('open'); pop.innerHTML=''; return; }
+  pop.innerHTML = items.map((it,i)=>`<div class="ac-item" data-i="${i}" onmousedown="selectGenoAC(event,${i})">
+    <span class="ac-label">${esc(it.label)}</span><span class="ac-tag ${it.type}">${it.type}</span></div>`).join('');
+  pop.classList.add('open');
+}
+function hideGenoAC(){ const pop=document.getElementById('genoAC'); if(pop) pop.classList.remove('open'); }
+function selectGenoAC(e, i){
+  if(e) e.preventDefault();
+  const it = genoAC.items[i]; if(!it) return;
+  const input = document.getElementById('genotype');
+  if(it.action==='full'){
+    input.value = it.value;
+    try{ input.setSelectionRange(input.value.length, input.value.length); }catch(_){}
+  } else {
+    const { start, cur } = genoCurToken(input), v = input.value;
+    input.value = v.slice(0,start) + it.value + v.slice(cur);
+    const pos = start + it.value.length;
+    try{ input.setSelectionRange(pos, pos); }catch(_){}
+  }
+  hideGenoAC(); input.focus();
+}
+function genoKeydown(e){
+  const pop = document.getElementById('genoAC');
+  if(!pop || !pop.classList.contains('open')) return;
+  const n = genoAC.items.length; if(!n) return;
+  if(e.key==='ArrowDown'){ e.preventDefault(); genoAC.active=(genoAC.active+1)%n; paintGenoActive(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); genoAC.active=(genoAC.active-1+n)%n; paintGenoActive(); }
+  else if(e.key==='Enter' && genoAC.active>=0){ e.preventDefault(); selectGenoAC(null, genoAC.active); }
+  else if(e.key==='Escape'){ e.stopPropagation(); hideGenoAC(); }
+}
+function paintGenoActive(){
+  const pop=document.getElementById('genoAC'); if(!pop) return;
+  [...pop.children].forEach((el,i)=> el.classList.toggle('active', i===genoAC.active));
+  const a=pop.children[genoAC.active]; if(a) a.scrollIntoView({block:'nearest'});
+}
+(function attachGenoAC(){
+  const input = document.getElementById('genotype'); if(!input) return;
+  input.addEventListener('input', showGenoAC);
+  input.addEventListener('keydown', genoKeydown);
+  input.addEventListener('focus', showGenoAC);
+  input.addEventListener('blur', ()=> setTimeout(hideGenoAC, 120));
+})();
 
 /* --- Acciones --- */
 function openForm(id){
   const ov=document.getElementById('overlay');
   document.getElementById('crossForm').reset();
   populateDatalists();
+  rebuildAutocompleteCache();
+  hideGenoAC();
   document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on'));
   if(id){
     const c = crosses.find(x=>x.id===id);
@@ -1393,7 +1640,10 @@ document.getElementById('agingOverlay').addEventListener('click',e=>{
 document.getElementById('planOverlay').addEventListener('click',e=>{
   if(e.target.id==='planOverlay') closePlan();
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeMenu(); } });
+document.getElementById('labOverlay').addEventListener('click',e=>{
+  if(e.target.id==='labOverlay') closeLabModal();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); } });
 /* cerrar el menú de datos al click fuera */
 document.addEventListener('click',e=>{ if(!e.target.closest('.menu')) closeMenu(); });
 
@@ -1405,6 +1655,8 @@ function autoRender(){
   render();
 }
 updateNotifBtn();
+updateLabStatus();
+rebuildAutocompleteCache();
 render();
 setInterval(autoRender, 60000);
 </script>
