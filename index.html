@@ -484,7 +484,7 @@
 <!-- Modal planificación -->
 <div class="overlay" id="planOverlay">
   <div class="modal">
-    <h2>Planificación</h2>
+    <h2 id="planTitle">Planificación</h2>
     <div class="sub">Agenda de próximos eventos y cálculo inverso de cruzas.</div>
     <h3 style="font-size:1rem;margin:6px 0 10px">📆 Próximos eventos</h3>
     <div id="agendaBox"></div>
@@ -1453,11 +1453,14 @@ function toggleMenu(){ updateLabStatus(); document.getElementById('dataMenu').cl
 function closeMenu(){ document.getElementById('dataMenu').classList.remove('open'); }
 
 /* --- Planificación: agenda + cálculo inverso de cruzas --- */
+let planEditId = null;
 function onPlanObjChange(){
   document.getElementById('planDissectRow').style.display =
     document.getElementById('planObjective').value==='dissect' ? 'block' : 'none';
 }
 function openPlan(){
+  planEditId = null;
+  document.getElementById('planTitle').textContent = 'Planificación';
   renderAgenda();
   document.getElementById('planForm').reset();
   document.getElementById('planStage').value = 'adult';
@@ -1502,7 +1505,9 @@ function computePlan(e){
     <div class="pr-main">Montá la cruza el<br><b>${fmtDT(crossDate)}</b></div>
     <div class="hint">A ${temp} °C, llegar a <b>${stObj.name}</b> tarda ~${offsetDays.toFixed(1)} d desde la puesta.${virginNote}</div>
     ${past ? '<div class="hint" style="color:#d98162;margin-top:6px">⚠ Esa fecha ya pasó: no llegás a tiempo a esa temperatura.</div>' : ''}
-    <button class="mini-btn" style="width:100%;margin-top:10px" onclick="createFromPlan('${local}',${temp})">+ Crear cruza con esta fecha</button>
+    ${planEditId
+      ? `<button class="mini-btn" style="width:100%;margin-top:10px" onclick="updateFromPlan('${planEditId}','${local}',${temp})">✓ Actualizar cruza planificada</button>`
+      : `<button class="mini-btn" style="width:100%;margin-top:10px" onclick="createFromPlan('${local}',${temp})">+ Crear cruza con esta fecha</button>`}
   </div>`;
 }
 function createFromPlan(dateStr, temp){
@@ -1514,8 +1519,48 @@ function createFromPlan(dateStr, temp){
   crosses.push({
     id:'c'+Date.now()+Math.random().toString(36).slice(2,5), parentsRemoved:false,
     experiments, genotype, objective, dissectStage, crossDate:dateStr, temp,
+    plan:{ stage:document.getElementById('planStage').value, target:document.getElementById('planDate').value },
   });
   save(crosses); closePlan(); render();
+}
+/* Actualiza una cruza planificada existente (recalcula la fecha de montaje) */
+function updateFromPlan(id, dateStr, temp){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const genotype = document.getElementById('planGeno').value.trim();
+  if(!genotype){ alert('Escribí el genotipo.'); return; }
+  c.experiments = document.getElementById('planExp').value.split(',').map(s=>s.trim()).filter(Boolean);
+  c.genotype = genotype;
+  c.objective = document.getElementById('planObjective').value;
+  c.dissectStage = c.objective==='dissect' ? document.getElementById('planDissectStage').value : null;
+  c.temp = temp;
+  c.crossDate = dateStr;
+  c.plan = { stage:document.getElementById('planStage').value, target:document.getElementById('planDate').value };
+  save(crosses); closePlan(); render();
+}
+/* Editar una cruza planificada: abre el planificador con su objetivo cargado */
+function openPlanEdit(id){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  openPlan();              // resetea (planEditId=null) y abre
+  planEditId = id;
+  document.getElementById('planTitle').textContent = 'Editar cruza planificada';
+  document.getElementById('planExp').value = (c.experiments||[]).join(', ');
+  document.getElementById('planGeno').value = c.genotype||'';
+  document.getElementById('planObjective').value = c.objective||'';
+  document.getElementById('planDissectStage').value = c.dissectStage||'l3';
+  onPlanObjChange();
+  document.getElementById('planTemp').value = c.temp;
+  if(c.plan){
+    document.getElementById('planStage').value = c.plan.stage;
+    document.getElementById('planDate').value = c.plan.target;
+  } else {
+    /* sin objetivo guardado: derivar uno coherente con la fecha actual */
+    const stage = (c.objective==='dissect' && c.dissectStage) ? c.dissectStage : 'adult';
+    const total = totalDays(c.temp), bounds = stageBounds(c.temp);
+    const offset = stage==='adult' ? total : bounds.find(b=>b.key===stage).start;
+    document.getElementById('planStage').value = stage;
+    document.getElementById('planDate').value = toLocalInput(addDays(parseCross(c), offset));
+  }
+  computePlan({preventDefault(){}});
 }
 
 /* --- Notificaciones del navegador --- */
@@ -1785,6 +1830,10 @@ function paintGenoActive(){
 
 /* --- Acciones --- */
 function openForm(id){
+  if(id){
+    const c0 = crosses.find(x=>x.id===id);
+    if(c0 && computeState(c0).planned){ openPlanEdit(id); return; }  // planificadas → editar en el planificador
+  }
   const ov=document.getElementById('overlay');
   document.getElementById('crossForm').reset();
   populateDatalists();
