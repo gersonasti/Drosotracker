@@ -805,8 +805,10 @@ function conicFill(pal, frac){
   const fillDeg = f*360;
   const stops = [];
   for(const p of pal){ if(p.at*360 < fillDeg) stops.push(`${p.col} ${(p.at*360).toFixed(1)}deg`); }
-  stops.push(`${colorAt(pal,f)} ${fillDeg.toFixed(1)}deg`);
-  stops.push(`transparent ${fillDeg.toFixed(1)}deg`, `transparent 360deg`);
+  const endc = colorAt(pal,f), fadeDeg = Math.min(fillDeg + 1.2, 360);
+  stops.push(`${endc} ${fillDeg.toFixed(1)}deg`);
+  stops.push(`${endc}00 ${fadeDeg.toFixed(1)}deg`);          // fundido suave de la punta (anti-aliasing)
+  if(fadeDeg < 360) stops.push('transparent 360deg');
   return `conic-gradient(from 0deg, ${stops.join(', ')})`;
 }
 function ring(st){
@@ -816,7 +818,7 @@ function ring(st){
   const kx   = (50 + 45.7*Math.cos(ang)).toFixed(2);     // % (escala con el tamaño)
   const ky   = (50 + 45.7*Math.sin(ang)).toFixed(2);
   const knobCol = colorAt(pal, frac);
-  const mask = 'radial-gradient(farthest-side, #0000 calc(100% - 11px), #000 calc(100% - 11px))';
+  const mask = 'radial-gradient(farthest-side, #0000 calc(100% - 11.5px), #000 calc(100% - 10.5px))';
   return `<div class="ring-wrap">
     <div class="ring-track"></div>
     <div class="ring-fill" style="background:${conicFill(pal,frac)};-webkit-mask:${mask};mask:${mask}"></div>
