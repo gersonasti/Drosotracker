@@ -292,18 +292,6 @@
   .lab-pv-row{font-size:.82rem;color:var(--ink);padding:4px 0;border-bottom:1px dashed var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lab-pv-row:last-child{border-bottom:none}
 
-  /* ---------- Bitácora ---------- */
-  .notes-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
-  .notes-panel.open{max-height:640px}
-  .notes-inner{padding-top:14px}
-  .note-add{display:flex;gap:8px;margin-bottom:12px}
-  .note-add input{flex:1;padding:9px 12px;border-radius:11px;border:1.5px solid var(--line);font-family:'Nunito';font-size:.88rem;background:var(--bg-2);color:var(--ink)}
-  .note-add input:focus{outline:none;border-color:var(--lav)}
-  .note-item{display:flex;align-items:flex-start;gap:8px;justify-content:space-between;padding:8px 4px;border-bottom:1px dashed var(--line)}
-  .note-item:last-child{border-bottom:none}
-  .note-text{font-size:.85rem;color:var(--ink)}
-  .note-date{font-size:.72rem;color:var(--ink-soft);margin-top:2px}
-
   /* ---------- Planificación ---------- */
   .field select{
     width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);
@@ -964,25 +952,7 @@ function card(cross){
     <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
 
     ${st.isAdult && (cross.objective==='aging' || (cross.aging && cross.aging.startN!=null)) ? agingPanel(cross, st) : ''}
-    ${notesPanel(cross)}
   </div>`;
-}
-
-/* --- Bitácora de notas (todas las cruzas) --- */
-function ensureNotes(c){ if(!Array.isArray(c.notes)) c.notes=[]; return c.notes; }
-function notesPanel(cross){
-  const notes = ensureNotes(cross).slice().sort((a,b)=> new Date(b.date)-new Date(a.date));
-  return `<button class="timeline-btn" onclick="toggleNotes('${cross.id}', this)">📝 Bitácora${notes.length?` (${notes.length})`:''} ▾</button>
-    <div class="notes-panel"><div class="notes-inner">
-      <div class="note-add">
-        <input id="note-${cross.id}" placeholder="Agregar observación…" maxlength="200"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();addNote('${cross.id}');}" />
-        <button class="mini-btn" onclick="addNote('${cross.id}')">Agregar</button>
-      </div>
-      <div class="note-list">${notes.length ? notes.map(n=>`
-        <div class="note-item"><div><div class="note-text">${esc(n.text)}</div><div class="note-date">${fmtDT(new Date(n.date))}</div></div>
-        <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="Borrar" onclick="delNote('${cross.id}','${n.id}')">✕</button></div>`).join('') : '<div class="hint">Sin notas todavía.</div>'}</div>
-    </div></div>`;
 }
 
 /* --- Panel de envejecimiento (cohortes adultas, Kaplan-Meier) --- */
@@ -1209,9 +1179,11 @@ function render(){
   const sorted = [...crosses].sort((a,b)=> parseCross(b)-parseCross(a));
   const groups = {}; _expOrder = [];
   sorted.forEach(c=>{
-    const exp = (c.experiments && c.experiments[0]) || '__none__';
-    if(!groups[exp]){ groups[exp]=[]; _expOrder.push(exp); }
-    groups[exp].push(c);
+    const exps = (c.experiments && c.experiments.length) ? c.experiments : ['__none__'];
+    exps.forEach(exp=>{
+      if(!groups[exp]){ groups[exp]=[]; _expOrder.push(exp); }
+      groups[exp].push(c);
+    });
   });
   content.innerHTML = _expOrder.map((exp,i)=>{
     const cards = groups[exp];
@@ -1245,17 +1217,11 @@ function toggleTL(btn){
   if(id){ if(open) openTLIds.add(id); else openTLIds.delete(id); }
 }
 const openAgingIds = new Set();
-const openNotesIds = new Set();
 const openTLIds = new Set();
 function toggleAging(id, btn){
   const open = btn.nextElementSibling.classList.toggle('open');
   btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
   if(open) openAgingIds.add(id); else openAgingIds.delete(id);
-}
-function toggleNotes(id, btn){
-  const open = btn.nextElementSibling.classList.toggle('open');
-  btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
-  if(open) openNotesIds.add(id); else openNotesIds.delete(id);
 }
 function reopenPanel(id, keyword){
   const card = document.getElementById('card-'+id); if(!card) return;
@@ -1265,22 +1231,11 @@ function reopenPanel(id, keyword){
 /* re-aplica el estado abierto de los paneles colapsables tras un render */
 function restorePanels(){
   openAgingIds.forEach(id=>reopenPanel(id,'Envejecimiento'));
-  openNotesIds.forEach(id=>reopenPanel(id,'Bitácora'));
   openTLIds.forEach(id=>{
     const card = document.getElementById('card-'+id); if(!card) return;
     const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>b.textContent.includes('cronología'));
     if(btn){ btn.nextElementSibling.classList.add('open'); btn.textContent='Ocultar cronología ▴'; }
   });
-}
-function addNote(id){
-  const inp = document.getElementById('note-'+id); const t = inp.value.trim(); if(!t) return;
-  const c = crosses.find(x=>x.id===id); ensureNotes(c);
-  c.notes.push({ id:'n'+Date.now()+Math.random().toString(36).slice(2,4), date:toLocalInput(new Date()), text:t });
-  openNotesIds.add(id); save(crosses); render();
-}
-function delNote(id, nid){
-  const c = crosses.find(x=>x.id===id); if(!c) return;
-  c.notes = (c.notes||[]).filter(n=>n.id!==nid); save(crosses); render();
 }
 /* Nueva generación: form pre-cargado con el mismo genotipo/objetivo/temperatura,
    pero como cruza NUEVA (reloj a cero — la fecha arranca en "ahora", editable). */
