@@ -1,0 +1,3 @@
+# Artefactos locales de pruebas (no forman parte de la app)
+.playwright-mcp/
+*.png
