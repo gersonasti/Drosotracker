@@ -1,3 +1,7 @@
 # Artefactos locales de pruebas (no forman parte de la app)
 .playwright-mcp/
 *.png
+
+# Backups y exportaciones de datos del usuario (no van al repo)
+drosotracker-backup-*.json
+drosotracker-*.csv
