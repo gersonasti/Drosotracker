@@ -999,7 +999,7 @@ function cohortForm(cross){
       <button class="mini-btn" style="flex:1" onclick="setCohort('${cross.id}')">${editing?'Guardar':'Definir cohorte'}</button>
       ${editing?`<button class="btn ghost" style="flex:1;padding:9px;font-size:.82rem" onclick="cancelEditCohort('${cross.id}')">Cancelar</button>`:''}
     </div>
-    <div class="hint" style="margin-top:8px">Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier).</div>
+    <div class="hint" style="margin-top:8px">Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.</div>
   </div>`;
 }
 
@@ -1012,18 +1012,23 @@ function agingPanel(cross, st){
     const km = kmCurve(cross, st);
     const pct = a.startN ? Math.round(km.alive/a.startN*100) : 0;
     const evs = a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date));
+    const dens = a.vials ? a.startN/a.vials : null;
+    const densStr = dens!=null ? (Number.isInteger(dens) ? dens : dens.toFixed(1)) : null;
+    const densHigh = dens!=null && dens > 30;
     body = `<div class="aging-metrics">
         <div class="m"><b>${km.alive}/${a.startN}</b><span>vivos</span></div>
         <div class="m"><b>${pct}%</b><span>supervivencia</span></div>
         <div class="m"><b>${Math.floor(st.adultAge)} d</b><span>edad cohorte</span></div>
       </div>
-      <div class="hint" style="margin:-4px 0 10px">${SEX_LABEL[a.sex]||''}${a.vials?` · ${a.vials} viales`:''}${km.censored?` · ${km.censored} censurados`:''} · <a href="#" onclick="editCohort('${cross.id}');return false">editar</a></div>
+      <div class="hint" style="margin:-4px 0 ${densHigh?'4px':'10px'}">${SEX_LABEL[a.sex]||''}${a.vials?` · ${a.vials} viales · ${densStr}/vial`:''}${km.censored?` · ${km.censored} censurados`:''} · <a href="#" onclick="editCohort('${cross.id}');return false">editar</a></div>
+      ${densHigh?`<div class="hint" style="margin:0 0 10px;color:#d98162;font-weight:700">⚠ Densidad alta (${densStr}/vial) · recomendado ≤25–30/vial</div>`:''}
       ${survChart(km)}
       <div class="hint" style="margin-bottom:10px">${km.median!=null?`Mediana de supervivencia: <b>${km.median} d</b>`:'Mediana: — (aún >50% vivos)'}${km.maxLife?` · Máx. observado: <b>${km.maxLife} d</b>`:''}</div>
       <div class="aging-events">${evs.length ? evs.map(e=>`
         <div class="aging-ev"><span class="d">${fmtDT(new Date(e.date))} · ${e.deaths||0}✝${e.censored?` · ${e.censored} cens.`:''}${e.flipped?' · 🔄':''}${e.note?' · '+esc(e.note):''}</span>
         <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="Borrar" onclick="delAging('${cross.id}',${a.events.indexOf(e)})">✕</button></div>`).join('') : '<div class="hint">Sin registros todavía.</div>'}</div>
-      <button class="mini-btn" style="margin-top:12px;width:100%" onclick="openAging('${cross.id}')">+ Registrar pase / conteo</button>`;
+      <button class="mini-btn" style="margin-top:12px;width:100%" onclick="openAging('${cross.id}')">+ Registrar pase / conteo</button>
+      <button class="mini-btn" style="margin-top:8px;width:100%;background:var(--mint-soft);color:#3fae8c" onclick="exportCohortCSV('${cross.id}')">⬇ Exportar tabla de supervivencia (CSV)</button>`;
   }
   return `<button class="timeline-btn" onclick="toggleAging('${cross.id}', this)">🧬 Envejecimiento ▾</button>
     <div class="aging-panel"><div class="aging-inner">${body}</div></div>`;
@@ -1265,6 +1270,27 @@ function exportSurvivalCSV(){
   downloadBlob(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}),
     `drosotracker-supervivencia-${new Date().toISOString().slice(0,10)}.csv`);
   closeMenu();
+}
+/* Exporta SOLO la cohorte de una cruza (una fila por mosca: día + estado 1=muerte 0=censura),
+   lista para análisis de supervivencia en GraphPad Prism / R */
+function exportCohortCSV(id){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const a = c.aging;
+  if(!a || a.startN==null){ alert('Definí la cohorte antes de exportar.'); return; }
+  const st = computeState(c); const ecl = st.eclosionDate;
+  const rows = [['day','status','status_label']];
+  let deaths=0, cens=0;
+  a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date)).forEach(e=>{
+    const day = Math.max((new Date(e.date)-ecl)/86400000, 0).toFixed(2);
+    for(let i=0;i<(e.deaths||0);i++){ rows.push([day,1,'death']); deaths++; }
+    for(let i=0;i<(e.censored||0);i++){ rows.push([day,0,'censored']); cens++; }
+  });
+  const alive = Math.max(a.startN-deaths-cens, 0);
+  const curDay = Math.max(st.adultAge, 0).toFixed(2);
+  for(let i=0;i<alive;i++){ rows.push([curDay,0,'censored']); }  // vivos = censurados a la edad actual
+  const slug = (c.name||c.genotype||'cohorte').replace(/[^\p{L}\p{N}._-]+/gu,'_').replace(/^_+|_+$/g,'').slice(0,40) || 'cohorte';
+  downloadBlob(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}),
+    `drosotracker-lifespan-${slug}${a.sex?'-'+a.sex:''}-${new Date().toISOString().slice(0,10)}.csv`);
 }
 function toggleMenu(){ updateLabStatus(); document.getElementById('dataMenu').classList.toggle('open'); }
 function closeMenu(){ document.getElementById('dataMenu').classList.remove('open'); }
