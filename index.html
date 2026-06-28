@@ -167,6 +167,8 @@
     border-radius:14px;font-size:.88rem;transition:background .12s;
   }
   .timeline-btn:hover{background:var(--lav-soft);color:var(--lav)}
+  .gen-btn{background:var(--mint-soft);color:#3fae8c}
+  .gen-btn:hover{background:#cdeee2;color:#3fae8c}
   .timeline{max-height:0;overflow:hidden;transition:max-height .35s ease}
   .timeline.open{max-height:640px}
   .tl-inner{padding-top:14px}
@@ -916,9 +918,6 @@ function card(cross){
       </div>
       <div class="card-tools">
         <span class="temp-pill" style="background:${tempColor(cross.temp)}">${cross.temp} °C</span>
-        <button class="icon-btn clone" title="Duplicar / nueva generación" onclick="cloneCross('${cross.id}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
         <button class="icon-btn edit" title="Editar" onclick="openForm('${cross.id}')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 6l4 4" stroke="currentColor" stroke-width="2"/></svg>
         </button>
@@ -941,6 +940,8 @@ function card(cross){
 
     ${(['l1','l2','l3'].includes(st.stageKey) && !cross.parentsRemoved)
       ? `<button class="timeline-btn" style="margin-top:10px" onclick="markParents('${cross.id}')">✓ Marcar parentales retirados</button>` : ''}
+
+    <button class="timeline-btn gen-btn" style="margin-top:10px" onclick="cloneCross('${cross.id}')" title="Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)">↪ Nueva generación</button>
 
     <button class="timeline-btn" onclick="toggleTL(this)">Ver cronología ▾</button>
     <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
@@ -1240,14 +1241,19 @@ function delNote(id, nid){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   c.notes = (c.notes||[]).filter(n=>n.id!==nid); save(crosses); render();
 }
+/* Nueva generación: form pre-cargado con el mismo genotipo/objetivo/temperatura,
+   pero como cruza NUEVA (reloj a cero — la fecha arranca en "ahora", editable). */
 function cloneCross(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   openForm();
-  document.getElementById('modalTitle').textContent = 'Duplicar / nueva generación';
-  document.getElementById('name').value = (c.name||'Cruza')+' (copia)';
+  document.getElementById('modalTitle').textContent = 'Nueva generación';
+  document.getElementById('name').value = c.name||'';
   document.getElementById('genotype').value = c.genotype;
+  document.getElementById('objective').value = c.objective||'';
+  document.getElementById('dissectStage').value = c.dissectStage||'l3';
   document.getElementById('temp').value = c.temp;
   document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on', b.dataset.t==String(c.temp)));
+  onObjectiveChange();
 }
 
 /* --- Acciones de envejecimiento --- */
