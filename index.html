@@ -211,6 +211,21 @@
   .task.done .chip{filter:grayscale(.35)}
   .task-del{flex:none;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:.85rem;line-height:1;padding:3px 5px;border-radius:7px}
   .task-del:hover{background:var(--peach-soft);color:var(--coral)}
+  /* Experimento(s): etiquetas en el formulario */
+  .tags-input{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;border-radius:13px;border:1.5px solid var(--line);background:var(--bg-2);cursor:text}
+  .tags-input:focus-within{border-color:var(--lav)}
+  .tags-input input{flex:1;min-width:130px;border:none;outline:none;background:none;font-family:'Nunito';font-size:.95rem;color:var(--ink);padding:4px 2px}
+  .tag-chip{display:inline-flex;align-items:center;gap:5px;background:var(--lav-soft);color:var(--lav);font-weight:700;font-size:.82rem;padding:4px 6px 4px 11px;border-radius:999px}
+  .tag-chip button{border:none;background:none;cursor:pointer;color:var(--lav);font-size:.8rem;line-height:1;padding:0 2px}
+  /* etiquetas de experimento en la tarjeta */
+  .card-exps{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .exp-chip{font-size:.72rem;font-weight:700;color:var(--lav);background:var(--lav-soft);padding:2px 9px;border-radius:999px}
+  .card-title{word-break:break-word}
+  /* secciones colapsables por experimento */
+  .exp-group{margin-bottom:24px}
+  .exp-head{width:100%;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;background:none;padding:4px 2px 14px;font-family:'Poppins';font-weight:700;font-size:1.15rem;color:var(--ink)}
+  .exp-count{background:var(--lav-soft);color:var(--lav);font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:999px}
+  .exp-arrow{margin-left:auto;color:var(--ink-soft);font-size:1rem}
 
   /* ---------- Panel envejecimiento ---------- */
   .aging-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
@@ -415,10 +430,12 @@
     <form id="crossForm" onsubmit="saveCross(event)">
       <input type="hidden" id="editId" />
       <div class="field">
-        <label for="name">Nombre / etiqueta de la cruza</label>
-        <input id="name" list="nameList" autocomplete="off" placeholder="ej. Cruza A · vial 1" maxlength="40" />
-        <datalist id="nameList"></datalist>
-        <div class="hint">Opcional. Para identificar el vial o el experimento.</div>
+        <label for="expInput">Experimento(s)</label>
+        <div class="tags-input" id="expBox" onclick="document.getElementById('expInput').focus()">
+          <input id="expInput" list="expList" autocomplete="off" placeholder="ej. Fenotipo del ojo…" onkeydown="expInputKey(event)" />
+        </div>
+        <datalist id="expList"></datalist>
+        <div class="hint">Agrupá las cruzas por experimento. Podés agregar más de uno (Enter o coma). Opcional.</div>
       </div>
       <div class="field">
         <label for="genotype">Genotipo *</label>
@@ -913,8 +930,8 @@ function card(cross){
   return `<div class="card" id="card-${cross.id}">
     <div class="card-top">
       <div>
-        <div class="card-title">${esc(cross.name || 'Cruza')}</div>
-        <div class="card-geno">${esc(cross.genotype)}</div>
+        <div class="card-title">${esc(cross.genotype)}</div>
+        ${(cross.experiments&&cross.experiments.length)?`<div class="card-exps">${cross.experiments.map(e=>`<span class="exp-chip">${esc(e)}</span>`).join('')}</div>`:''}
       </div>
       <div class="card-tools">
         <span class="temp-pill" style="background:${tempColor(cross.temp)}">${cross.temp} °C</span>
@@ -946,7 +963,7 @@ function card(cross){
     <button class="timeline-btn" onclick="toggleTL(this)">Ver cronología ▾</button>
     <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
 
-    ${st.isAdult ? agingPanel(cross, st) : ''}
+    ${st.isAdult && (cross.objective==='aging' || (cross.aging && cross.aging.startN!=null)) ? agingPanel(cross, st) : ''}
     ${notesPanel(cross)}
   </div>`;
 }
@@ -1188,11 +1205,35 @@ function render(){
     </div>`;
     return;
   }
-  // ordenar por fecha de cruza descendente
+  // ordenar por fecha de cruza descendente y agrupar por experimento (secciones colapsables)
   const sorted = [...crosses].sort((a,b)=> parseCross(b)-parseCross(a));
-  content.innerHTML = `<div class="grid">${sorted.map(card).join('')}</div>`;
+  const groups = {}; _expOrder = [];
+  sorted.forEach(c=>{
+    const exp = (c.experiments && c.experiments[0]) || '__none__';
+    if(!groups[exp]){ groups[exp]=[]; _expOrder.push(exp); }
+    groups[exp].push(c);
+  });
+  content.innerHTML = _expOrder.map((exp,i)=>{
+    const cards = groups[exp];
+    const title = exp==='__none__' ? 'Sin experimento' : esc(exp);
+    const open = !collapsedExps.has(exp);
+    return `<section class="exp-group">
+      <button class="exp-head" onclick="toggleExp(${i})">
+        <span class="exp-name">${title}</span><span class="exp-count">${cards.length}</span>
+        <span class="exp-arrow">${open?'▴':'▾'}</span>
+      </button>
+      <div class="grid" style="${open?'':'display:none'}">${cards.map(card).join('')}</div>
+    </section>`;
+  }).join('');
   restorePanels();
   checkNotifications();
+}
+let _expOrder = [];
+const collapsedExps = new Set();
+function toggleExp(i){
+  const exp = _expOrder[i]; if(exp==null) return;
+  if(collapsedExps.has(exp)) collapsedExps.delete(exp); else collapsedExps.add(exp);
+  render();
 }
 
 function toggleTL(btn){
@@ -1247,7 +1288,7 @@ function cloneCross(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   openForm();
   document.getElementById('modalTitle').textContent = 'Nueva generación';
-  document.getElementById('name').value = c.name||'';
+  formExperiments = (c.experiments||[]).slice(); renderExpTags();
   document.getElementById('genotype').value = c.genotype;
   document.getElementById('objective').value = c.objective||'';
   document.getElementById('dissectStage').value = c.dissectStage||'l3';
@@ -1487,9 +1528,32 @@ function checkNotifications(){
 
 /* --- Autocompletado del campo Nombre (datalist nativo) a partir del historial --- */
 function populateDatalists(){
-  const names = [...new Set(crosses.map(c=>c.name).filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
-  const dl = document.getElementById('nameList');
-  if(dl) dl.innerHTML = names.map(v=>`<option value="${esc(v)}"></option>`).join('');
+  const exps = [...new Set(crosses.flatMap(c=>c.experiments||[]).filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  const dl = document.getElementById('expList');
+  if(dl) dl.innerHTML = exps.map(v=>`<option value="${esc(v)}"></option>`).join('');
+}
+/* --- Campo de Experimento(s) como etiquetas --- */
+let formExperiments = [];
+function renderExpTags(){
+  const box = document.getElementById('expBox'); if(!box) return;
+  const input = document.getElementById('expInput');
+  [...box.querySelectorAll('.tag-chip')].forEach(c=>c.remove());
+  formExperiments.forEach((t,i)=>{
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${esc(t)} <button type="button" onclick="removeExpTag(${i})" aria-label="quitar">✕</button>`;
+    box.insertBefore(chip, input);
+  });
+}
+function addExpTag(text){
+  text = String(text||'').trim();
+  if(text && !formExperiments.some(e=>e.toLowerCase()===text.toLowerCase())) formExperiments.push(text);
+  renderExpTags();
+}
+function removeExpTag(i){ formExperiments.splice(i,1); renderExpTags(); }
+function expInputKey(e){
+  if(e.key==='Enter' || e.key===','){ e.preventDefault(); addExpTag(e.target.value); e.target.value=''; }
+  else if(e.key==='Backspace' && !e.target.value && formExperiments.length){ removeExpTag(formExperiments.length-1); }
 }
 
 /* ============================================================
@@ -1696,7 +1760,7 @@ function openForm(id){
     const c = crosses.find(x=>x.id===id);
     document.getElementById('modalTitle').textContent='Editar cruza';
     document.getElementById('editId').value=c.id;
-    document.getElementById('name').value=c.name||'';
+    formExperiments = (c.experiments||[]).slice();
     document.getElementById('genotype').value=c.genotype;
     document.getElementById('objective').value=c.objective||'';
     document.getElementById('dissectStage').value=c.dissectStage||'l3';
@@ -1705,10 +1769,12 @@ function openForm(id){
   } else {
     document.getElementById('modalTitle').textContent='Nueva cruza';
     document.getElementById('editId').value='';
+    formExperiments = [];
     document.getElementById('crossDate').value = toLocalInput(new Date());
     document.getElementById('temp').value = 25;
     document.querySelector('#presets button[data-t="25"]').classList.add('on');
   }
+  document.getElementById('expInput').value=''; renderExpTags();
   onObjectiveChange();
   ov.classList.add('open');
 }
@@ -1731,8 +1797,9 @@ function saveCross(e){
   e.preventDefault();
   const id = document.getElementById('editId').value;
   const objective = document.getElementById('objective').value;
+  addExpTag(document.getElementById('expInput').value); document.getElementById('expInput').value=''; // capturar texto sin Enter
   const data = {
-    name: document.getElementById('name').value.trim(),
+    experiments: [...formExperiments],
     genotype: document.getElementById('genotype').value.trim(),
     objective,
     dissectStage: objective==='dissect' ? document.getElementById('dissectStage').value : null,
