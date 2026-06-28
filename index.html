@@ -220,6 +220,7 @@
   /* etiquetas de experimento en la tarjeta */
   .card-exps{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
   .exp-chip{font-size:.72rem;font-weight:700;color:var(--lav);background:var(--lav-soft);padding:2px 9px;border-radius:999px}
+  .obj-chip{color:#5b8fc7;background:var(--blue-soft)}
   .card-title{word-break:break-word}
   /* secciones colapsables por experimento */
   .exp-group{margin-bottom:24px}
@@ -665,7 +666,9 @@ function buildReminders(cross, st, now=new Date()){
     const next = st.bounds.find(b => b.start > st.elapsedDays);
     const hoursToNext = (st.nextBoundaryDays - st.elapsedDays)*24;
     if(st.stage.key === 'pupa'){
-      if(hoursToNext <= 48) push(`Eclosión en ${fmtH(hoursToNext)}`, 'warn', false, hoursToNext<=24);
+      /* TAREA (cruza genética): cuenta regresiva a la eclosión para recolectar vírgenes */
+      if(obj==='cross') push(`Recolectar vírgenes: eclosión en ${fmtH(hoursToNext)}`, 'action', true, hoursToNext<=24, 'virgenes-prep');
+      else if(hoursToNext <= 48) push(`Eclosión en ${fmtH(hoursToNext)}`, 'warn', false, hoursToNext<=24);
     } else if(next){
       if(hoursToNext <= 24) push(`Muda a ${next.short} en ${fmtH(hoursToNext)}`, 'warn', false, hoursToNext<=8);
     }
@@ -887,6 +890,14 @@ function tempColor(t){
   return 'linear-gradient(135deg,#f7c5b4,#f5a3a3)';
 }
 
+/* etiqueta legible del objetivo de la cruza */
+const OBJ_LABEL = { cross:'Cruza genética', amplify:'Amplificación de línea', stock:'Mantenimiento de stock', aging:'Cohorte de envejecimiento', dissect:'Disección larval' };
+function objLabel(cross){
+  if(!cross.objective) return '';
+  let l = OBJ_LABEL[cross.objective] || '';
+  if(cross.objective==='dissect' && cross.dissectStage) l += ` (${cross.dissectStage.toUpperCase()})`;
+  return l;
+}
 function card(cross){
   const st = computeState(cross);
   const reminders = buildReminders(cross, st);
@@ -919,7 +930,7 @@ function card(cross){
     <div class="card-top">
       <div>
         <div class="card-title">${esc(cross.genotype)}</div>
-        ${(cross.experiments&&cross.experiments.length)?`<div class="card-exps">${cross.experiments.map(e=>`<span class="exp-chip">${esc(e)}</span>`).join('')}</div>`:''}
+        ${objLabel(cross)?`<div class="card-exps"><span class="exp-chip obj-chip">${esc(objLabel(cross))}</span></div>`:''}
       </div>
       <div class="card-tools">
         <span class="temp-pill" style="background:${tempColor(cross.temp)}">${cross.temp} °C</span>
