@@ -223,6 +223,7 @@
   .card-exps{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
   .exp-chip{font-size:.72rem;font-weight:700;color:var(--lav);background:var(--lav-soft);padding:2px 9px;border-radius:999px}
   .obj-chip{color:#7c7990;background:#ebe9f0}
+  .card.planned{filter:grayscale(.92);opacity:.75;border:1.5px dashed #cfcbd9}
   .card-title{word-break:break-word}
   /* secciones colapsables por experimento */
   .exp-group{margin-bottom:24px}
@@ -491,6 +492,33 @@
     <div class="sub" style="margin-bottom:14px">¿Cuándo montar la cruza para llegar a un estadio en una fecha objetivo?</div>
     <form id="planForm" onsubmit="computePlan(event)">
       <div class="field">
+        <label for="planExp">Experimento(s)</label>
+        <input id="planExp" list="planExpList" autocomplete="off" placeholder="ej. Fenotipo del ojo (separá con comas)" />
+        <datalist id="planExpList"></datalist>
+      </div>
+      <div class="field">
+        <label for="planGeno">Genotipo</label>
+        <input id="planGeno" list="planGenoList" autocomplete="off" placeholder="ej. w[1118] ; UAS-GFP / CyO" />
+        <datalist id="planGenoList"></datalist>
+      </div>
+      <div class="field">
+        <label for="planObjective">Objetivo</label>
+        <select id="planObjective" onchange="onPlanObjChange()">
+          <option value="">— Sin objetivo específico</option>
+          <option value="cross">Cruza genética</option>
+          <option value="amplify">Amplificación de línea</option>
+          <option value="stock">Mantenimiento de stock</option>
+          <option value="aging">Cohorte de envejecimiento</option>
+          <option value="dissect">Disección larval</option>
+        </select>
+        <div id="planDissectRow" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+            <label style="margin:0;font-weight:700;font-size:.82rem;color:var(--ink-soft)">Estadio a disecar:</label>
+            <select id="planDissectStage" style="flex:none;width:auto;padding:8px 11px"><option value="l1">L1</option><option value="l2">L2</option><option value="l3" selected>L3</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="field">
         <label for="planStage">Quiero llegar a</label>
         <select id="planStage">
           <option value="egg">Embrión (puesta)</option>
@@ -627,6 +655,15 @@ function computeState(cross, now=new Date()){
   const total = totalDays(cross.temp);
   const bounds = stageBounds(cross.temp);
 
+  if(elapsedDays < 0){
+    /* cruza PLANIFICADA (fecha futura): todavía no se montó */
+    return {
+      planned:true, stageKey:'egg', stage:STAGES[0], elapsedDays, total, bounds,
+      isAdult:false, fraction:0, inStageDay:0, stageLen:bounds[0].end,
+      eclosionDate: addDays(start, total),
+      daysToCross: -elapsedDays, nextBoundaryDays: bounds[0].end,
+    };
+  }
   if(elapsedDays >= total){
     const adultAge = elapsedDays - total;            // días post-eclosión
     const adultLifespan = lifespanDays(cross.temp);
@@ -663,6 +700,10 @@ function buildReminders(cross, st, now=new Date()){
   const obj = cross.objective || '';
   const push = (t, c, task, pulse, key) => out.push({ t, c, task:!!task, pulse:!!pulse, key:key||null });
 
+  if(st.planned){
+    push(`Montar la cruza (en ${fmtH(st.daysToCross*24)})`, 'action', true, st.daysToCross<=1, 'montar');
+    return out;
+  }
   if(!st.isAdult){
     /* --- AVISOS de desarrollo (no son tareas) --- */
     const next = st.bounds.find(b => b.start > st.elapsedDays);
@@ -912,7 +953,9 @@ function card(cross){
   const ti = tempInfo(cross.temp);
   const start = parseCross(cross);
 
-  const dayLine = st.isAdult
+  const dayLine = st.planned
+    ? `<div class="day-line">Se monta en <b>${fmtH(st.daysToCross*24)}</b></div>`
+    : st.isAdult
     ? `<div class="day-line"><b>${Math.round(st.adultAge)}</b> días post-eclosión</div>`
     : `<div class="day-line">Día <b>${Math.round(st.elapsedDays)}</b> de ${Math.ceil(st.total)} · estadio ${st.stage.short}</div>`;
 
@@ -935,7 +978,7 @@ function card(cross){
     <div class="tl-body"><div class="tl-name">Eclosión → Adulto</div>
     <div class="tl-date">${fmtDT(eclDate)}${st.isAdult?` · día ${Math.floor(st.adultAge)} de envejecimiento`:''}</div></div></div>`;
 
-  return `<div class="card" id="card-${cross.id}">
+  return `<div class="card ${st.planned?'planned':''}" id="card-${cross.id}">
     <div class="card-top">
       <div>
         <div class="card-title">${esc(cross.genotype)}</div>
@@ -954,9 +997,9 @@ function card(cross){
       ${ring(st)}
       <div class="card-info">
         <span class="stage-badge" style="background:${st.stage.soft};color:${st.stage.txt}">
-          <span class="dot" style="background:${st.stage.txt}"></span>${st.stage.name}</span>
+          <span class="dot" style="background:${st.stage.txt}"></span>${st.planned?'Planificada':st.stage.name}</span>
         ${dayLine}
-        <div class="meta-row"><span class="k">Cruza</span><span class="v">${fmtDT(start)}</span></div>
+        <div class="meta-row"><span class="k">${st.planned?'Se monta':'Cruza'}</span><span class="v">${fmtDT(start)}</span></div>
         <div class="meta-row"><span class="k">${st.isAdult?'Eclosionó':'Eclosión est.'}</span><span class="v">${fmtDT(eclDate)}</span></div>
       </div>
     </div>
@@ -1410,6 +1453,10 @@ function toggleMenu(){ updateLabStatus(); document.getElementById('dataMenu').cl
 function closeMenu(){ document.getElementById('dataMenu').classList.remove('open'); }
 
 /* --- Planificación: agenda + cálculo inverso de cruzas --- */
+function onPlanObjChange(){
+  document.getElementById('planDissectRow').style.display =
+    document.getElementById('planObjective').value==='dissect' ? 'block' : 'none';
+}
 function openPlan(){
   renderAgenda();
   document.getElementById('planForm').reset();
@@ -1417,6 +1464,12 @@ function openPlan(){
   document.getElementById('planDate').value = toLocalInput(addDays(new Date(), 7));
   document.getElementById('planTemp').value = 25;
   document.getElementById('planResult').innerHTML = '';
+  onPlanObjChange();
+  // autocompletado de experimentos y genotipos
+  const exps = [...new Set(crosses.flatMap(c=>c.experiments||[]).filter(Boolean))];
+  document.getElementById('planExpList').innerHTML = exps.map(v=>`<option value="${esc(v)}"></option>`).join('');
+  const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  document.getElementById('planGenoList').innerHTML = genos.map(v=>`<option value="${esc(v)}"></option>`).join('');
   document.getElementById('planOverlay').classList.add('open');
 }
 function closePlan(){ document.getElementById('planOverlay').classList.remove('open'); }
@@ -1453,10 +1506,16 @@ function computePlan(e){
   </div>`;
 }
 function createFromPlan(dateStr, temp){
-  closePlan(); openForm();
-  document.getElementById('crossDate').value = dateStr;
-  document.getElementById('temp').value = temp;
-  document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on', b.dataset.t==String(temp)));
+  const genotype = document.getElementById('planGeno').value.trim();
+  if(!genotype){ alert('Escribí el genotipo para crear la cruza.'); return; }
+  const experiments = document.getElementById('planExp').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const objective = document.getElementById('planObjective').value;
+  const dissectStage = objective==='dissect' ? document.getElementById('planDissectStage').value : null;
+  crosses.push({
+    id:'c'+Date.now()+Math.random().toString(36).slice(2,5), parentsRemoved:false,
+    experiments, genotype, objective, dissectStage, crossDate:dateStr, temp,
+  });
+  save(crosses); closePlan(); render();
 }
 
 /* --- Notificaciones del navegador --- */
