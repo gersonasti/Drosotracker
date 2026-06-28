@@ -959,7 +959,7 @@ function card(cross){
     ? `<div class="day-line">Se monta en <b>${fmtH(st.daysToCross*24)}</b></div>`
     : st.isAdult
     ? `<div class="day-line"><b>${Math.round(st.adultAge)}</b> días post-eclosión</div>`
-    : `<div class="day-line">Día <b>${Math.round(st.elapsedDays)}</b> de ${Math.ceil(st.total)} · estadio ${st.stage.short}</div>`;
+    : `<div class="day-line">Día <b>${Math.round(st.elapsedDays)}</b> de ${Math.ceil(st.total)}</div>`;
 
   const remHtml = reminders.map(r=>
     `<span class="chip ${r.c}">${r.pulse?'<span class="pulse"></span>':''}${r.t}</span>`).join('');
