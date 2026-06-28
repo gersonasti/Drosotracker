@@ -885,15 +885,17 @@ function ring(st){
 }
 
 /* --- Render de una tarjeta --- */
-/* Escala de temperatura: 18°C frío (azul) → 29°C calor (naranja).
-   Interpola en RGB pasando por un gris cálido, para no parecerse a los
-   colores de los estadios (azul embrión, verde/amarillo larvas, durazno pupa). */
-function tempColor(t){
-  const f = Math.max(0, Math.min(1, (t-18)/(29-18)));
-  const cold=[63,131,201], warm=[237,138,60];
-  const ch = i => Math.round(cold[i] + (warm[i]-cold[i])*f);
-  const r=ch(0), g=ch(1), b=ch(2), d = v => Math.round(v*0.85);
-  return `linear-gradient(135deg, rgb(${r},${g},${b}), rgb(${d(r)},${d(g)},${d(b)}))`;
+/* Pastilla de temperatura: 18°C frío (azul) → 25°C claro/neutro → 29°C calor (naranja).
+   El medio es CLARO (no marrón); el texto se pone oscuro o blanco según el fondo,
+   para que siempre se lea. Los extremos quedan distintos de los colores de estadios. */
+function tempInfo(t){
+  const cold=[74,143,208], mid=[235,238,242], warm=[224,118,44];
+  const lerp = (a,b,k)=> a.map((v,i)=> Math.round(v + (b[i]-v)*k));
+  const c = t<=25 ? lerp(cold, mid, Math.max(0,(t-18)/7)) : lerp(mid, warm, Math.min(1,(t-25)/4));
+  const lum = 0.299*c[0] + 0.587*c[1] + 0.114*c[2];
+  const text = lum > 150 ? '#5b576f' : '#fff';
+  const d = v => Math.round(v*0.92);
+  return { bg:`linear-gradient(135deg, rgb(${c[0]},${c[1]},${c[2]}), rgb(${d(c[0])},${d(c[1])},${d(c[2])}))`, text };
 }
 
 /* etiqueta legible del objetivo de la cruza */
@@ -907,6 +909,7 @@ function objLabel(cross){
 function card(cross){
   const st = computeState(cross);
   const reminders = buildReminders(cross, st);
+  const ti = tempInfo(cross.temp);
   const start = parseCross(cross);
 
   const dayLine = st.isAdult
@@ -939,7 +942,7 @@ function card(cross){
         ${objLabel(cross)?`<div class="card-exps"><span class="exp-chip obj-chip">${esc(objLabel(cross))}</span></div>`:''}
       </div>
       <div class="card-tools">
-        <span class="temp-pill" style="background:${tempColor(cross.temp)}">${cross.temp} °C</span>
+        <span class="temp-pill" style="background:${ti.bg};color:${ti.text}">${cross.temp} °C</span>
         <button class="icon-btn edit" title="Editar" onclick="openForm('${cross.id}')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 6l4 4" stroke="currentColor" stroke-width="2"/></svg>
         </button>
