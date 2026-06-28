@@ -171,6 +171,8 @@
   .gen-btn:hover{background:#cdeee2;color:#3fae8c}
   .btn-row{display:flex;gap:8px;margin-top:10px}
   .btn-row .timeline-btn{flex:1;margin-top:0;padding:11px 8px;font-size:.83rem}
+  .timeline-btn:disabled{cursor:not-allowed}
+  .timeline-btn:disabled:hover{background:var(--mint-soft);color:#3fae8c}
   .timeline{max-height:0;overflow:hidden;transition:max-height .35s ease}
   .timeline.open{max-height:640px}
   .tl-inner{padding-top:14px}
@@ -1010,7 +1012,7 @@ function card(cross){
       ? `<button class="timeline-btn" style="margin-top:10px" onclick="markParents('${cross.id}')">✓ Marcar parentales retirados</button>` : ''}
 
     <div class="btn-row">
-      <button class="timeline-btn gen-btn" onclick="cloneCross('${cross.id}')" title="Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)">↪ Nueva generación</button>
+      <button class="timeline-btn gen-btn" ${st.planned ? 'disabled title="Disponible cuando se monte la cruza"' : `onclick="cloneCross('${cross.id}')" title="Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)"`}>↪ Nueva generación</button>
       <button class="timeline-btn" onclick="toggleTL(this)">Ver cronología ▾</button>
     </div>
     <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
@@ -1305,6 +1307,7 @@ function restorePanels(){
    pero como cruza NUEVA (reloj a cero — la fecha arranca en "ahora", editable). */
 function cloneCross(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
+  if(computeState(c).planned) return;  // "nueva generación" no aplica hasta montar la cruza
   openForm();
   document.getElementById('modalTitle').textContent = 'Nueva generación';
   formExperiments = (c.experiments||[]).slice(); renderExpTags();
