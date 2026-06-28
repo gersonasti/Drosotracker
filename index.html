@@ -415,6 +415,26 @@
         <div class="hint">Autocompleta con tu historial, la base del laboratorio y componentes comunes (CyO, UAS-GFP, elav-GAL4…). Empezá a escribir.</div>
       </div>
       <div class="field">
+        <label for="objective">Objetivo</label>
+        <select id="objective" onchange="onObjectiveChange()">
+          <option value="">— Sin objetivo específico</option>
+          <option value="cross">Cruza genética</option>
+          <option value="amplify">Amplificación de línea</option>
+          <option value="stock">Mantenimiento de stock</option>
+          <option value="aging">Cohorte de envejecimiento</option>
+          <option value="dissect">Disección larval</option>
+        </select>
+        <div id="dissectRow" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+            <label style="margin:0;font-weight:700;font-size:.82rem;color:var(--ink-soft)">Estadio a disecar:</label>
+            <select id="dissectStage" style="flex:none;width:auto;padding:8px 11px">
+              <option value="l1">L1</option><option value="l2">L2</option><option value="l3" selected>L3</option>
+            </select>
+          </div>
+        </div>
+        <div class="hint">De esto se desprenden las <b>tareas pendientes</b>. Opcional.</div>
+      </div>
+      <div class="field">
         <label for="crossDate">Fecha y hora de cruza *</label>
         <input id="crossDate" type="datetime-local" required />
         <div class="hint">Momento en que se montó la cruza (puesta de huevos). La hora afina los cálculos y la ventana de vírgenes.</div>
@@ -613,47 +633,60 @@ function computeState(cross, now=new Date()){
 function addDays(d, days){ return new Date(d.getTime() + days*86400000); }
 
 /* --- Recordatorios automáticos --- */
+/* Avisos (informativos, sólo chips en la tarjeta) y tareas (accionables, van al
+   panel de "Tareas pendientes"). Las tareas se desprenden del OBJETIVO de la cruza.
+   Cada item: { t, c, pulse, task } — task:true => aparece en el panel de tareas. */
 function buildReminders(cross, st, now=new Date()){
   const out = [];
-  const start = parseCross(cross);
+  const obj = cross.objective || '';
+  const push = (t, c, task, pulse) => out.push({ t, c, task:!!task, pulse:!!pulse });
 
   if(!st.isAdult){
-    // próxima transición
-    const next = st.bounds.find(b => b.start > st.elapsedDays) ;
+    /* --- AVISOS de desarrollo (no son tareas) --- */
+    const next = st.bounds.find(b => b.start > st.elapsedDays);
     const hoursToNext = (st.nextBoundaryDays - st.elapsedDays)*24;
     if(st.stage.key === 'pupa'){
-      if(hoursToNext <= 48) out.push({t:`Eclosión en ${fmtH(hoursToNext)}`, c:'warn', pulse:hoursToNext<=24});
+      if(hoursToNext <= 48) push(`Eclosión en ${fmtH(hoursToNext)}`, 'warn', false, hoursToNext<=24);
     } else if(next){
-      if(hoursToNext <= 24) out.push({t:`Muda a ${next.short} en ${fmtH(hoursToNext)}`, c:'warn', pulse:hoursToNext<=8});
+      if(hoursToNext <= 24) push(`Muda a ${next.short} en ${fmtH(hoursToNext)}`, 'warn', false, hoursToNext<=8);
     }
-    // retirar parentales: durante estadios larvales, si no se removieron
-    if(['l1','l2','l3'].includes(st.stage.key) && !cross.parentsRemoved){
-      out.push({t:'Retirar parentales pronto', c:'action'});
+    const larval = ['l1','l2','l3'].includes(st.stage.key);
+    /* TAREA: retirar parentales (cruza genética, amplificación o sin objetivo) */
+    if(larval && !cross.parentsRemoved && (obj==='cross' || obj==='amplify' || obj==='')){
+      push('Retirar parentales', 'action', true);
     }
-    // eclosión próxima (genérico)
-    const hoursToEcl = (st.total - st.elapsedDays)*24;
-    if(st.stage.key==='l3' && hoursToEcl <= 96){
-      out.push({t:`Preparar para eclosión (${fmtH(hoursToEcl)})`, c:'info'});
+    /* TAREA: disección larval cuando llega al estadio elegido */
+    if(obj==='dissect' && cross.dissectStage){
+      const order = ['egg','l1','l2','l3','pupa'];
+      const ci = order.indexOf(st.stage.key), ti = order.indexOf(cross.dissectStage);
+      if(ci===ti)    push(`Disecar larvas (${cross.dissectStage.toUpperCase()})`, 'action', true, true);
+      else if(ci<ti) push(`Próxima disección: ${cross.dissectStage.toUpperCase()}`, 'info', false);
     }
   } else {
-    out.push({t:'Adultos eclosionados', c:'success'});
-    // ventana de recolección de vírgenes (escala con temperatura)
-    const windowH = 8 * (st.total / REF_TOTAL); // ~8 h a 25°C, más a baja temp
-    const ageH = st.adultAge*24;
-    if(ageH < windowH){
-      out.push({t:`Recolectar vírgenes (${fmtH(windowH-ageH)})`, c:'action', pulse:true});
-    }
-    // envejecimiento: pasar a comida fresca según el último pase registrado
+    /* --- ADULTO --- */
+    push('Adultos eclosionados', 'success', false);
     const ageD = st.adultAge;
-    if(ageD >= 1){
+    /* TAREA: recolectar vírgenes (cruza genética; ventana que escala con la temperatura) */
+    if(obj==='cross'){
+      const windowH = 8 * (st.total / REF_TOTAL);
+      const ageH = ageD*24;
+      if(ageH < windowH) push(`Recolectar vírgenes (${fmtH(windowH-ageH)})`, 'action', true, true);
+    }
+    /* TAREA: amplificación → pasar adultos a botellas nuevas */
+    if(obj==='amplify') push('Pasar adultos a botellas nuevas', 'action', true);
+    /* TAREA: definir la cohorte de envejecimiento */
+    if(obj==='aging' && (!cross.aging || cross.aging.startN==null)){
+      push('Definir cohorte de envejecimiento', 'action', true);
+    }
+    /* TAREA: pasar a comida fresca cada 2-3 d (envejecimiento, stock o sin objetivo) */
+    if((obj==='aging' || obj==='stock' || obj==='') && ageD >= 1){
       const flips = (cross.aging && cross.aging.events || []).filter(e=>e.flipped).map(e=> new Date(e.date).getTime());
       const lastFlip = flips.length ? Math.max(...flips) : null;
       const daysSinceFlip = lastFlip ? (now - lastFlip)/86400000 : ageD;
-      if(daysSinceFlip >= 2){
-        out.push({t:'Pasar a comida fresca', c:'info'});
-      }
-      out.push({t:`Edad adulta: día ${Math.floor(ageD)}`, c:'success'});
+      if(daysSinceFlip >= 2) push('Pasar a comida fresca', 'action', true);
     }
+    /* AVISO: edad */
+    if(ageD >= 1) push(`Edad adulta: día ${Math.floor(ageD)}`, 'success', false);
   }
   return out;
 }
@@ -1060,7 +1093,7 @@ function renderTasks(){
   crosses.forEach(c=>{
     const st = computeState(c);
     buildReminders(c, st).forEach(r=>{
-      if(r.c==='action' || r.c==='warn' || /comida fresca/i.test(r.t)) tasks.push({c, r});
+      if(r.task) tasks.push({c, r});
     });
   });
   if(tasks.length===0){ el.innerHTML=''; return; }
@@ -1601,6 +1634,8 @@ function openForm(id){
     document.getElementById('editId').value=c.id;
     document.getElementById('name').value=c.name||'';
     document.getElementById('genotype').value=c.genotype;
+    document.getElementById('objective').value=c.objective||'';
+    document.getElementById('dissectStage').value=c.dissectStage||'l3';
     document.getElementById('crossDate').value = c.crossDate.includes('T') ? c.crossDate : c.crossDate + 'T09:00';
     document.getElementById('temp').value=c.temp;
   } else {
@@ -1610,9 +1645,15 @@ function openForm(id){
     document.getElementById('temp').value = 25;
     document.querySelector('#presets button[data-t="25"]').classList.add('on');
   }
+  onObjectiveChange();
   ov.classList.add('open');
 }
 function closeForm(){ document.getElementById('overlay').classList.remove('open'); }
+/* muestra el selector de estadio sólo si el objetivo es disección larval */
+function onObjectiveChange(){
+  const obj = document.getElementById('objective').value;
+  document.getElementById('dissectRow').style.display = obj==='dissect' ? 'block' : 'none';
+}
 
 document.getElementById('presets').addEventListener('click',e=>{
   if(e.target.dataset.t){
@@ -1625,9 +1666,12 @@ document.getElementById('presets').addEventListener('click',e=>{
 function saveCross(e){
   e.preventDefault();
   const id = document.getElementById('editId').value;
+  const objective = document.getElementById('objective').value;
   const data = {
     name: document.getElementById('name').value.trim(),
     genotype: document.getElementById('genotype').value.trim(),
+    objective,
+    dissectStage: objective==='dissect' ? document.getElementById('dissectStage').value : null,
     crossDate: document.getElementById('crossDate').value,
     temp: parseFloat(document.getElementById('temp').value),
   };
