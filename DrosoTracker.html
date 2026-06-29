@@ -376,6 +376,8 @@
     .ring-wrap{width:112px;height:112px}
     .stage-art svg{width:54px;height:54px}
     header .btn span.lbl{display:inline}
+    /* el menú de Datos se abre hacia la derecha y nunca se sale de la pantalla */
+    .menu-pop{left:0;right:auto;max-width:calc(100vw - 28px)}
   }
 </style>
 </head>
@@ -396,7 +398,7 @@
       <button class="btn ghost" id="notifBtn" onclick="toggleNotif()">🔔 Activar recordatorios</button>
       <button class="btn ghost" onclick="openPlan()">🗓 Planificar</button>
       <div class="menu">
-        <button class="btn ghost" onclick="toggleMenu()">⋯ Datos</button>
+        <button class="btn ghost" onclick="toggleMenu()">⇅ Datos</button>
         <div class="menu-pop" id="dataMenu">
           <button onclick="exportJSON()">⬇ Exportar backup (JSON)</button>
           <button onclick="document.getElementById('importFile').click()">⬆ Importar backup</button>
