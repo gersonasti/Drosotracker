@@ -156,7 +156,7 @@
     display:inline-flex;align-items:center;gap:6px;line-height:1;
   }
   .chip.warn{background:var(--peach-soft);color:#d98162}
-  .chip.action{background:var(--blue-soft);color:#5b8fc7}
+  .chip.action{background:#f7d3d3;color:#b73a3a}
   .chip.success{background:var(--mint-soft);color:#3fae8c}
   .chip.info{background:var(--lav-soft);color:#8a76c9}
   .chip .pulse{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.6s infinite}
@@ -205,8 +205,6 @@
   .task .tname{font-weight:700;font-size:.84rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .task .tgeno{font-size:.8rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
   .task .chip{margin-left:auto;flex:none}
-  /* el chip de cada tarea pendiente va en rojizo (atención), en vez del celeste */
-  .task:not(.done) .chip{background:#f7d3d3;color:#b73a3a}
   .tasks.alert{background:#fdeeee;border-color:#f4cccc}
   .tasks-head{width:100%;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'Poppins';font-weight:600;font-size:1rem;color:var(--ink);padding:0}
   .tasks-head .badge{background:var(--lav-soft);color:var(--lav);font-size:.75rem;padding:2px 9px;border-radius:999px;margin-left:8px}
@@ -938,7 +936,7 @@ function ring(st){
    El medio es CLARO (no marrón); el texto se pone oscuro o blanco según el fondo,
    para que siempre se lea. Los extremos quedan distintos de los colores de estadios. */
 function tempInfo(t){
-  const cold=[74,143,208], mid=[235,238,242], warm=[224,118,44];
+  const cold=[74,143,208], mid=[245,242,228], warm=[224,118,44];  // 25 °C: crema apenas amarillento
   const lerp = (a,b,k)=> a.map((v,i)=> Math.round(v + (b[i]-v)*k));
   const c = t<=25 ? lerp(cold, mid, Math.max(0,(t-18)/7)) : lerp(mid, warm, Math.min(1,(t-25)/4));
   const lum = 0.299*c[0] + 0.587*c[1] + 0.114*c[2];
