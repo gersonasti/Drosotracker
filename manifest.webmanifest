@@ -1,0 +1,16 @@
+{
+  "name": "DrosoTracker — Ciclo de vida de Drosophila",
+  "short_name": "DrosoTracker",
+  "description": "Seguimiento del ciclo de vida de Drosophila melanogaster: estadios, mudas, eclosión, tareas y recordatorios.",
+  "lang": "es",
+  "start_url": "DrosoTracker.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f5fc",
+  "theme_color": "#c9bdf0",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
