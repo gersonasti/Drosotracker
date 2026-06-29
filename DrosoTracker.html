@@ -92,7 +92,9 @@
   .stat .lbl{font-size:.82rem;color:var(--ink-soft);margin-top:2px}
 
   /* ---------- Cards grid ---------- */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:20px;align-items:start}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:20px;align-items:stretch}
+  /* mientras hay una cronología abierta, no estirar las vecinas (solo crece la abierta) */
+  .grid.tl-open{align-items:start}
 
   .card{
     background:var(--card);border-radius:var(--radius);padding:20px;
@@ -198,9 +200,9 @@
   .tasks h3{font-size:1rem;font-family:'Poppins';margin-bottom:12px;display:flex;align-items:center;gap:8px}
   .tasks h3 .badge{background:var(--lav-soft);color:var(--lav);font-size:.75rem;padding:2px 9px;border-radius:999px}
   .task-list{display:flex;flex-direction:column;gap:8px}
-  .task{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:var(--bg-1);cursor:pointer;transition:background .12s}
-  .task:hover{background:var(--lav-soft)}
-  .task .tname{font-weight:700;font-size:.84rem;max-width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:none}
+  .task{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:#fdeeee;border:1px solid #f4cccc;cursor:pointer;transition:background .12s}
+  .task:hover{background:#fbe0e0}
+  .task .tname{font-weight:700;font-size:.84rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .task .tgeno{font-size:.8rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
   .task .chip{margin-left:auto;flex:none}
   .tasks.alert{background:#fdeeee;border-color:#f4cccc}
@@ -210,7 +212,7 @@
   .tasks-arrow{color:var(--ink-soft);font-size:.85rem;font-weight:700}
   .task-list{margin-top:12px}
   .task-check{width:18px;height:18px;flex:none;cursor:pointer;accent-color:#7fcfb5}
-  .task.done{opacity:.6;cursor:default}
+  .task.done{opacity:.6;cursor:default;background:var(--bg-1);border-color:var(--line)}
   .task.done .tname,.task.done .tgeno{text-decoration:line-through}
   .task.done .chip{filter:grayscale(.35)}
   .task-del{flex:none;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:.85rem;line-height:1;padding:3px 5px;border-radius:7px}
@@ -700,10 +702,12 @@ function addDays(d, days){ return new Date(d.getTime() + days*86400000); }
 function buildReminders(cross, st, now=new Date()){
   const out = [];
   const obj = cross.objective || '';
-  const push = (t, c, task, pulse, key) => out.push({ t, c, task:!!task, pulse:!!pulse, key:key||null });
+  /* urgency = horas hasta que toca hacer la tarea (menor = más urgente; 0 = hacer ya).
+     Se usa para ordenar el panel de "Tareas pendientes" de más a menos urgente. */
+  const push = (t, c, task, pulse, key, urgency=0) => out.push({ t, c, task:!!task, pulse:!!pulse, key:key||null, urgency });
 
   if(st.planned){
-    push(`Montar la cruza (en ${fmtH(st.daysToCross*24)})`, 'action', true, st.daysToCross<=1, 'montar');
+    push(`Montar la cruza (en ${fmtH(st.daysToCross*24)})`, 'action', true, st.daysToCross<=1, 'montar', st.daysToCross*24);
     return out;
   }
   if(!st.isAdult){
@@ -712,7 +716,7 @@ function buildReminders(cross, st, now=new Date()){
     const hoursToNext = (st.nextBoundaryDays - st.elapsedDays)*24;
     if(st.stage.key === 'pupa'){
       /* TAREA (cruza genética): cuenta regresiva a la eclosión para recolectar vírgenes */
-      if(obj==='cross') push(`Recolectar vírgenes: eclosión en ${fmtH(hoursToNext)}`, 'action', true, hoursToNext<=24, 'virgenes-prep');
+      if(obj==='cross') push(`Recolectar vírgenes: eclosión en ${fmtH(hoursToNext)}`, 'action', true, hoursToNext<=24, 'virgenes-prep', hoursToNext);
       else if(hoursToNext <= 48) push(`Eclosión en ${fmtH(hoursToNext)}`, 'warn', false, hoursToNext<=24);
     } else if(next){
       if(hoursToNext <= 24) push(`Muda a ${next.short} en ${fmtH(hoursToNext)}`, 'warn', false, hoursToNext<=8);
@@ -743,7 +747,7 @@ function buildReminders(cross, st, now=new Date()){
     if(obj==='amplify') push('Pasar adultos a botellas nuevas', 'action', true, false, 'botellas');
     /* TAREA: definir la cohorte de envejecimiento */
     if(obj==='aging' && (!cross.aging || cross.aging.startN==null)){
-      push('Definir cohorte de envejecimiento', 'action', true, false, 'cohorte');
+      push('Definir cohorte de envejecimiento', 'action', true, false, 'cohorte', 1e6);
     }
     /* TAREA: pasar a comida fresca cada 2-3 d (envejecimiento, stock o sin objetivo) */
     if((obj==='aging' || obj==='stock' || obj==='') && ageD >= 1){
@@ -1192,21 +1196,21 @@ function renderTasks(){
       }
     });
   });
-  const order={warn:0, action:1, info:2, success:3};
-  const pending = live.filter(t=> !done[t.id]).sort((a,b)=> (order[a.r.c]??9)-(order[b.r.c]??9));
+  // orden: más urgente arriba (menor "urgency" = antes); empates por orden de cruza
+  const pending = live.filter(t=> !done[t.id]).sort((a,b)=> (a.r.urgency??9e9)-(b.r.urgency??9e9));
   const doneList = Object.keys(done).map(id=>({id, ...done[id]})).sort((a,b)=> b.doneAt-a.doneAt);
 
   const alert = pending.length>0 && !tasksPanelOpen;   // rojo pastel sólo cuando está cerrado y hay tareas
-  const rowName = (name,geno)=> `${name?`<span class="tname">${esc(name)}</span>`:''}<span class="tgeno">${esc(geno)}</span>`;
+  const rowName = (geno)=> `<span class="tname">${esc(geno)}</span>`;  // el genotipo identifica la cruza
   const pendingHTML = pending.map(t=>`
     <div class="task" onclick="scrollToCard('${t.crossId}')">
-      ${rowName(t.name,t.genotype)}
+      ${rowName(t.genotype)}
       <span class="chip ${t.r.c}">${t.r.pulse?'<span class="pulse"></span>':''}${esc(t.r.t)}</span>
       <input type="checkbox" class="task-check" title="Marcar como hecha" onclick="event.stopPropagation();markTaskDone('${t.id}')" />
     </div>`).join('');
   const doneHTML = doneList.map(d=>`
     <div class="task done">
-      ${rowName(d.name,d.genotype)}
+      ${rowName(d.genotype)}
       <span class="chip ${d.c}">${esc(d.text)}</span>
       <input type="checkbox" class="task-check" checked title="Desmarcar" onclick="unmarkTask('${d.id}')" />
       <button class="task-del" title="Quitar" onclick="deleteTask('${d.id}')">✕</button>
@@ -1281,6 +1285,12 @@ function toggleTL(btn){
   const card = btn.closest('.card');
   const id = card ? card.id.replace('card-','') : null;
   if(id){ if(open) openTLIds.add(id); else openTLIds.delete(id); }
+  updateGridAlign();
+}
+/* Marca las grillas que tienen una cronología abierta para que NO estiren las vecinas.
+   Sin cronologías abiertas, la grilla vuelve a "stretch" y todas las tarjetas igualan altura. */
+function updateGridAlign(){
+  document.querySelectorAll('.grid').forEach(g=> g.classList.toggle('tl-open', !!g.querySelector('.timeline.open')));
 }
 const openAgingIds = new Set();
 const openTLIds = new Set();
@@ -1302,6 +1312,7 @@ function restorePanels(){
     const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>b.textContent.includes('cronología'));
     if(btn){ card.querySelector('.timeline').classList.add('open'); btn.textContent='Ocultar cronología ▴'; }
   });
+  updateGridAlign();
 }
 /* Nueva generación: form pre-cargado con el mismo genotipo/objetivo/temperatura,
    pero como cruza NUEVA (reloj a cero — la fecha arranca en "ahora", editable). */
