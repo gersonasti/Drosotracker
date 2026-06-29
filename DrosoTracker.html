@@ -200,11 +200,13 @@
   .tasks h3{font-size:1rem;font-family:'Poppins';margin-bottom:12px;display:flex;align-items:center;gap:8px}
   .tasks h3 .badge{background:var(--lav-soft);color:var(--lav);font-size:.75rem;padding:2px 9px;border-radius:999px}
   .task-list{display:flex;flex-direction:column;gap:8px}
-  .task{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:#fdeeee;border:1px solid #f4cccc;cursor:pointer;transition:background .12s}
-  .task:hover{background:#fbe0e0}
+  .task{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:var(--bg-1);cursor:pointer;transition:background .12s}
+  .task:hover{background:var(--lav-soft)}
   .task .tname{font-weight:700;font-size:.84rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .task .tgeno{font-size:.8rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
   .task .chip{margin-left:auto;flex:none}
+  /* el chip de cada tarea pendiente va en rojizo (atención), en vez del celeste */
+  .task:not(.done) .chip{background:#f7d3d3;color:#b73a3a}
   .tasks.alert{background:#fdeeee;border-color:#f4cccc}
   .tasks-head{width:100%;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'Poppins';font-weight:600;font-size:1rem;color:var(--ink);padding:0}
   .tasks-head .badge{background:var(--lav-soft);color:var(--lav);font-size:.75rem;padding:2px 9px;border-radius:999px;margin-left:8px}
@@ -212,7 +214,7 @@
   .tasks-arrow{color:var(--ink-soft);font-size:.85rem;font-weight:700}
   .task-list{margin-top:12px}
   .task-check{width:18px;height:18px;flex:none;cursor:pointer;accent-color:#7fcfb5}
-  .task.done{opacity:.6;cursor:default;background:var(--bg-1);border-color:var(--line)}
+  .task.done{opacity:.6;cursor:default}
   .task.done .tname,.task.done .tgeno{text-decoration:line-through}
   .task.done .chip{filter:grayscale(.35)}
   .task-del{flex:none;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:.85rem;line-height:1;padding:3px 5px;border-radius:7px}
