@@ -51,7 +51,9 @@ export async function onRequestPost({ request, env }) {
   const payload = {
     system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
     contents,
-    generationConfig: { temperature: 0.4, maxOutputTokens: 1400 },
+    // thinkingBudget:0 apaga el "pensamiento" interno de Gemini 2.5 Flash (que consumía
+    // el presupuesto de texto y cortaba la respuesta); más rápido y respuestas completas.
+    generationConfig: { temperature: 0.4, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } },
   };
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
