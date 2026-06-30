@@ -379,6 +379,39 @@
     /* el menú de Datos se abre hacia la derecha y nunca se sale de la pantalla */
     .menu-pop{left:0;right:auto;max-width:calc(100vw - 28px)}
   }
+
+  /* ===== Asistente de cruzas (chat con IA) ===== */
+  .chat-fab{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;align-items:center;gap:8px;
+    border:none;cursor:pointer;padding:12px 16px;border-radius:999px;font-family:'Poppins';font-weight:600;font-size:.9rem;color:#fff;
+    background:linear-gradient(135deg,var(--lav),var(--mint));box-shadow:var(--shadow)}
+  .chat-fab:hover{filter:brightness(1.05)}
+  .chat-fab svg{width:20px;height:20px}
+  .chat-panel{position:fixed;right:18px;bottom:18px;z-index:201;width:min(390px,94vw);height:min(560px,78vh);
+    display:none;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:20px;
+    box-shadow:var(--shadow);overflow:hidden}
+  .chat-panel.open{display:flex}
+  .chat-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;
+    background:linear-gradient(135deg,var(--lav-soft),var(--mint-soft));border-bottom:1px solid var(--line)}
+  .chat-head .ct{font-family:'Poppins';font-weight:600;font-size:.95rem;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .chat-head .cx{border:none;background:none;cursor:pointer;font-size:1.05rem;color:var(--ink-soft);padding:4px}
+  .chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg-1)}
+  .chat-msg{max-width:86%;padding:10px 13px;border-radius:14px;font-size:.88rem;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+  .chat-msg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:5px}
+  .chat-msg.me{align-self:flex-end;background:var(--lav-soft);color:var(--ink);border-bottom-right-radius:5px}
+  .chat-msg.err{align-self:flex-start;background:#fdeeee;border:1px solid #f4cccc;color:#b73a3a}
+  .chat-msg b{font-weight:700}
+  .chat-typing{align-self:flex-start;color:var(--ink-soft);font-size:.85rem;font-style:italic;padding:2px 6px}
+  .chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--card)}
+  .chat-input textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px 12px;
+    font-family:'Nunito';font-size:.88rem;color:var(--ink);max-height:90px;outline:none}
+  .chat-input textarea:focus{border-color:var(--lav)}
+  .chat-send{border:none;cursor:pointer;border-radius:12px;padding:0 15px;font-size:1rem;color:#fff;
+    background:linear-gradient(135deg,var(--lav),var(--mint))}
+  .chat-send:disabled{opacity:.5;cursor:default}
+  @media (max-width:560px){
+    .chat-panel{right:0;bottom:0;width:100vw;height:82vh;border-radius:20px 20px 0 0}
+    .chat-fab{right:14px;bottom:14px}
+  }
 </style>
 </head>
 <body>
@@ -1981,6 +2014,90 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   });
 }
+</script>
+
+<!-- ===== Asistente de cruzas (IA) ===== -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" title="Asistente de cruzas con IA">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9.5L5 21v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="#fff" opacity=".92"/></svg>
+  <span>Asistente</span>
+</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head">
+    <div class="ct">🧬 Asistente de cruzas</div>
+    <button class="cx" onclick="toggleChat()" title="Cerrar">✕</button>
+  </div>
+  <div class="chat-msgs" id="chatMsgs"></div>
+  <div class="chat-input">
+    <textarea id="chatInput" rows="1" placeholder="Ej: quiero expresar UAS-Atg8 en neuronas…" onkeydown="chatKey(event)"></textarea>
+    <button class="chat-send" id="chatSend" onclick="sendChat()" title="Enviar">➤</button>
+  </div>
+</div>
+<script>
+/* Asistente de cruzas con IA: manda el historial a /api/chat (función de Cloudflare → Gemini). */
+const chatHistory = [];
+let chatBusy = false;
+function toggleChat(){
+  const p = document.getElementById('chatPanel');
+  const open = p.classList.toggle('open');
+  document.getElementById('chatFab').style.display = open ? 'none' : 'flex';
+  if(open){
+    if(!chatHistory.length){
+      addChatMsg('bot', '¡Hola! Soy tu asistente de cruzas de *Drosophila*. Contame qué objetivo querés lograr (por ej. expresar un transgén UAS en cierto tejido) y te propongo el esquema de cruza. Cuantos más datos me des de tus stocks y genotipos, mejor.');
+    }
+    document.getElementById('chatInput').focus();
+  }
+}
+function chatKey(e){ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } }
+function chatEsc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function chatFmt(s){ return chatEsc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>'); }
+function addChatMsg(role, text){
+  const box = document.getElementById('chatMsgs');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + (role === 'me' ? 'me' : role === 'err' ? 'err' : 'bot');
+  div.innerHTML = chatFmt(text);
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+async function sendChat(){
+  if(chatBusy) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = ''; input.style.height = 'auto';
+  addChatMsg('me', text);
+  chatHistory.push({ role:'user', text });
+  chatBusy = true;
+  const sendBtn = document.getElementById('chatSend');
+  sendBtn.disabled = true;
+  const box = document.getElementById('chatMsgs');
+  const typing = document.createElement('div');
+  typing.className = 'chat-typing'; typing.textContent = 'pensando…';
+  box.appendChild(typing); box.scrollTop = box.scrollHeight;
+  try{
+    const r = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ messages: chatHistory.slice(-16) }),
+    });
+    if(!r.ok){
+      addChatMsg('err', r.status === 404
+        ? 'El asistente solo funciona en la versión publicada online (con la clave configurada), no en el archivo local.'
+        : 'El asistente no está disponible (error ' + r.status + ').');
+    } else {
+      const data = await r.json();
+      if(data.error){ addChatMsg('err', data.error); }
+      else { addChatMsg('bot', data.text); chatHistory.push({ role:'assistant', text: data.text }); }
+    }
+  }catch(e){
+    addChatMsg('err', 'No pude conectar con el asistente. Probá de nuevo en un momento.');
+  }finally{
+    typing.remove();
+    chatBusy = false; sendBtn.disabled = false; input.focus();
+  }
+}
+document.getElementById('chatInput').addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 90) + 'px';
+});
 </script>
 </body>
 </html>
