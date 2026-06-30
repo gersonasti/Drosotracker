@@ -29,7 +29,7 @@ function json(obj, status = 200) {
 }
 
 export async function onRequestPost({ request, env }) {
-  const key = env.GEMINI_API_KEY;
+  const key = (env.GEMINI_API_KEY || '').trim();  // .trim() por si la clave trae espacios/saltos al copiar
   if (!key) {
     return json({ error: 'Falta configurar la clave GEMINI_API_KEY en Cloudflare (Settings → Variables and Secrets).' });
   }
