@@ -9,3 +9,6 @@
 # Backups y exportaciones de datos del usuario (no van al repo)
 drosotracker-backup*.json
 drosotracker-*.csv
+
+# Documento de trabajo interno (no se despliega al sitio público)
+DrosoTracker-funcionalidades.md
