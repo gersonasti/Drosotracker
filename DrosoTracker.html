@@ -2208,7 +2208,7 @@ setInterval(autoRender, 60000);
   const tip = document.createElement('div');
   tip.className = 'tip';
   document.body.appendChild(tip);
-  let pressTimer = null, longPressed = false, lastTouch = 0, hoverTimer = null, hideTimer = null, startX = 0, startY = 0;
+  let pressTimer = null, longPressed = false, lastTouch = 0, hoverTimer = null, hideTimer = null, startX = 0, startY = 0, pressEl = null, moved = false;
   function show(el){
     const txt = el.getAttribute('data-tip'); if(!txt) return;
     clearTimeout(hideTimer);
@@ -2236,31 +2236,33 @@ setInterval(autoRender, 60000);
   document.addEventListener('mouseout', e=>{
     const el = e.target.closest('[data-tip]'); if(el && !el.contains(e.relatedTarget)) hide();
   });
-  // Touch: mantener apretado. Se muestra por la primera de dos vías que dispare el
-  // dispositivo: un temporizador propio (~0,4 s) y, sobre todo, el evento `contextmenu`
-  // que el navegador lanza al detectar el long-press (la vibración) — clave en Android.
+  // Touch: mantener apretado. Android "se roba" el gesto del long-press (vibra y suele
+  // disparar touchcancel), así que mostramos el tooltip por CUALQUIERA de estas vías:
+  //  (a) temporizador propio (~0,5 s) → funciona en iOS/Safari;
+  //  (b) touchcancel del navegador → es la señal del long-press en Android;
+  //  (c) evento contextmenu, si el navegador lo lanza.
+  // Un scroll real (movimiento > 12px) lo cancela; el temblor del dedo no.
+  function longShow(){ if(pressEl && !moved){ longPressed = true; show(pressEl); scheduleHide(3000); } }
   document.addEventListener('touchstart', e=>{
-    lastTouch = Date.now(); clearTimeout(pressTimer); longPressed = false;
-    const el = e.target.closest('[data-tip]');
-    if(el){
+    lastTouch = Date.now(); clearTimeout(pressTimer); longPressed = false; moved = false;
+    pressEl = e.target.closest('[data-tip]');
+    if(pressEl){
       const tch = e.touches[0]; startX = tch.clientX; startY = tch.clientY;
-      pressTimer = setTimeout(()=>{ longPressed = true; show(el); scheduleHide(2500); }, 400);
+      pressTimer = setTimeout(longShow, 500);
     }
   }, {passive:true});
-  function endTouch(){ lastTouch = Date.now(); clearTimeout(pressTimer); if(tip.classList.contains('show')) scheduleHide(2000); }
-  document.addEventListener('touchend', endTouch);
-  document.addEventListener('touchcancel', endTouch);
-  document.addEventListener('touchmove', e=>{                    // solo un scroll real (>12px) cancela; ignora el temblor del dedo
+  document.addEventListener('touchmove', e=>{
     const tch = e.touches[0];
-    if(tch && (Math.abs(tch.clientX-startX) > 12 || Math.abs(tch.clientY-startY) > 12)){ clearTimeout(pressTimer); hide(); }
+    if(tch && (Math.abs(tch.clientX-startX) > 12 || Math.abs(tch.clientY-startY) > 12)){ moved = true; clearTimeout(pressTimer); hide(); }
   }, {passive:true});
-  // El long-press dispara `contextmenu`: cancelamos el menú del sistema y mostramos el
-  // tooltip justo cuando el navegador detecta el mantener apretado (funciona en Android).
+  document.addEventListener('touchend', ()=>{ lastTouch = Date.now(); clearTimeout(pressTimer); pressEl = null; if(tip.classList.contains('show')) scheduleHide(2000); });
+  document.addEventListener('touchcancel', ()=>{ lastTouch = Date.now(); clearTimeout(pressTimer); longShow(); pressEl = null; });
   document.addEventListener('contextmenu', e=>{
-    const el = e.target.closest('[data-tip]'); if(!el) return;
-    e.preventDefault();
-    clearTimeout(pressTimer); show(el); scheduleHide(2500);
-    if(Date.now()-lastTouch < 1200) longPressed = true;         // solo en touch: no activar el botón al soltar
+    if(!e.target.closest('[data-tip]')) return;
+    e.preventDefault();                                  // sin menú del sistema
+    if(!pressEl) pressEl = e.target.closest('[data-tip]');
+    longShow();
+    if(Date.now()-lastTouch < 1200) longPressed = true;  // solo en touch: no activar el botón al soltar
   });
   // Un tooltip abierto por long-press NO debe activar el botón
   document.addEventListener('click', e=>{ hide(); if(longPressed){ longPressed = false; e.preventDefault(); e.stopPropagation(); } }, true);
