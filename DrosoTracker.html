@@ -413,6 +413,14 @@
     .chat-panel{right:0;bottom:0;width:100vw;height:82vh;border-radius:20px 20px 0 0}
     .chat-fab{right:14px;bottom:14px}
   }
+  /* Tooltips propios: hover en desktop, mantener apretado en touch (funcionan en ambos) */
+  .tip{position:fixed;z-index:9999;max-width:min(280px,86vw);background:#2f2b45;color:#fff;
+    font-size:.8rem;line-height:1.38;font-weight:500;padding:9px 12px;border-radius:11px;
+    box-shadow:0 10px 28px rgba(31,27,54,.28);pointer-events:none;opacity:0;transform:translateY(4px);
+    transition:opacity .12s ease,transform .12s ease;left:0;top:0}
+  .tip.show{opacity:1;transform:translateY(0)}
+  /* al mantener apretado, evitar el resaltado/selección del sistema en los botones con tooltip */
+  [data-tip]{-webkit-touch-callout:none}
 </style>
 </head>
 <body>
@@ -429,29 +437,29 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn ghost" id="notifBtn" onclick="toggleNotif()">🔔 Activate reminders</button>
-      <button class="btn ghost" onclick="openPlan()" data-i18n="hdr.plan">🗓 Plan</button>
+      <button class="btn ghost" id="notifBtn" onclick="toggleNotif()" data-tip-key="tip.notif">🔔 Activate reminders</button>
+      <button class="btn ghost" onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">🗓 Plan</button>
       <div class="menu">
-        <button class="btn ghost" onclick="toggleMenu()" data-i18n="hdr.data">⇅ Data</button>
+        <button class="btn ghost" onclick="toggleMenu()" data-i18n="hdr.data" data-tip-key="tip.data">⇅ Data</button>
         <div class="menu-pop" id="dataMenu">
-          <button onclick="exportJSON()" data-i18n="menu.exportBackup">⬇ Export backup (JSON)</button>
-          <button onclick="document.getElementById('importFile').click()" data-i18n="menu.importBackup">⬆ Import backup</button>
-          <button onclick="exportSurvivalCSV()" data-i18n="menu.exportSurvival">📊 Export survival (CSV)</button>
+          <button onclick="exportJSON()" data-i18n="menu.exportBackup" data-tip-key="tip.exportBackup">⬇ Export backup (JSON)</button>
+          <button onclick="document.getElementById('importFile').click()" data-i18n="menu.importBackup" data-tip-key="tip.importBackup">⬆ Import backup</button>
+          <button onclick="exportSurvivalCSV()" data-i18n="menu.exportSurvival" data-tip-key="tip.exportSurvival">📊 Export survival (CSV)</button>
           <div class="menu-sep"></div>
-          <button onclick="document.getElementById('labFile').click()" data-i18n="menu.importLab" data-i18n-title="menu.importLabTitle" title="If your database is in Excel, export it as CSV (Save as → CSV)">🧬 Import lab genotype database</button>
+          <button onclick="document.getElementById('labFile').click()" data-i18n="menu.importLab" data-tip-key="tip.importLab">🧬 Import lab genotype database</button>
           <div class="menu-fmt" data-i18n="menu.fmt">.csv · .tab · .tsv</div>
           <div id="labStatus"></div>
         </div>
       </div>
       <div class="menu">
-        <button class="btn ghost" onclick="toggleSettings()" data-i18n-title="hdr.settings" title="Settings" style="padding:12px 14px">⚙️</button>
+        <button class="btn ghost" onclick="toggleSettings()" data-tip-key="tip.settings" style="padding:12px 14px">⚙️</button>
         <div class="menu-pop" id="settingsPop">
           <div class="menu-fmt" data-i18n="set.language">Language</div>
           <button onclick="setLang('en')" data-i18n="set.english">English</button>
           <button onclick="setLang('es')" data-i18n="set.spanish">Español</button>
         </div>
       </div>
-      <button class="btn" onclick="openForm()">
+      <button class="btn" onclick="openForm()" data-tip-key="tip.newCross">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
         <span class="lbl" data-i18n="hdr.newCross">New cross</span>
       </button>
@@ -674,6 +682,9 @@ const I18N = {
     'menu.exportSurvival':'📊 Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv',
     'set.language':'Language','set.english':'English','set.spanish':'Español',
+    'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set up a cross to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Register a new cross: genotype, date and incubation temperature.',
+    'tip.exportBackup':'Download all your crosses as a JSON file (backup or move to another device).','tip.importBackup':'Load crosses from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
+    'tip.edit':'Edit this cross.','tip.delete':'Delete this cross.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the cross has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active crosses','stat.nextEcl':'next eclosion',
     'tasks.title':'📋 Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
     'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.',
@@ -743,6 +754,9 @@ const I18N = {
     'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv',
     'set.language':'Idioma','set.english':'English','set.spanish':'Español',
+    'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montar una cruza para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Registrá una cruza nueva: genotipo, fecha y temperatura de incubación.',
+    'tip.exportBackup':'Descargá todas tus cruzas como archivo JSON (backup o pasarlas a otro dispositivo).','tip.importBackup':'Cargá cruzas desde un backup JSON (reemplaza las actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
+    'tip.edit':'Editar esta cruza.','tip.delete':'Eliminar esta cruza.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte la cruza.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'cruzas activas','stat.nextEcl':'próxima eclosión',
     'tasks.title':'📋 Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
     'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10 °C · ~148 grados-día). Tiempos estimados · Datos guardados localmente en tu navegador.',
@@ -809,6 +823,7 @@ function applyStaticI18n(){
   document.querySelectorAll('[data-i18n-html]').forEach(el=> el.innerHTML = t(el.getAttribute('data-i18n-html')));
   document.querySelectorAll('[data-i18n-ph]').forEach(el=> el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))));
   document.querySelectorAll('[data-i18n-title]').forEach(el=> el.setAttribute('title', t(el.getAttribute('data-i18n-title'))));
+  document.querySelectorAll('[data-tip-key]').forEach(el=> el.setAttribute('data-tip', t(el.getAttribute('data-tip-key'))));
   document.title = t('doc.title');
 }
 function toggleSettings(){ document.getElementById('settingsPop').classList.toggle('open'); }
@@ -1207,10 +1222,10 @@ function card(cross){
       </div>
       <div class="card-tools">
         <span class="temp-pill" style="background:${ti.bg};color:${ti.text}">${cross.temp} °C</span>
-        <button class="icon-btn edit" title="${t('card.edit')}" onclick="openForm('${cross.id}')">
+        <button class="icon-btn edit" data-tip="${esc(t('tip.edit'))}" onclick="openForm('${cross.id}')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 6l4 4" stroke="currentColor" stroke-width="2"/></svg>
         </button>
-        <button class="icon-btn" title="${t('card.delete')}" onclick="delCross('${cross.id}')">✕</button>
+        <button class="icon-btn" data-tip="${esc(t('tip.delete'))}" onclick="delCross('${cross.id}')">✕</button>
       </div>
     </div>
 
@@ -1228,11 +1243,11 @@ function card(cross){
     <div class="reminders">${remHtml}</div>
 
     ${(['l1','l2','l3'].includes(st.stageKey) && !cross.parentsRemoved)
-      ? `<button class="timeline-btn" style="margin-top:10px" onclick="markParents('${cross.id}')">${t('card.markParents')}</button>` : ''}
+      ? `<button class="timeline-btn" style="margin-top:10px" onclick="markParents('${cross.id}')" data-tip="${esc(t('tip.markParents'))}">${t('card.markParents')}</button>` : ''}
 
     <div class="btn-row">
-      <button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${t('card.newGenDisabled')}"` : `onclick="cloneCross('${cross.id}')" title="${t('card.newGenTitle')}"`}>${t('card.newGen')}</button>
-      <button class="timeline-btn" onclick="toggleTL(this)">${t('card.viewTimeline')}</button>
+      <button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>
+      <button class="timeline-btn" onclick="toggleTL(this)" data-tip="${esc(t('tip.timeline'))}">${t('card.viewTimeline')}</button>
     </div>
     <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
 
@@ -1348,7 +1363,7 @@ function agingPanel(cross, st){
       <button class="mini-btn" style="margin-top:12px;width:100%" onclick="openAging('${cross.id}')">${t('aging.addRecord')}</button>
       <button class="mini-btn" style="margin-top:8px;width:100%;background:var(--mint-soft);color:#3fae8c" onclick="exportCohortCSV('${cross.id}')">${t('aging.exportCohort')}</button>`;
   }
-  return `<button class="timeline-btn" onclick="toggleAging('${cross.id}', this)">${t('aging.toggle')}</button>
+  return `<button class="timeline-btn" onclick="toggleAging('${cross.id}', this)" data-tip="${esc(t('tip.aging'))}">${t('aging.toggle')}</button>
     <div class="aging-panel"><div class="aging-inner">${body}</div></div>`;
 }
 
@@ -2186,6 +2201,52 @@ updateLabStatus();
 rebuildAutocompleteCache();
 render();
 setInterval(autoRender, 60000);
+
+/* ---- Tooltips propios: hover (desktop) o mantener apretado (touch) ----
+   Leen el texto de data-tip (ya traducido); funcionan en cualquier dispositivo. */
+(function(){
+  const tip = document.createElement('div');
+  tip.className = 'tip';
+  document.body.appendChild(tip);
+  let pressTimer = null, longPressed = false, lastTouch = 0;
+  function show(el){
+    const txt = el.getAttribute('data-tip'); if(!txt) return;
+    tip.textContent = txt;
+    const r = el.getBoundingClientRect();
+    const tr = tip.getBoundingClientRect();
+    let left = r.left + r.width/2 - tr.width/2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tr.width - 8));
+    let top = r.top - tr.height - 9;
+    if(top < 6) top = r.bottom + 9;                    // si no entra arriba, aparece abajo
+    tip.style.left = Math.round(left) + 'px';
+    tip.style.top  = Math.round(top) + 'px';
+    tip.classList.add('show');
+  }
+  function hide(){ tip.classList.remove('show'); }
+  // Desktop: hover (ignora los mouse "fantasma" que dispara el touch)
+  document.addEventListener('mouseover', e=>{
+    if(Date.now()-lastTouch < 800) return;
+    const el = e.target.closest('[data-tip]'); if(el) show(el);
+  });
+  document.addEventListener('mouseout', e=>{
+    const el = e.target.closest('[data-tip]'); if(el && !el.contains(e.relatedTarget)) hide();
+  });
+  // Touch: mantener apretado ~0,45 s
+  document.addEventListener('touchstart', e=>{
+    lastTouch = Date.now(); clearTimeout(pressTimer); longPressed = false;
+    const el = e.target.closest('[data-tip]');
+    if(el) pressTimer = setTimeout(()=>{ longPressed = true; show(el); }, 450);
+  }, {passive:true});
+  function endTouch(){ lastTouch = Date.now(); clearTimeout(pressTimer); if(tip.classList.contains('show')) setTimeout(hide, 1600); }
+  document.addEventListener('touchend', endTouch);
+  document.addEventListener('touchmove', ()=>{ clearTimeout(pressTimer); hide(); }, {passive:true});
+  document.addEventListener('touchcancel', endTouch);
+  // Un tooltip abierto por long-press NO debe activar el botón ni abrir el menú del sistema
+  document.addEventListener('click', e=>{ hide(); if(longPressed){ longPressed = false; e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener('contextmenu', e=>{ if(e.target.closest('[data-tip]')) e.preventDefault(); });
+  window.addEventListener('scroll', hide, {passive:true});
+  window.addEventListener('resize', hide);
+})();
 
 /* PWA: registrar el service worker. Solo cuando la app está ALOJADA (http/https);
    si la abrís como archivo local (file://) no hace nada y todo sigue igual. */
