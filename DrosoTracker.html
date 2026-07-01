@@ -1365,12 +1365,12 @@ function restorePanels(){
 }
 /* Nueva generación: form pre-cargado con el mismo genotipo/objetivo/temperatura,
    pero como cruza NUEVA (reloj a cero — la fecha arranca en "ahora", editable). */
+let newGenSourceId = null;  // cruza de origen de una "nueva generación" en curso (se limpia al confirmar/cancelar)
 function cloneCross(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   if(computeState(c).planned) return;  // "nueva generación" no aplica hasta montar la cruza
-  // al iniciar la nueva generación se retiran los parentales de esta cruza → limpia el aviso "Retirar parentales"
-  if(!c.parentsRemoved){ c.parentsRemoved = true; save(crosses); render(); }
   openForm();
+  newGenSourceId = id;  // los parentales de `id` se retiran recién al CONFIRMAR la nueva generación (saveCross)
   document.getElementById('modalTitle').textContent = 'Nueva generación';
   formExperiments = (c.experiments||[]).slice(); renderExpTags();
   document.getElementById('genotype').value = c.genotype;
@@ -1901,6 +1901,7 @@ function openForm(id){
   }
   const ov=document.getElementById('overlay');
   document.getElementById('crossForm').reset();
+  newGenSourceId = null;  // por defecto un form nuevo no es una "nueva generación"
   populateDatalists();
   rebuildAutocompleteCache();
   hideGenoAC();
@@ -1927,7 +1928,7 @@ function openForm(id){
   onObjectiveChange();
   ov.classList.add('open');
 }
-function closeForm(){ document.getElementById('overlay').classList.remove('open'); }
+function closeForm(){ document.getElementById('overlay').classList.remove('open'); newGenSourceId = null; }
 /* muestra el selector de estadio sólo si el objetivo es disección larval */
 function onObjectiveChange(){
   const obj = document.getElementById('objective').value;
@@ -1960,7 +1961,10 @@ function saveCross(e){
     Object.assign(c, data);
   } else {
     crosses.push({ id:'c'+Date.now()+Math.random().toString(36).slice(2,5), parentsRemoved:false, ...data });
+    // nueva generación CONFIRMADA → recién ahora se retiran los parentales de la cruza de origen
+    if(newGenSourceId){ const src = crosses.find(x=>x.id===newGenSourceId); if(src) src.parentsRemoved = true; }
   }
+  newGenSourceId = null;
   save(crosses); render(); closeForm();
 }
 
