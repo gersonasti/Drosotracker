@@ -2208,9 +2208,10 @@ setInterval(autoRender, 60000);
   const tip = document.createElement('div');
   tip.className = 'tip';
   document.body.appendChild(tip);
-  let pressTimer = null, longPressed = false, lastTouch = 0, hoverTimer = null, startX = 0, startY = 0;
+  let pressTimer = null, longPressed = false, lastTouch = 0, hoverTimer = null, hideTimer = null, startX = 0, startY = 0;
   function show(el){
     const txt = el.getAttribute('data-tip'); if(!txt) return;
+    clearTimeout(hideTimer);
     tip.textContent = txt;
     const r = el.getBoundingClientRect();
     const tr = tip.getBoundingClientRect();
@@ -2222,7 +2223,8 @@ setInterval(autoRender, 60000);
     tip.style.top  = Math.round(top) + 'px';
     tip.classList.add('show');
   }
-  function hide(){ clearTimeout(hoverTimer); tip.classList.remove('show'); }
+  function hide(){ clearTimeout(hoverTimer); clearTimeout(hideTimer); tip.classList.remove('show'); }
+  function scheduleHide(ms){ clearTimeout(hideTimer); hideTimer = setTimeout(hide, ms); }
   // Desktop: hover con retardo de 0,5 s (estándar: rápido pero no instantáneo,
   // no molesta al pasar el cursor de largo). Ignora los mouse "fantasma" del touch.
   document.addEventListener('mouseover', e=>{
@@ -2234,26 +2236,34 @@ setInterval(autoRender, 60000);
   document.addEventListener('mouseout', e=>{
     const el = e.target.closest('[data-tip]'); if(el && !el.contains(e.relatedTarget)) hide();
   });
-  // Touch: mantener apretado ~0,45 s. Se ignora el temblor del dedo (< 10px);
-  // solo un movimiento real (scroll) cancela el tooltip.
+  // Touch: mantener apretado. Se muestra por la primera de dos vías que dispare el
+  // dispositivo: un temporizador propio (~0,4 s) y, sobre todo, el evento `contextmenu`
+  // que el navegador lanza al detectar el long-press (la vibración) — clave en Android.
   document.addEventListener('touchstart', e=>{
     lastTouch = Date.now(); clearTimeout(pressTimer); longPressed = false;
     const el = e.target.closest('[data-tip]');
     if(el){
       const tch = e.touches[0]; startX = tch.clientX; startY = tch.clientY;
-      pressTimer = setTimeout(()=>{ longPressed = true; show(el); }, 450);
+      pressTimer = setTimeout(()=>{ longPressed = true; show(el); scheduleHide(2500); }, 400);
     }
   }, {passive:true});
-  function endTouch(){ lastTouch = Date.now(); clearTimeout(pressTimer); if(tip.classList.contains('show')) setTimeout(hide, 1600); }
+  function endTouch(){ lastTouch = Date.now(); clearTimeout(pressTimer); if(tip.classList.contains('show')) scheduleHide(2000); }
   document.addEventListener('touchend', endTouch);
-  document.addEventListener('touchmove', e=>{
-    const tch = e.touches[0];
-    if(tch && (Math.abs(tch.clientX-startX) > 10 || Math.abs(tch.clientY-startY) > 10)){ clearTimeout(pressTimer); hide(); }
-  }, {passive:true});
   document.addEventListener('touchcancel', endTouch);
-  // Un tooltip abierto por long-press NO debe activar el botón ni abrir el menú del sistema
+  document.addEventListener('touchmove', e=>{                    // solo un scroll real (>12px) cancela; ignora el temblor del dedo
+    const tch = e.touches[0];
+    if(tch && (Math.abs(tch.clientX-startX) > 12 || Math.abs(tch.clientY-startY) > 12)){ clearTimeout(pressTimer); hide(); }
+  }, {passive:true});
+  // El long-press dispara `contextmenu`: cancelamos el menú del sistema y mostramos el
+  // tooltip justo cuando el navegador detecta el mantener apretado (funciona en Android).
+  document.addEventListener('contextmenu', e=>{
+    const el = e.target.closest('[data-tip]'); if(!el) return;
+    e.preventDefault();
+    clearTimeout(pressTimer); show(el); scheduleHide(2500);
+    if(Date.now()-lastTouch < 1200) longPressed = true;         // solo en touch: no activar el botón al soltar
+  });
+  // Un tooltip abierto por long-press NO debe activar el botón
   document.addEventListener('click', e=>{ hide(); if(longPressed){ longPressed = false; e.preventDefault(); e.stopPropagation(); } }, true);
-  document.addEventListener('contextmenu', e=>{ if(e.target.closest('[data-tip]')) e.preventDefault(); });
   window.addEventListener('scroll', hide, {passive:true});
   window.addEventListener('resize', hide);
 })();
