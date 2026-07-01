@@ -4,7 +4,7 @@
      sin internet, abre la última versión guardada.
    - Íconos / manifest / fuentes: CACHÉ primero, y se actualizan en segundo plano.
    Subí VERSION cada vez que quieras forzar una actualización limpia. */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'drosotracker-' + VERSION;
 const ASSETS = [
   'DrosoTracker.html',
@@ -32,13 +32,12 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  // El documento HTML: red primero, caché de respaldo.
+  // El documento HTML: red primero (sin caché HTTP → siempre lo último), caché de respaldo.
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'reload' })
         .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
+          if (!res.redirected) { const copy = res.clone(); caches.open(CACHE).then(c => c.put('DrosoTracker.html', copy)); }
           return res;
         })
         .catch(() => caches.match(req).then(r => r || caches.match('DrosoTracker.html')))

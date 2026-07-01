@@ -2315,8 +2315,16 @@ setInterval(autoRender, 60000);
 /* PWA: registrar el service worker. Solo cuando la app está ALOJADA (http/https);
    si la abrís como archivo local (file://) no hace nada y todo sigue igual. */
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  // Si ya había un SW controlando la página y se activa uno nuevo, recargar una vez
+  // para tomar la versión actualizada al instante (evita quedarse en una versión vieja).
+  if (navigator.serviceWorker.controller) {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return; refreshing = true; location.reload();
+    });
+  }
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.register('sw.js').then(reg => reg.update()).catch(()=>{});
   });
 }
 </script>
