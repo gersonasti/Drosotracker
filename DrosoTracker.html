@@ -213,7 +213,8 @@
   .task-list{display:flex;flex-direction:column;gap:8px}
   .task{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:var(--bg-1);cursor:pointer;transition:background .12s}
   .task:hover{background:var(--lav-soft)}
-  .task .tname{font-weight:700;font-size:.84rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .task .tname{font-weight:700;font-size:.84rem;flex:none;max-width:56%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .task .texp{font-size:.76rem;color:var(--ink-soft);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .task .tgeno{font-size:.8rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
   .task .chip{margin-left:auto;flex:none}
   .tasks.alert{background:#fdeeee;border-color:#f4cccc}
@@ -1237,8 +1238,8 @@ function renderTasks(){
     buildReminders(c, st).forEach(r=>{
       if(r.task && r.key){
         const id = c.id+':'+r.key;
-        _taskMap[id] = { text:r.t, c:r.c, name:c.name||'', genotype:c.genotype||'', crossId:c.id };
-        live.push({ id, crossId:c.id, name:c.name||'', genotype:c.genotype||'', r });
+        _taskMap[id] = { text:r.t, c:r.c, genotype:c.genotype||'', crossId:c.id };
+        live.push({ id, crossId:c.id, genotype:c.genotype||'', exp:(c.experiments||[]).join(', '), r });
       }
     });
   });
@@ -1247,16 +1248,18 @@ function renderTasks(){
   const doneList = Object.keys(done).map(id=>({id, ...done[id]})).sort((a,b)=> b.doneAt-a.doneAt);
 
   const alert = pending.length>0 && !tasksPanelOpen;   // rojo pastel sólo cuando está cerrado y hay tareas
-  const rowName = (geno)=> `<span class="tname">${esc(geno)}</span>`;  // el genotipo identifica la cruza
+  // genotipo (identifica la cruza) + experimento (desambigua cruzas con el mismo genotipo)
+  const rowName = (geno, exp)=> `<span class="tname" title="${esc(geno)}">${esc(geno)}</span>${exp?`<span class="texp" title="${esc(exp)}">${esc(exp)}</span>`:''}`;
+  const expOf = crossId => { const c = crosses.find(x=>x.id===crossId); return c ? (c.experiments||[]).join(', ') : ''; };
   const pendingHTML = pending.map(t=>`
     <div class="task" onclick="scrollToCard('${t.crossId}')">
-      ${rowName(t.genotype)}
+      ${rowName(t.genotype, t.exp)}
       <span class="chip ${t.r.c}">${t.r.pulse?'<span class="pulse"></span>':''}${esc(t.r.t)}</span>
       <input type="checkbox" class="task-check" title="Marcar como hecha" onclick="event.stopPropagation();markTaskDone('${t.id}')" />
     </div>`).join('');
   const doneHTML = doneList.map(d=>`
     <div class="task done">
-      ${rowName(d.genotype)}
+      ${rowName(d.genotype, expOf(d.crossId || d.id.split(':')[0]))}
       <span class="chip ${d.c}">${esc(d.text)}</span>
       <input type="checkbox" class="task-check" checked title="Desmarcar" onclick="unmarkTask('${d.id}')" />
       <button class="task-del" title="Quitar" onclick="deleteTask('${d.id}')">✕</button>
@@ -1365,6 +1368,8 @@ function restorePanels(){
 function cloneCross(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   if(computeState(c).planned) return;  // "nueva generación" no aplica hasta montar la cruza
+  // al iniciar la nueva generación se retiran los parentales de esta cruza → limpia el aviso "Retirar parentales"
+  if(!c.parentsRemoved){ c.parentsRemoved = true; save(crosses); render(); }
   openForm();
   document.getElementById('modalTitle').textContent = 'Nueva generación';
   formExperiments = (c.experiments||[]).slice(); renderExpTags();
@@ -1847,7 +1852,7 @@ function showGenoAC(){
   genoAC.items = items; genoAC.active = -1;
   if(!items.length){ pop.classList.remove('open'); pop.innerHTML=''; return; }
   pop.innerHTML = items.map((it,i)=>`<div class="ac-item" data-i="${i}" onmousedown="selectGenoAC(event,${i})">
-    <span class="ac-label">${esc(it.label)}</span><span class="ac-tag ${it.type}">${it.type}</span></div>`).join('');
+    <span class="ac-label">${esc(it.label)}</span><span class="ac-tag ${it.type}">${it.type==='comp'?'común':it.type}</span></div>`).join('');
   pop.classList.add('open');
 }
 function hideGenoAC(){ const pop=document.getElementById('genoAC'); if(pop) pop.classList.remove('open'); }
