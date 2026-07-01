@@ -13,7 +13,7 @@ const SYSTEM_PROMPT = `Sos un asistente experto en genética de Drosophila melan
 Contexto de la app: cada cruza tiene un genotipo, una temperatura de incubación (afecta los tiempos de desarrollo) y un objetivo, que puede ser: cruza genética, amplificación de línea, mantenimiento de stock, cohorte de envejecimiento o disección larval (L1/L2/L3).
 
 Cómo respondés:
-- En español, claro y conciso, con tono de colega de laboratorio. La persona es bióloga y entiende términos técnicos, así que podés usarlos directamente.
+- Con tono de colega de laboratorio, claro y conciso. La persona es bióloga y entiende términos técnicos, así que podés usarlos directamente. Respondé SIEMPRE en el idioma que se indica al final de estas instrucciones (english o español).
 - Conocés el sistema binario GAL4/UAS, cromosomas (X, 2, 3, 4), balanceadores (CyO, TM3, TM6B, FM7, etc.), marcadores dominantes, recombinación, recolección de vírgenes y los tiempos de desarrollo según temperatura.
 - Cuando te piden un esquema de cruza, proponé los pasos concretos (qué cruzar con qué, qué genotipo esperar en cada generación, qué seleccionar) de forma ordenada.
 - Si te falta información clave (qué stocks/genotipos tiene disponibles, en qué cromosoma está el transgén, si hay balanceadores), preguntá antes de asumir.
@@ -37,6 +37,11 @@ export async function onRequestPost({ request, env }) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Pedido inválido.' }); }
 
+  const lang = body.lang === 'es' ? 'es' : 'en';  // idioma de respuesta elegido en la app (inglés por defecto)
+  const langDirective = lang === 'es'
+    ? 'IDIOMA DE RESPUESTA: Español. Respondé siempre en español.'
+    : 'RESPONSE LANGUAGE: English. Always respond in English.';
+
   const messages = Array.isArray(body.messages) ? body.messages : [];
   // Convertir el historial del chat al formato de Gemini.
   const contents = messages
@@ -49,7 +54,7 @@ export async function onRequestPost({ request, env }) {
   if (!contents.length) return json({ error: 'No hay mensaje para responder.' });
 
   const payload = {
-    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    system_instruction: { parts: [{ text: SYSTEM_PROMPT + '\n\n' + langDirective }] },
     contents,
     // thinkingBudget:0 apaga el "pensamiento" interno de Gemini 2.5 Flash (que consumía
     // el presupuesto de texto y cortaba la respuesta); más rápido y respuestas completas.

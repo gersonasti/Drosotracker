@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>DrosoTracker — Ciclo de vida de Drosophila melanogaster</title>
+<title>DrosoTracker — Drosophila melanogaster life cycle</title>
 <!-- Fase de pruebas: que los buscadores no lo indexen. Quitar al lanzar públicamente. -->
 <meta name="robots" content="noindex, nofollow" />
 <!-- PWA: instalable y con apariencia de app -->
@@ -425,27 +425,35 @@
       </div>
       <div>
         <div class="brand-name">DrosoTracker</div>
-        <div class="brand-sub">Ciclo de vida de <i>Drosophila melanogaster</i></div>
+        <div class="brand-sub" data-i18n-html="brand.sub">Life cycle of <i>Drosophila melanogaster</i></div>
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn ghost" id="notifBtn" onclick="toggleNotif()">🔔 Activar recordatorios</button>
-      <button class="btn ghost" onclick="openPlan()">🗓 Planificar</button>
+      <button class="btn ghost" id="notifBtn" onclick="toggleNotif()">🔔 Activate reminders</button>
+      <button class="btn ghost" onclick="openPlan()" data-i18n="hdr.plan">🗓 Plan</button>
       <div class="menu">
-        <button class="btn ghost" onclick="toggleMenu()">⇅ Datos</button>
+        <button class="btn ghost" onclick="toggleMenu()" data-i18n="hdr.data">⇅ Data</button>
         <div class="menu-pop" id="dataMenu">
-          <button onclick="exportJSON()">⬇ Exportar backup (JSON)</button>
-          <button onclick="document.getElementById('importFile').click()">⬆ Importar backup</button>
-          <button onclick="exportSurvivalCSV()">📊 Exportar supervivencia (CSV)</button>
+          <button onclick="exportJSON()" data-i18n="menu.exportBackup">⬇ Export backup (JSON)</button>
+          <button onclick="document.getElementById('importFile').click()" data-i18n="menu.importBackup">⬆ Import backup</button>
+          <button onclick="exportSurvivalCSV()" data-i18n="menu.exportSurvival">📊 Export survival (CSV)</button>
           <div class="menu-sep"></div>
-          <button onclick="document.getElementById('labFile').click()" title="Si tu base está en Excel, exportala como CSV (Guardar como → CSV)">🧬 Importar base de genotipos del lab</button>
-          <div class="menu-fmt">.csv · .tab · .tsv</div>
+          <button onclick="document.getElementById('labFile').click()" data-i18n="menu.importLab" data-i18n-title="menu.importLabTitle" title="If your database is in Excel, export it as CSV (Save as → CSV)">🧬 Import lab genotype database</button>
+          <div class="menu-fmt" data-i18n="menu.fmt">.csv · .tab · .tsv</div>
           <div id="labStatus"></div>
+        </div>
+      </div>
+      <div class="menu">
+        <button class="btn ghost" onclick="toggleSettings()" data-i18n-title="hdr.settings" title="Settings" style="padding:12px 14px">⚙️</button>
+        <div class="menu-pop" id="settingsPop">
+          <div class="menu-fmt" data-i18n="set.language">Language</div>
+          <button onclick="setLang('en')" data-i18n="set.english">English</button>
+          <button onclick="setLang('es')" data-i18n="set.spanish">Español</button>
         </div>
       </div>
       <button class="btn" onclick="openForm()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
-        <span class="lbl">Nueva cruza</span>
+        <span class="lbl" data-i18n="hdr.newCross">New cross</span>
       </button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(event)" />
       <input type="file" id="labFile" accept=".csv,.tsv,.tab,.txt,text/csv,text/tab-separated-values,text/plain" style="display:none" onchange="importLabDB(event)" />
@@ -459,62 +467,61 @@
   <div id="content"></div>
 
   <div class="footer-note">
-    Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10&nbsp;°C · ~148 grados-día).
-    Tiempos estimados · Datos guardados localmente en tu navegador.<br>
-    Los recordatorios se notifican mientras esta pestaña esté abierta.
+    <span data-i18n="foot.model">Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.</span><br>
+    <span data-i18n="foot.notif">Reminders fire while this tab is open.</span>
   </div>
 </div>
 
 <!-- Modal -->
 <div class="overlay" id="overlay">
   <div class="modal">
-    <h2 id="modalTitle">Nueva cruza</h2>
-    <div class="sub">Registrá el genotipo, la fecha de cruza y la temperatura de incubación.</div>
+    <h2 id="modalTitle">New cross</h2>
+    <div class="sub" data-i18n="form.sub">Enter the genotype, cross date and incubation temperature.</div>
     <form id="crossForm" onsubmit="saveCross(event)">
       <input type="hidden" id="editId" />
       <div class="field">
-        <label for="expInput">Experimento(s)</label>
+        <label for="expInput" data-i18n="form.experiments">Experiment(s)</label>
         <div class="tags-input" id="expBox" onclick="document.getElementById('expInput').focus()">
-          <input id="expInput" list="expList" autocomplete="off" placeholder="ej. Fenotipo del ojo…" onkeydown="expInputKey(event)" />
+          <input id="expInput" list="expList" autocomplete="off" placeholder="e.g. Eye phenotype…" data-i18n-ph="form.expPh" onkeydown="expInputKey(event)" />
         </div>
         <datalist id="expList"></datalist>
-        <div class="hint">Agrupá las cruzas por experimento. Podés agregar más de uno (Enter o coma). Opcional.</div>
+        <div class="hint" data-i18n="form.expHint">Group crosses by experiment. You can add more than one (Enter or comma). Optional.</div>
       </div>
       <div class="field">
-        <label for="genotype">Genotipo *</label>
+        <label for="genotype" data-i18n="form.genotype">Genotype *</label>
         <div class="ac-wrap">
-          <input id="genotype" autocomplete="off" placeholder="ej. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
+          <input id="genotype" autocomplete="off" placeholder="e.g. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
           <div class="ac-pop" id="genoAC"></div>
         </div>
-        <div class="hint">Autocompleta con tu historial, la base del laboratorio y componentes comunes (CyO, UAS-GFP, elav-GAL4…). Empezá a escribir.</div>
+        <div class="hint" data-i18n="form.genoHint">Autocompletes from your history, the lab database and common components (CyO, UAS-GFP, elav-GAL4…). Start typing.</div>
       </div>
       <div class="field">
-        <label for="objective">Objetivo</label>
+        <label for="objective" data-i18n="form.objective">Objective</label>
         <select id="objective" onchange="onObjectiveChange()">
-          <option value="">— Sin objetivo específico</option>
-          <option value="cross">Cruza genética</option>
-          <option value="amplify">Amplificación de línea</option>
-          <option value="stock">Mantenimiento de stock</option>
-          <option value="aging">Cohorte de envejecimiento</option>
-          <option value="dissect">Disección larval</option>
+          <option value="" data-i18n="obj.none">— No specific objective</option>
+          <option value="cross" data-i18n="obj.cross">Genetic cross</option>
+          <option value="amplify" data-i18n="obj.amplify">Line amplification</option>
+          <option value="stock" data-i18n="obj.stock">Stock maintenance</option>
+          <option value="aging" data-i18n="obj.aging">Aging cohort</option>
+          <option value="dissect" data-i18n="obj.dissect">Larval dissection</option>
         </select>
         <div id="dissectRow" style="display:none">
           <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
-            <label style="margin:0;font-weight:700;font-size:.82rem;color:var(--ink-soft)">Estadio a disecar:</label>
+            <label style="margin:0;font-weight:700;font-size:.82rem;color:var(--ink-soft)" data-i18n="form.dissectStage">Stage to dissect:</label>
             <select id="dissectStage" style="flex:none;width:auto;padding:8px 11px">
               <option value="l1">L1</option><option value="l2">L2</option><option value="l3" selected>L3</option>
             </select>
           </div>
         </div>
-        <div class="hint">De esto se desprenden las <b>tareas pendientes</b>. Opcional.</div>
+        <div class="hint" data-i18n-html="form.objHint">This drives the <b>pending tasks</b>. Optional.</div>
       </div>
       <div class="field">
-        <label for="crossDate">Fecha y hora de cruza *</label>
+        <label for="crossDate" data-i18n="form.crossDate">Cross date and time *</label>
         <input id="crossDate" type="datetime-local" required />
-        <div class="hint">Momento en que se montó la cruza (puesta de huevos). La hora afina los cálculos y la ventana de vírgenes.</div>
+        <div class="hint" data-i18n="form.crossDateHint">When the cross was set up (egg-laying). The time refines the calculations and the virgin window.</div>
       </div>
       <div class="field">
-        <label for="temp">Temperatura de incubación (°C) *</label>
+        <label for="temp" data-i18n="form.temp">Incubation temperature (°C) *</label>
         <input id="temp" type="number" min="12" max="30" step="0.5" placeholder="25" required />
         <div class="temp-presets" id="presets">
           <button type="button" data-t="18">18 °C</button>
@@ -522,11 +529,11 @@
           <button type="button" data-t="25">25 °C</button>
           <button type="button" data-t="29">29 °C</button>
         </div>
-        <div class="hint">Acelera o ralentiza todo el ciclo. Rango útil: 18–29 °C.</div>
+        <div class="hint" data-i18n="form.tempHint">Speeds up or slows down the whole cycle. Useful range: 18–29 °C.</div>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn ghost" onclick="closeForm()">Cancelar</button>
-        <button type="submit" class="btn">Guardar cruza</button>
+        <button type="button" class="btn ghost" onclick="closeForm()" data-i18n="form.cancel">Cancel</button>
+        <button type="submit" class="btn" data-i18n="form.save">Save cross</button>
       </div>
     </form>
   </div>
@@ -535,91 +542,91 @@
 <!-- Modal planificación -->
 <div class="overlay" id="planOverlay">
   <div class="modal">
-    <h2 id="planTitle">Planificación</h2>
-    <div class="sub">Agenda de próximos eventos y cálculo inverso de cruzas.</div>
-    <h3 style="font-size:1rem;margin:6px 0 10px">📆 Próximos eventos</h3>
+    <h2 id="planTitle">Planning</h2>
+    <div class="sub" data-i18n="plan.sub">Upcoming events and reverse cross scheduling.</div>
+    <h3 style="font-size:1rem;margin:6px 0 10px" data-i18n="plan.upcoming">📆 Upcoming events</h3>
     <div id="agendaBox"></div>
-    <h3 style="font-size:1rem;margin:18px 0 6px">⏪ Planificar hacia atrás</h3>
-    <div class="sub" style="margin-bottom:14px">¿Cuándo montar la cruza para llegar a un estadio en una fecha objetivo?</div>
+    <h3 style="font-size:1rem;margin:18px 0 6px" data-i18n="plan.backward">⏪ Plan backward</h3>
+    <div class="sub" style="margin-bottom:14px" data-i18n="plan.backwardSub">When to set up the cross to reach a stage by a target date?</div>
     <form id="planForm" onsubmit="computePlan(event)">
       <div class="field">
-        <label for="planExp">Experimento(s)</label>
-        <input id="planExp" list="planExpList" autocomplete="off" placeholder="ej. Fenotipo del ojo (separá con comas)" />
+        <label for="planExp" data-i18n="form.experiments">Experiment(s)</label>
+        <input id="planExp" list="planExpList" autocomplete="off" placeholder="e.g. Eye phenotype (comma-separated)" data-i18n-ph="plan.expPh" />
         <datalist id="planExpList"></datalist>
       </div>
       <div class="field">
-        <label for="planGeno">Genotipo</label>
-        <input id="planGeno" list="planGenoList" autocomplete="off" placeholder="ej. w[1118] ; UAS-GFP / CyO" />
+        <label for="planGeno" data-i18n="form.genotype">Genotype</label>
+        <input id="planGeno" list="planGenoList" autocomplete="off" placeholder="e.g. w[1118] ; UAS-GFP / CyO" />
         <datalist id="planGenoList"></datalist>
       </div>
       <div class="field">
-        <label for="planObjective">Objetivo</label>
+        <label for="planObjective" data-i18n="form.objective">Objective</label>
         <select id="planObjective" onchange="onPlanObjChange()">
-          <option value="">— Sin objetivo específico</option>
-          <option value="cross">Cruza genética</option>
-          <option value="amplify">Amplificación de línea</option>
-          <option value="stock">Mantenimiento de stock</option>
-          <option value="aging">Cohorte de envejecimiento</option>
-          <option value="dissect">Disección larval</option>
+          <option value="" data-i18n="obj.none">— No specific objective</option>
+          <option value="cross" data-i18n="obj.cross">Genetic cross</option>
+          <option value="amplify" data-i18n="obj.amplify">Line amplification</option>
+          <option value="stock" data-i18n="obj.stock">Stock maintenance</option>
+          <option value="aging" data-i18n="obj.aging">Aging cohort</option>
+          <option value="dissect" data-i18n="obj.dissect">Larval dissection</option>
         </select>
         <div id="planDissectRow" style="display:none">
           <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
-            <label style="margin:0;font-weight:700;font-size:.82rem;color:var(--ink-soft)">Estadio a disecar:</label>
+            <label style="margin:0;font-weight:700;font-size:.82rem;color:var(--ink-soft)" data-i18n="form.dissectStage">Stage to dissect:</label>
             <select id="planDissectStage" style="flex:none;width:auto;padding:8px 11px"><option value="l1">L1</option><option value="l2">L2</option><option value="l3" selected>L3</option></select>
           </div>
         </div>
       </div>
       <div class="field">
-        <label for="planStage">Quiero llegar a</label>
+        <label for="planStage" data-i18n="plan.reachStage">I want to reach</label>
         <select id="planStage">
-          <option value="egg">Embrión (puesta)</option>
-          <option value="l1">Larva L1</option>
-          <option value="l2">Larva L2</option>
-          <option value="l3">Larva L3</option>
-          <option value="pupa">Pupa</option>
-          <option value="adult" selected>Adultos / vírgenes (eclosión)</option>
+          <option value="egg" data-i18n="plan.stEgg">Embryo (egg-lay)</option>
+          <option value="l1" data-i18n="stage.l1">Larva L1</option>
+          <option value="l2" data-i18n="stage.l2">Larva L2</option>
+          <option value="l3" data-i18n="stage.l3">Larva L3</option>
+          <option value="pupa" data-i18n="stage.pupa">Pupa</option>
+          <option value="adult" selected data-i18n="plan.stAdult">Adults / virgins (eclosion)</option>
         </select>
       </div>
-      <div class="field"><label for="planDate">El día</label><input id="planDate" type="datetime-local" required /></div>
-      <div class="field"><label for="planTemp">Temperatura (°C)</label><input id="planTemp" type="number" min="12" max="30" step="0.5" value="25" required /></div>
-      <button class="btn" type="submit" style="width:100%;justify-content:center">Calcular fecha de cruza</button>
+      <div class="field"><label for="planDate" data-i18n="plan.onDay">On</label><input id="planDate" type="datetime-local" required /></div>
+      <div class="field"><label for="planTemp" data-i18n="plan.temp">Temperature (°C)</label><input id="planTemp" type="number" min="12" max="30" step="0.5" value="25" required /></div>
+      <button class="btn" type="submit" style="width:100%;justify-content:center" data-i18n="plan.calc">Calculate cross date</button>
     </form>
     <div id="planResult"></div>
-    <div class="modal-actions"><button type="button" class="btn ghost" onclick="closePlan()" style="flex:1;justify-content:center">Cerrar</button></div>
+    <div class="modal-actions"><button type="button" class="btn ghost" onclick="closePlan()" style="flex:1;justify-content:center" data-i18n="plan.close">Close</button></div>
   </div>
 </div>
 
 <!-- Modal envejecimiento -->
 <div class="overlay" id="agingOverlay">
   <div class="modal">
-    <h2>Registrar pase / conteo</h2>
+    <h2 data-i18n="agm.title">Log flip / count</h2>
     <div class="sub" id="agingSub"></div>
     <form id="agingForm" onsubmit="saveAgingEntry(event)">
       <input type="hidden" id="agingId" />
       <div class="field">
-        <label for="agingDate">Fecha y hora del control</label>
+        <label for="agingDate" data-i18n="agm.date">Check date and time</label>
         <input id="agingDate" type="datetime-local" required />
       </div>
       <div class="field">
-        <label for="agingDeaths">Moscas muertas en este control</label>
+        <label for="agingDeaths" data-i18n="agm.deaths">Dead flies at this check</label>
         <input id="agingDeaths" type="number" min="0" step="1" value="0" />
       </div>
       <div class="field">
-        <label for="agingCensored">Censuradas (escapadas, pegadas, accidentes)</label>
+        <label for="agingCensored" data-i18n="agm.censored">Censored (escaped, stuck, accidents)</label>
         <input id="agingCensored" type="number" min="0" step="1" value="0" />
-        <div class="hint">Se descuentan del grupo en riesgo sin contar como muerte (Kaplan-Meier).</div>
+        <div class="hint" data-i18n="agm.censoredHint">Removed from the at-risk group without counting as deaths (Kaplan-Meier).</div>
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="agingFlip" checked />
-        <label for="agingFlip">Pasé la cohorte a comida fresca</label>
+        <label for="agingFlip" data-i18n="agm.flip">Flipped the cohort to fresh food</label>
       </div>
       <div class="field">
-        <label for="agingNote">Nota (opcional)</label>
-        <input id="agingNote" maxlength="80" placeholder="ej. hembras, 2 viales" />
+        <label for="agingNote" data-i18n="agm.note">Note (optional)</label>
+        <input id="agingNote" maxlength="80" placeholder="e.g. females, 2 vials" data-i18n-ph="agm.notePh" />
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn ghost" onclick="closeAging()">Cancelar</button>
-        <button type="submit" class="btn">Guardar</button>
+        <button type="button" class="btn ghost" onclick="closeAging()" data-i18n="form.cancel">Cancel</button>
+        <button type="submit" class="btn" data-i18n="cohort.save">Save</button>
       </div>
     </form>
   </div>
@@ -628,20 +635,20 @@
 <!-- Modal importar base de genotipos del laboratorio -->
 <div class="overlay" id="labOverlay">
   <div class="modal">
-    <h2>Importar base de genotipos</h2>
+    <h2 data-i18n="lab.title">Import genotype database</h2>
     <div class="sub" id="labSub"></div>
     <div class="field">
-      <label for="labCol">¿Qué columna tiene el genotipo?</label>
+      <label for="labCol" data-i18n="lab.col">Which column has the genotype?</label>
       <select id="labCol" onchange="renderLabPreview()"></select>
-      <div class="hint">Se asume que la primera fila son los títulos de las columnas.</div>
+      <div class="hint" data-i18n="lab.colHint">The first row is assumed to be the column headers.</div>
     </div>
     <div class="field">
-      <label>Vista previa</label>
+      <label data-i18n="lab.preview">Preview</label>
       <div class="lab-preview" id="labPreview"></div>
     </div>
     <div class="modal-actions">
-      <button type="button" class="btn ghost" onclick="closeLabModal()">Cancelar</button>
-      <button type="button" class="btn" onclick="confirmLabImport()">Importar genotipos</button>
+      <button type="button" class="btn ghost" onclick="closeLabModal()" data-i18n="lab.cancel">Cancel</button>
+      <button type="button" class="btn" onclick="confirmLabImport()" data-i18n="lab.import">Import genotypes</button>
     </div>
   </div>
 </div>
@@ -652,6 +659,168 @@
    ============================================================ */
 
 const STORE_KEY = 'drosotrack.crosses.v1';
+
+/* ============================================================
+   i18n — inglés por defecto, español opcional (ruedita ⚙️)
+   ============================================================ */
+const LANG_KEY = 'drosotrack.lang.v1';
+let lang = localStorage.getItem(LANG_KEY) || 'en';
+const I18N = {
+  en: {
+    'hdr.notifActivate':'🔔 Activate reminders','hdr.notifActive':'🔔 Reminders on',
+    'hdr.plan':'🗓 Plan','hdr.data':'⇅ Data','hdr.newCross':'New cross','hdr.settings':'Settings',
+    'brand.sub':'Life cycle of <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker — Drosophila melanogaster life cycle',
+    'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
+    'menu.exportSurvival':'📊 Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database',
+    'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv',
+    'set.language':'Language','set.english':'English','set.spanish':'Español',
+    'stat.active':'active crosses','stat.nextEcl':'next eclosion',
+    'tasks.title':'📋 Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
+    'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.',
+    'foot.notif':'Reminders fire while this tab is open.',
+    'empty.title':'No crosses yet','empty.text':'Add your first cross with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New cross','group.none':'No experiment',
+    // objetivos
+    'obj.none':'— No specific objective','obj.cross':'Genetic cross','obj.amplify':'Line amplification','obj.stock':'Stock maintenance','obj.aging':'Aging cohort','obj.dissect':'Larval dissection',
+    // estadios
+    'stage.egg':'Embryo','stage.l1':'Larva L1','stage.l2':'Larva L2','stage.l3':'Larva L3','stage.pupa':'Pupa','stage.adult':'Adult',
+    'stage.short.egg':'Embryo','stage.short.l1':'L1','stage.short.l2':'L2','stage.short.l3':'L3','stage.short.pupa':'Pupa','stage.short.adult':'Adult',
+    // avisos / tareas
+    'rem.montar':'Set up the cross (in {h})','rem.virgenesPrep':'Collect virgins: eclosion in {h}','rem.eclosionEn':'Eclosion in {h}','rem.muda':'Molt to {s} in {h}',
+    'rem.retirarParentales':'Remove parents','rem.disecar':'Dissect larvae ({s})','rem.proxDiseccion':'Next dissection: {s}',
+    'rem.adultosEclosionados':'Adults eclosed','rem.virgenes':'Collect virgins ({h})','rem.botellas':'Move adults to fresh bottles','rem.cohorte':'Define aging cohort','rem.comida':'Flip to fresh food','rem.edad':'Adult age: day {d}',
+    // tarjeta
+    'card.plannedBadge':'Planned','card.setupIn':'Set up in <b>{h}</b>','card.postEcl':'<b>{d}</b> days post-eclosion','card.dayOf':'Day <b>{d}</b> of {t}',
+    'card.metaSetup':'Set up','card.metaCross':'Cross','card.metaEclosed':'Eclosed','card.metaEclEst':'Est. eclosion',
+    'card.edit':'Edit','card.delete':'Delete','card.markParents':'✓ Mark parents removed',
+    'card.newGen':'↪ New generation','card.newGenTitle':'Create the next generation (same genotype and objective, clock reset)','card.newGenDisabled':'Available once the cross is set up',
+    'card.viewTimeline':'View timeline ▾','card.hideTimeline':'Hide timeline ▴','tl.eclosionAdult':'Eclosion → Adult','tl.inProgress':'in progress','tl.agingDay':'day {d} of aging',
+    // envejecimiento
+    'aging.toggle':'🧬 Aging ▾','aging.mAlive':'alive','aging.mSurv':'survival','aging.mAge':'cohort age',
+    'aging.sexF':'♀ Females','aging.sexM':'♂ Males','aging.sexMixed':'⚥ Mixed','aging.vials':'vials','aging.censored':'censored','aging.edit':'edit',
+    'aging.densHigh':'⚠ High density ({d}/vial) · recommended ≤25–30/vial','aging.median':'Median survival: <b>{d} d</b>','aging.medianNone':'Median: — (still >50% alive)','aging.maxObs':'Max observed: <b>{d} d</b>',
+    'aging.noRecords':'No records yet.','aging.evDelete':'Delete','aging.addRecord':'+ Log flip / count','aging.exportCohort':'⬇ Export survival table (CSV)',
+    'surv.day0':'day 0','surv.dayN':'day {n}',
+    'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Define cohort','cohort.save':'Save','cohort.cancel':'Cancel',
+    'cohort.hint':'Log the adult cohort to follow its survival curve (Kaplan-Meier). Recommended density: ≤25–30 flies/vial.','cohort.nPh':'e.g. 100','cohort.vialsPh':'optional',
+    // form nueva cruza
+    'form.newTitle':'New cross','form.editTitle':'Edit cross','form.newGenTitle':'New generation','form.sub':'Enter the genotype, cross date and incubation temperature.',
+    'form.experiments':'Experiment(s)','form.expPh':'e.g. Eye phenotype…','form.expHint':'Group crosses by experiment. You can add more than one (Enter or comma). Optional.',
+    'form.genotype':'Genotype *','form.genoHint':'Autocompletes from your history, the lab database and common components (CyO, UAS-GFP, elav-GAL4…). Start typing.',
+    'form.objective':'Objective','form.dissectStage':'Stage to dissect:','form.objHint':'This drives the <b>pending tasks</b>. Optional.',
+    'form.crossDate':'Cross date and time *','form.crossDateHint':'When the cross was set up (egg-laying). The time refines the calculations and the virgin window.',
+    'form.temp':'Incubation temperature (°C) *','form.tempHint':'Speeds up or slows down the whole cycle. Useful range: 18–29 °C.','form.cancel':'Cancel','form.save':'Save cross',
+    // planificación
+    'plan.title':'Planning','plan.titleEdit':'Edit planned cross','plan.sub':'Upcoming events and reverse cross scheduling.',
+    'plan.upcoming':'📆 Upcoming events','plan.backward':'⏪ Plan backward','plan.backwardSub':'When to set up the cross to reach a stage by a target date?',
+    'plan.expPh':'e.g. Eye phenotype (comma-separated)','plan.reachStage':'I want to reach','plan.stEgg':'Embryo (egg-lay)','plan.stAdult':'Adults / virgins (eclosion)',
+    'plan.onDay':'On','plan.temp':'Temperature (°C)','plan.calc':'Calculate cross date','plan.close':'Close','plan.noEvents':'No upcoming events.','agenda.eclosion':'Eclosion',
+    'plan.rMain':'Set up the cross on<br><b>{date}</b>','plan.rDetail':'At {t} °C, reaching <b>{stage}</b> takes ~{d} d from egg-lay.','plan.rVirgin':' Virgin window ~{h} h after eclosion.',
+    'plan.rPast':'⚠ That date has passed: you can\'t make it in time at that temperature.','plan.rUpdate':'✓ Update planned cross','plan.rCreate':'+ Create cross with this date',
+    // modal envejecimiento
+    'agm.title':'Log flip / count','agm.date':'Check date and time','agm.deaths':'Dead flies at this check','agm.censored':'Censored (escaped, stuck, accidents)',
+    'agm.censoredHint':'Removed from the at-risk group without counting as deaths (Kaplan-Meier).','agm.flip':'Flipped the cohort to fresh food','agm.note':'Note (optional)','agm.notePh':'e.g. females, 2 vials','agm.sub':'{geno} · cohort day {d}',
+    // importar base del lab
+    'lab.title':'Import genotype database','lab.col':'Which column has the genotype?','lab.colHint':'The first row is assumed to be the column headers.','lab.preview':'Preview','lab.cancel':'Cancel','lab.import':'Import genotypes',
+    'lab.sub':'{file} · {n} rows. Pick the genotype column and confirm.','lab.noCol':'The selected column has no genotypes.','lab.loaded':'Lab database: {n} genotypes','lab.clear':'Clear','lab.colN':'Column {n}','err.labFormat':'Expected a header row + at least one data row.',
+    // chat
+    'chat.title':'🧬 Cross assistant','chat.fab':'Assistant','chat.fabTitle':'AI cross assistant','chat.close':'Close','chat.placeholder':'e.g. I want to express UAS-Atg8 in neurons…','chat.send':'Send','chat.typing':'thinking…','ac.comp':'common','ac.stock':'stock',
+    'chat.welcome':'Hi! I\'m your *Drosophila* cross assistant. Tell me the objective you want to reach (e.g. express a UAS transgene in a tissue) and I\'ll propose the crossing scheme. The more you tell me about your stocks and genotypes, the better.',
+    'chat.errNotDeployed':'The assistant only works on the published version online (with the key set), not on the local file.','chat.errUnavailable':'The assistant is unavailable (error {s}).','chat.errConnect':'Couldn\'t reach the assistant. Try again in a moment.',
+    // alertas / confirmaciones / notificaciones
+    'al.cohortN':'Enter a valid initial N of adults.','cf.importReplace':'Importing will replace the {n} current crosses with {m}. Continue?','al.imported':'Imported {n} crosses.','al.importFail':'Import failed: {e}',
+    'err.notList':'The file does not contain a list of crosses.','err.empty':'The file contains no crosses.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
+    'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the cross.','al.geno':'Enter the genotype.',
+    'al.notifUnsupported':'Your browser doesn\'t support notifications.','notif.alreadyOn':'Reminders are already on ✓','al.notifBlocked':'Notifications are blocked. Enable them for this site in your browser settings.',
+    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the cross "{name}"? This can\'t be undone.',
+    'notif.eclTitle':'Eclosion 🪰','notif.eclBody':'Adults of "{label}" have eclosed.','notif.virginTitle':'Collect virgins ⏳','notif.virginBody':'Virgin collection window open for "{label}".',
+    'notif.eclSoonTitle':'Eclosion imminent','notif.eclSoonBody':'"{label}" ecloses in ~{h}.','notif.moltTitle':'Molt soon','notif.moltBody':'"{label}" molts to {s} in ~{h}.',
+  },
+  es: {
+    'hdr.notifActivate':'🔔 Activar recordatorios','hdr.notifActive':'🔔 Recordatorios activos',
+    'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.newCross':'Nueva cruza','hdr.settings':'Ajustes',
+    'brand.sub':'Ciclo de vida de <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker — Ciclo de vida de Drosophila melanogaster',
+    'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
+    'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab',
+    'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv',
+    'set.language':'Idioma','set.english':'English','set.spanish':'Español',
+    'stat.active':'cruzas activas','stat.nextEcl':'próxima eclosión',
+    'tasks.title':'📋 Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
+    'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10 °C · ~148 grados-día). Tiempos estimados · Datos guardados localmente en tu navegador.',
+    'foot.notif':'Los recordatorios se notifican mientras esta pestaña esté abierta.',
+    'empty.title':'Todavía no hay cruzas registradas','empty.text':'Agregá tu primera cruza con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nueva cruza','group.none':'Sin experimento',
+    'obj.none':'— Sin objetivo específico','obj.cross':'Cruza genética','obj.amplify':'Amplificación de línea','obj.stock':'Mantenimiento de stock','obj.aging':'Cohorte de envejecimiento','obj.dissect':'Disección larval',
+    'stage.egg':'Embrión','stage.l1':'Larva L1','stage.l2':'Larva L2','stage.l3':'Larva L3','stage.pupa':'Pupa','stage.adult':'Adulto',
+    'stage.short.egg':'Embrión','stage.short.l1':'L1','stage.short.l2':'L2','stage.short.l3':'L3','stage.short.pupa':'Pupa','stage.short.adult':'Adulto',
+    'rem.montar':'Montar la cruza (en {h})','rem.virgenesPrep':'Recolectar vírgenes: eclosión en {h}','rem.eclosionEn':'Eclosión en {h}','rem.muda':'Muda a {s} en {h}',
+    'rem.retirarParentales':'Retirar parentales','rem.disecar':'Disecar larvas ({s})','rem.proxDiseccion':'Próxima disección: {s}',
+    'rem.adultosEclosionados':'Adultos eclosionados','rem.virgenes':'Recolectar vírgenes ({h})','rem.botellas':'Pasar adultos a botellas nuevas','rem.cohorte':'Definir cohorte de envejecimiento','rem.comida':'Pasar a comida fresca','rem.edad':'Edad adulta: día {d}',
+    'card.plannedBadge':'Planificada','card.setupIn':'Se monta en <b>{h}</b>','card.postEcl':'<b>{d}</b> días post-eclosión','card.dayOf':'Día <b>{d}</b> de {t}',
+    'card.metaSetup':'Se monta','card.metaCross':'Cruza','card.metaEclosed':'Eclosionó','card.metaEclEst':'Eclosión est.',
+    'card.edit':'Editar','card.delete':'Eliminar','card.markParents':'✓ Marcar parentales retirados',
+    'card.newGen':'↪ Nueva generación','card.newGenTitle':'Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)','card.newGenDisabled':'Disponible cuando se monte la cruza',
+    'card.viewTimeline':'Ver cronología ▾','card.hideTimeline':'Ocultar cronología ▴','tl.eclosionAdult':'Eclosión → Adulto','tl.inProgress':'en curso','tl.agingDay':'día {d} de envejecimiento',
+    'aging.toggle':'🧬 Envejecimiento ▾','aging.mAlive':'vivos','aging.mSurv':'supervivencia','aging.mAge':'edad cohorte',
+    'aging.sexF':'♀ Hembras','aging.sexM':'♂ Machos','aging.sexMixed':'⚥ Mixto','aging.vials':'viales','aging.censored':'censurados','aging.edit':'editar',
+    'aging.densHigh':'⚠ Densidad alta ({d}/vial) · recomendado ≤25–30/vial','aging.median':'Mediana de supervivencia: <b>{d} d</b>','aging.medianNone':'Mediana: — (aún >50% vivos)','aging.maxObs':'Máx. observado: <b>{d} d</b>',
+    'aging.noRecords':'Sin registros todavía.','aging.evDelete':'Borrar','aging.addRecord':'+ Registrar pase / conteo','aging.exportCohort':'⬇ Exportar tabla de supervivencia (CSV)',
+    'surv.day0':'día 0','surv.dayN':'día {n}',
+    'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Definir cohorte','cohort.save':'Guardar','cohort.cancel':'Cancelar',
+    'cohort.hint':'Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.','cohort.nPh':'ej. 100','cohort.vialsPh':'opcional',
+    'form.newTitle':'Nueva cruza','form.editTitle':'Editar cruza','form.newGenTitle':'Nueva generación','form.sub':'Registrá el genotipo, la fecha de cruza y la temperatura de incubación.',
+    'form.experiments':'Experimento(s)','form.expPh':'ej. Fenotipo del ojo…','form.expHint':'Agrupá las cruzas por experimento. Podés agregar más de uno (Enter o coma). Opcional.',
+    'form.genotype':'Genotipo *','form.genoHint':'Autocompleta con tu historial, la base del laboratorio y componentes comunes (CyO, UAS-GFP, elav-GAL4…). Empezá a escribir.',
+    'form.objective':'Objetivo','form.dissectStage':'Estadio a disecar:','form.objHint':'De esto se desprenden las <b>tareas pendientes</b>. Opcional.',
+    'form.crossDate':'Fecha y hora de cruza *','form.crossDateHint':'Momento en que se montó la cruza (puesta de huevos). La hora afina los cálculos y la ventana de vírgenes.',
+    'form.temp':'Temperatura de incubación (°C) *','form.tempHint':'Acelera o ralentiza todo el ciclo. Rango útil: 18–29 °C.','form.cancel':'Cancelar','form.save':'Guardar cruza',
+    'plan.title':'Planificación','plan.titleEdit':'Editar cruza planificada','plan.sub':'Agenda de próximos eventos y cálculo inverso de cruzas.',
+    'plan.upcoming':'📆 Próximos eventos','plan.backward':'⏪ Planificar hacia atrás','plan.backwardSub':'¿Cuándo montar la cruza para llegar a un estadio en una fecha objetivo?',
+    'plan.expPh':'ej. Fenotipo del ojo (separá con comas)','plan.reachStage':'Quiero llegar a','plan.stEgg':'Embrión (puesta)','plan.stAdult':'Adultos / vírgenes (eclosión)',
+    'plan.onDay':'El día','plan.temp':'Temperatura (°C)','plan.calc':'Calcular fecha de cruza','plan.close':'Cerrar','plan.noEvents':'No hay eventos próximos.','agenda.eclosion':'Eclosión',
+    'plan.rMain':'Montá la cruza el<br><b>{date}</b>','plan.rDetail':'A {t} °C, llegar a <b>{stage}</b> tarda ~{d} d desde la puesta.','plan.rVirgin':' Ventana de vírgenes ~{h} h tras la eclosión.',
+    'plan.rPast':'⚠ Esa fecha ya pasó: no llegás a tiempo a esa temperatura.','plan.rUpdate':'✓ Actualizar cruza planificada','plan.rCreate':'+ Crear cruza con esta fecha',
+    'agm.title':'Registrar pase / conteo','agm.date':'Fecha y hora del control','agm.deaths':'Moscas muertas en este control','agm.censored':'Censuradas (escapadas, pegadas, accidentes)',
+    'agm.censoredHint':'Se descuentan del grupo en riesgo sin contar como muerte (Kaplan-Meier).','agm.flip':'Pasé la cohorte a comida fresca','agm.note':'Nota (opcional)','agm.notePh':'ej. hembras, 2 viales','agm.sub':'{geno} · día {d} de cohorte',
+    'lab.title':'Importar base de genotipos','lab.col':'¿Qué columna tiene el genotipo?','lab.colHint':'Se asume que la primera fila son los títulos de las columnas.','lab.preview':'Vista previa','lab.cancel':'Cancelar','lab.import':'Importar genotipos',
+    'lab.sub':'{file} · {n} filas. Elegí la columna del genotipo y confirmá.','lab.noCol':'La columna elegida no tiene genotipos.','lab.loaded':'Base del lab: {n} genotipos','lab.clear':'Borrar','lab.colN':'Columna {n}','err.labFormat':'Se espera una fila de títulos + al menos una fila de datos.',
+    'chat.title':'🧬 Asistente de cruzas','chat.fab':'Asistente','chat.fabTitle':'Asistente de cruzas con IA','chat.close':'Cerrar','chat.placeholder':'Ej: quiero expresar UAS-Atg8 en neuronas…','chat.send':'Enviar','chat.typing':'pensando…','ac.comp':'común','ac.stock':'stock',
+    'chat.welcome':'¡Hola! Soy tu asistente de cruzas de *Drosophila*. Contame qué objetivo querés lograr (por ej. expresar un transgén UAS en cierto tejido) y te propongo el esquema de cruza. Cuantos más datos me des de tus stocks y genotipos, mejor.',
+    'chat.errNotDeployed':'El asistente solo funciona en la versión publicada online (con la clave configurada), no en el archivo local.','chat.errUnavailable':'El asistente no está disponible (error {s}).','chat.errConnect':'No pude conectar con el asistente. Probá de nuevo en un momento.',
+    'al.cohortN':'Ingresá un N inicial válido de adultos.','cf.importReplace':'Importar reemplazará las {n} cruzas actuales por {m}. ¿Continuar?','al.imported':'Importadas {n} cruzas.','al.importFail':'No se pudo importar: {e}',
+    'err.notList':'El archivo no contiene una lista de cruzas.','err.empty':'El archivo no contiene ninguna cruza.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
+    'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear la cruza.','al.geno':'Escribí el genotipo.',
+    'al.notifUnsupported':'Tu navegador no soporta notificaciones.','notif.alreadyOn':'Los recordatorios ya están activos ✓','al.notifBlocked':'Las notificaciones están bloqueadas. Habilitalas para este sitio desde la configuración del navegador.',
+    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar la cruza "{name}"? Esta acción no se puede deshacer.',
+    'notif.eclTitle':'Eclosión 🪰','notif.eclBody':'Eclosionaron los adultos de "{label}".','notif.virginTitle':'Recolectar vírgenes ⏳','notif.virginBody':'Ventana de recolección de vírgenes abierta para "{label}".',
+    'notif.eclSoonTitle':'Eclosión inminente','notif.eclSoonBody':'"{label}" eclosiona en ~{h}.','notif.moltTitle':'Muda próxima','notif.moltBody':'"{label}" muda a {s} en ~{h}.',
+  },
+};
+function t(key, vars){
+  let s = (I18N[lang] && I18N[lang][key]) != null ? I18N[lang][key] : (I18N.en[key] != null ? I18N.en[key] : key);
+  if(vars) for(const k in vars) s = s.split('{'+k+'}').join(vars[k]);
+  return s;
+}
+function localeTag(){ return lang === 'es' ? 'es-ES' : 'en-GB'; }
+/* nombres de estadio traducidos (STAGES/ADULT guardan sólo la key) */
+function stageName(s){ return t('stage.'+s.key); }
+function stageShort(s){ return t('stage.short.'+s.key); }
+/* aplica traducciones a los textos estáticos del HTML (marcados con data-i18n*) */
+function applyStaticI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=> el.textContent = t(el.getAttribute('data-i18n')));
+  document.querySelectorAll('[data-i18n-html]').forEach(el=> el.innerHTML = t(el.getAttribute('data-i18n-html')));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=> el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))));
+  document.querySelectorAll('[data-i18n-title]').forEach(el=> el.setAttribute('title', t(el.getAttribute('data-i18n-title'))));
+  document.title = t('doc.title');
+}
+function toggleSettings(){ document.getElementById('settingsPop').classList.toggle('open'); }
+function setLang(l){
+  lang = l; localStorage.setItem(LANG_KEY, l);
+  document.documentElement.lang = l;
+  document.getElementById('settingsPop').classList.remove('open');
+  applyStaticI18n();
+  updateNotifBtn();
+  chatReset();
+  render();
+}
 
 /* --- Modelo de desarrollo dependiente de temperatura ---
    Suma térmica (degree-days): D(T) = DD / (T - T0)
@@ -751,10 +920,10 @@ function buildReminders(cross, st, now=new Date()){
   const obj = cross.objective || '';
   /* urgency = horas hasta que toca hacer la tarea (menor = más urgente; 0 = hacer ya).
      Se usa para ordenar el panel de "Tareas pendientes" de más a menos urgente. */
-  const push = (t, c, task, pulse, key, urgency=0) => out.push({ t, c, task:!!task, pulse:!!pulse, key:key||null, urgency });
+  const push = (txt, c, task, pulse, key, urgency=0) => out.push({ t:txt, c, task:!!task, pulse:!!pulse, key:key||null, urgency });
 
   if(st.planned){
-    push(`Montar la cruza (en ${fmtH(st.daysToCross*24)})`, 'action', true, st.daysToCross<=1, 'montar', st.daysToCross*24);
+    push(t('rem.montar',{h:fmtH(st.daysToCross*24)}), 'action', true, st.daysToCross<=1, 'montar', st.daysToCross*24);
     return out;
   }
   if(!st.isAdult){
@@ -763,48 +932,48 @@ function buildReminders(cross, st, now=new Date()){
     const hoursToNext = (st.nextBoundaryDays - st.elapsedDays)*24;
     if(st.stage.key === 'pupa'){
       /* TAREA (cruza genética): cuenta regresiva a la eclosión para recolectar vírgenes */
-      if(obj==='cross') push(`Recolectar vírgenes: eclosión en ${fmtH(hoursToNext)}`, 'action', true, hoursToNext<=24, 'virgenes-prep', hoursToNext);
-      else if(hoursToNext <= 48) push(`Eclosión en ${fmtH(hoursToNext)}`, 'warn', false, hoursToNext<=24);
+      if(obj==='cross') push(t('rem.virgenesPrep',{h:fmtH(hoursToNext)}), 'action', true, hoursToNext<=24, 'virgenes-prep', hoursToNext);
+      else if(hoursToNext <= 48) push(t('rem.eclosionEn',{h:fmtH(hoursToNext)}), 'warn', false, hoursToNext<=24);
     } else if(next){
-      if(hoursToNext <= 24) push(`Muda a ${next.short} en ${fmtH(hoursToNext)}`, 'warn', false, hoursToNext<=8);
+      if(hoursToNext <= 24) push(t('rem.muda',{s:stageShort(next),h:fmtH(hoursToNext)}), 'warn', false, hoursToNext<=8);
     }
     const larval = ['l1','l2','l3'].includes(st.stage.key);
     /* TAREA: retirar parentales (cruza genética, amplificación o sin objetivo) */
     if(larval && !cross.parentsRemoved && (obj==='cross' || obj==='amplify' || obj==='')){
-      push('Retirar parentales', 'action', true, false, 'parentales');
+      push(t('rem.retirarParentales'), 'action', true, false, 'parentales');
     }
     /* TAREA: disección larval cuando llega al estadio elegido */
     if(obj==='dissect' && cross.dissectStage){
       const order = ['egg','l1','l2','l3','pupa'];
       const ci = order.indexOf(st.stage.key), ti = order.indexOf(cross.dissectStage);
-      if(ci===ti)    push(`Disecar larvas (${cross.dissectStage.toUpperCase()})`, 'action', true, true, 'disecar');
-      else if(ci<ti) push(`Próxima disección: ${cross.dissectStage.toUpperCase()}`, 'info', false);
+      if(ci===ti)    push(t('rem.disecar',{s:cross.dissectStage.toUpperCase()}), 'action', true, true, 'disecar');
+      else if(ci<ti) push(t('rem.proxDiseccion',{s:cross.dissectStage.toUpperCase()}), 'info', false);
     }
   } else {
     /* --- ADULTO --- */
-    push('Adultos eclosionados', 'success', false);
+    push(t('rem.adultosEclosionados'), 'success', false);
     const ageD = st.adultAge;
     /* TAREA: recolectar vírgenes (cruza genética; ventana que escala con la temperatura) */
     if(obj==='cross'){
       const windowH = 8 * (st.total / REF_TOTAL);
       const ageH = ageD*24;
-      if(ageH < windowH) push(`Recolectar vírgenes (${fmtH(windowH-ageH)})`, 'action', true, true, 'virgenes');
+      if(ageH < windowH) push(t('rem.virgenes',{h:fmtH(windowH-ageH)}), 'action', true, true, 'virgenes');
     }
     /* TAREA: amplificación → pasar adultos a botellas nuevas */
-    if(obj==='amplify') push('Pasar adultos a botellas nuevas', 'action', true, false, 'botellas');
+    if(obj==='amplify') push(t('rem.botellas'), 'action', true, false, 'botellas');
     /* TAREA: definir la cohorte de envejecimiento */
     if(obj==='aging' && (!cross.aging || cross.aging.startN==null)){
-      push('Definir cohorte de envejecimiento', 'action', true, false, 'cohorte', 1e6);
+      push(t('rem.cohorte'), 'action', true, false, 'cohorte', 1e6);
     }
     /* TAREA: pasar a comida fresca cada 2-3 d (envejecimiento, stock o sin objetivo) */
     if((obj==='aging' || obj==='stock' || obj==='') && ageD >= 1){
       const flips = (cross.aging && cross.aging.events || []).filter(e=>e.flipped).map(e=> new Date(e.date).getTime());
       const lastFlip = flips.length ? Math.max(...flips) : null;
       const daysSinceFlip = lastFlip ? (now - lastFlip)/86400000 : ageD;
-      if(daysSinceFlip >= 2) push('Pasar a comida fresca', 'action', true, false, 'comida');
+      if(daysSinceFlip >= 2) push(t('rem.comida'), 'action', true, false, 'comida');
     }
     /* AVISO: edad */
-    if(ageD >= 1) push(`Edad adulta: día ${Math.floor(ageD)}`, 'success', false);
+    if(ageD >= 1) push(t('rem.edad',{d:Math.floor(ageD)}), 'success', false);
   }
   return out;
 }
@@ -815,11 +984,11 @@ function fmtH(h){
   return `${Math.round(h)} h`;
 }
 function fmtDate(d){
-  return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'}).replace('.','');
+  return d.toLocaleDateString(localeTag(),{day:'2-digit',month:'short'}).replace('.','');
 }
-/* fecha + hora corta, ej. "23 jun 09:30" */
+/* fecha + hora corta, ej. "23 jun 09:30" / "23 Jun 09:30" */
 function fmtDT(d){
-  return d.toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})
+  return d.toLocaleString(localeTag(),{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})
           .replace('.','').replace(',','');
 }
 /* parsea crossDate aceptando datetime-local nuevo y fechas antiguas (solo día) */
@@ -993,10 +1162,9 @@ function tempInfo(t){
 }
 
 /* etiqueta legible del objetivo de la cruza */
-const OBJ_LABEL = { cross:'Cruza genética', amplify:'Amplificación de línea', stock:'Mantenimiento de stock', aging:'Cohorte de envejecimiento', dissect:'Disección larval' };
 function objLabel(cross){
   if(!cross.objective) return '';
-  let l = OBJ_LABEL[cross.objective] || '';
+  let l = t('obj.'+cross.objective);
   if(cross.objective==='dissect' && cross.dissectStage) l += ` (${cross.dissectStage.toUpperCase()})`;
   return l;
 }
@@ -1007,10 +1175,10 @@ function card(cross){
   const start = parseCross(cross);
 
   const dayLine = st.planned
-    ? `<div class="day-line">Se monta en <b>${fmtH(st.daysToCross*24)}</b></div>`
+    ? `<div class="day-line">${t('card.setupIn',{h:fmtH(st.daysToCross*24)})}</div>`
     : st.isAdult
-    ? `<div class="day-line"><b>${Math.round(st.adultAge)}</b> días post-eclosión</div>`
-    : `<div class="day-line">Día <b>${Math.round(st.elapsedDays)}</b> de ${Math.ceil(st.total)}</div>`;
+    ? `<div class="day-line">${t('card.postEcl',{d:Math.round(st.adultAge)})}</div>`
+    : `<div class="day-line">${t('card.dayOf',{d:Math.round(st.elapsedDays),t:Math.ceil(st.total)})}</div>`;
 
   const remHtml = reminders.map(r=>
     `<span class="chip ${r.c}">${r.pulse?'<span class="pulse"></span>':''}${r.t}</span>`).join('');
@@ -1022,14 +1190,14 @@ function card(cross){
     const nowS = st.stageKey===b.key && !st.isAdult;
     return `<div class="tl-item ${done?'done':''} ${nowS?'now':''}">
       <div class="tl-dot" style="background:${b.color}"></div>
-      <div class="tl-body"><div class="tl-name">${b.name}</div>
-      <div class="tl-date">${fmtDT(date)}${nowS?' · en curso':''}</div></div></div>`;
+      <div class="tl-body"><div class="tl-name">${stageName(b)}</div>
+      <div class="tl-date">${fmtDT(date)}${nowS?' · '+t('tl.inProgress'):''}</div></div></div>`;
   }).join('');
   const eclDate = addDays(start, st.total);
   const tlAdult = `<div class="tl-item ${st.isAdult?'now':''}">
     <div class="tl-dot" style="background:var(--pink)"></div>
-    <div class="tl-body"><div class="tl-name">Eclosión → Adulto</div>
-    <div class="tl-date">${fmtDT(eclDate)}${st.isAdult?` · día ${Math.floor(st.adultAge)} de envejecimiento`:''}</div></div></div>`;
+    <div class="tl-body"><div class="tl-name">${t('tl.eclosionAdult')}</div>
+    <div class="tl-date">${fmtDT(eclDate)}${st.isAdult?' · '+t('tl.agingDay',{d:Math.floor(st.adultAge)}):''}</div></div></div>`;
 
   return `<div class="card ${st.planned?'planned':''}" id="card-${cross.id}">
     <div class="card-top">
@@ -1039,10 +1207,10 @@ function card(cross){
       </div>
       <div class="card-tools">
         <span class="temp-pill" style="background:${ti.bg};color:${ti.text}">${cross.temp} °C</span>
-        <button class="icon-btn edit" title="Editar" onclick="openForm('${cross.id}')">
+        <button class="icon-btn edit" title="${t('card.edit')}" onclick="openForm('${cross.id}')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 6l4 4" stroke="currentColor" stroke-width="2"/></svg>
         </button>
-        <button class="icon-btn" title="Eliminar" onclick="delCross('${cross.id}')">✕</button>
+        <button class="icon-btn" title="${t('card.delete')}" onclick="delCross('${cross.id}')">✕</button>
       </div>
     </div>
 
@@ -1050,21 +1218,21 @@ function card(cross){
       ${ring(st)}
       <div class="card-info">
         <span class="stage-badge" style="background:${st.stage.soft};color:${st.stage.txt}">
-          <span class="dot" style="background:${st.stage.txt}"></span>${st.planned?'Planificada':st.stage.name}</span>
+          <span class="dot" style="background:${st.stage.txt}"></span>${st.planned?t('card.plannedBadge'):stageName(st.stage)}</span>
         ${dayLine}
-        <div class="meta-row"><span class="k">${st.planned?'Se monta':'Cruza'}</span><span class="v">${fmtDT(start)}</span></div>
-        <div class="meta-row"><span class="k">${st.isAdult?'Eclosionó':'Eclosión est.'}</span><span class="v">${fmtDT(eclDate)}</span></div>
+        <div class="meta-row"><span class="k">${st.planned?t('card.metaSetup'):t('card.metaCross')}</span><span class="v">${fmtDT(start)}</span></div>
+        <div class="meta-row"><span class="k">${st.isAdult?t('card.metaEclosed'):t('card.metaEclEst')}</span><span class="v">${fmtDT(eclDate)}</span></div>
       </div>
     </div>
 
     <div class="reminders">${remHtml}</div>
 
     ${(['l1','l2','l3'].includes(st.stageKey) && !cross.parentsRemoved)
-      ? `<button class="timeline-btn" style="margin-top:10px" onclick="markParents('${cross.id}')">✓ Marcar parentales retirados</button>` : ''}
+      ? `<button class="timeline-btn" style="margin-top:10px" onclick="markParents('${cross.id}')">${t('card.markParents')}</button>` : ''}
 
     <div class="btn-row">
-      <button class="timeline-btn gen-btn" ${st.planned ? 'disabled title="Disponible cuando se monte la cruza"' : `onclick="cloneCross('${cross.id}')" title="Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)"`}>↪ Nueva generación</button>
-      <button class="timeline-btn" onclick="toggleTL(this)">Ver cronología ▾</button>
+      <button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${t('card.newGenDisabled')}"` : `onclick="cloneCross('${cross.id}')" title="${t('card.newGenTitle')}"`}>${t('card.newGen')}</button>
+      <button class="timeline-btn" onclick="toggleTL(this)">${t('card.viewTimeline')}</button>
     </div>
     <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
 
@@ -1073,7 +1241,7 @@ function card(cross){
 }
 
 /* --- Panel de envejecimiento (cohortes adultas, Kaplan-Meier) --- */
-const SEX_LABEL = { F:'♀ Hembras', M:'♂ Machos', mixed:'⚥ Mixto' };
+const SEX_KEY = { F:'aging.sexF', M:'aging.sexM', mixed:'aging.sexMixed' };
 const editingCohort = new Set();
 
 function ensureAging(c){
@@ -1130,8 +1298,8 @@ function survChart(km){
     <line x1="${pad}" y1="${y50.toFixed(1)}" x2="${W-pad}" y2="${y50.toFixed(1)}" stroke="var(--line)" stroke-dasharray="4 4"/>
     <text x="${W-pad}" y="${(y50-3).toFixed(1)}" font-size="7.5" fill="#8b86a3" text-anchor="end">50%</text>
     <polyline points="${poly.trim()}" fill="none" stroke="#d96fa0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-    <text x="${pad}" y="${H-1}" font-size="8" fill="#8b86a3">día 0</text>
-    <text x="${W-pad}" y="${H-1}" font-size="8" fill="#8b86a3" text-anchor="end">día ${Math.round(maxDay)}</text>
+    <text x="${pad}" y="${H-1}" font-size="8" fill="#8b86a3">${t('surv.day0')}</text>
+    <text x="${W-pad}" y="${H-1}" font-size="8" fill="#8b86a3" text-anchor="end">${t('surv.dayN',{n:Math.round(maxDay)})}</text>
   </svg></div>`;
 }
 
@@ -1139,17 +1307,17 @@ function cohortForm(cross){
   const a = ensureAging(cross);
   const editing = editingCohort.has(cross.id);
   return `<div class="cohort-form">
-    <div class="cf-row"><label>N inicial</label><input type="number" min="1" step="1" id="cohortN-${cross.id}" value="${a.startN??''}" placeholder="ej. 100" /></div>
-    <div class="cf-row"><label>Sexo</label><select id="cohortSex-${cross.id}">
-      <option value="F"${a.sex==='F'?' selected':''}>♀ Hembras</option>
-      <option value="M"${a.sex==='M'?' selected':''}>♂ Machos</option>
-      <option value="mixed"${a.sex==='mixed'?' selected':''}>⚥ Mixto</option></select></div>
-    <div class="cf-row"><label>Viales</label><input type="number" min="1" step="1" id="cohortVials-${cross.id}" value="${a.vials??''}" placeholder="opcional" /></div>
+    <div class="cf-row"><label>${t('cohort.n')}</label><input type="number" min="1" step="1" id="cohortN-${cross.id}" value="${a.startN??''}" placeholder="${t('cohort.nPh')}" /></div>
+    <div class="cf-row"><label>${t('cohort.sex')}</label><select id="cohortSex-${cross.id}">
+      <option value="F"${a.sex==='F'?' selected':''}>${t('aging.sexF')}</option>
+      <option value="M"${a.sex==='M'?' selected':''}>${t('aging.sexM')}</option>
+      <option value="mixed"${a.sex==='mixed'?' selected':''}>${t('aging.sexMixed')}</option></select></div>
+    <div class="cf-row"><label>${t('cohort.vials')}</label><input type="number" min="1" step="1" id="cohortVials-${cross.id}" value="${a.vials??''}" placeholder="${t('cohort.vialsPh')}" /></div>
     <div style="display:flex;gap:8px;margin-top:6px">
-      <button class="mini-btn" style="flex:1" onclick="setCohort('${cross.id}')">${editing?'Guardar':'Definir cohorte'}</button>
-      ${editing?`<button class="btn ghost" style="flex:1;padding:9px;font-size:.82rem" onclick="cancelEditCohort('${cross.id}')">Cancelar</button>`:''}
+      <button class="mini-btn" style="flex:1" onclick="setCohort('${cross.id}')">${editing?t('cohort.save'):t('cohort.define')}</button>
+      ${editing?`<button class="btn ghost" style="flex:1;padding:9px;font-size:.82rem" onclick="cancelEditCohort('${cross.id}')">${t('cohort.cancel')}</button>`:''}
     </div>
-    <div class="hint" style="margin-top:8px">Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.</div>
+    <div class="hint" style="margin-top:8px">${t('cohort.hint')}</div>
   </div>`;
 }
 
@@ -1166,21 +1334,21 @@ function agingPanel(cross, st){
     const densStr = dens!=null ? (Number.isInteger(dens) ? dens : dens.toFixed(1)) : null;
     const densHigh = dens!=null && dens > 30;
     body = `<div class="aging-metrics">
-        <div class="m"><b>${km.alive}/${a.startN}</b><span>vivos</span></div>
-        <div class="m"><b>${pct}%</b><span>supervivencia</span></div>
-        <div class="m"><b>${Math.floor(st.adultAge)} d</b><span>edad cohorte</span></div>
+        <div class="m"><b>${km.alive}/${a.startN}</b><span>${t('aging.mAlive')}</span></div>
+        <div class="m"><b>${pct}%</b><span>${t('aging.mSurv')}</span></div>
+        <div class="m"><b>${Math.floor(st.adultAge)} d</b><span>${t('aging.mAge')}</span></div>
       </div>
-      <div class="hint" style="margin:-4px 0 ${densHigh?'4px':'10px'}">${SEX_LABEL[a.sex]||''}${a.vials?` · ${a.vials} viales · ${densStr}/vial`:''}${km.censored?` · ${km.censored} censurados`:''} · <a href="#" onclick="editCohort('${cross.id}');return false">editar</a></div>
-      ${densHigh?`<div class="hint" style="margin:0 0 10px;color:#d98162;font-weight:700">⚠ Densidad alta (${densStr}/vial) · recomendado ≤25–30/vial</div>`:''}
+      <div class="hint" style="margin:-4px 0 ${densHigh?'4px':'10px'}">${SEX_KEY[a.sex]?t(SEX_KEY[a.sex]):''}${a.vials?` · ${a.vials} ${t('aging.vials')} · ${densStr}/vial`:''}${km.censored?` · ${km.censored} ${t('aging.censored')}`:''} · <a href="#" onclick="editCohort('${cross.id}');return false">${t('aging.edit')}</a></div>
+      ${densHigh?`<div class="hint" style="margin:0 0 10px;color:#d98162;font-weight:700">${t('aging.densHigh',{d:densStr})}</div>`:''}
       ${survChart(km)}
-      <div class="hint" style="margin-bottom:10px">${km.median!=null?`Mediana de supervivencia: <b>${km.median} d</b>`:'Mediana: — (aún >50% vivos)'}${km.maxLife?` · Máx. observado: <b>${km.maxLife} d</b>`:''}</div>
+      <div class="hint" style="margin-bottom:10px">${km.median!=null?t('aging.median',{d:km.median}):t('aging.medianNone')}${km.maxLife?` · ${t('aging.maxObs',{d:km.maxLife})}`:''}</div>
       <div class="aging-events">${evs.length ? evs.map(e=>`
         <div class="aging-ev"><span class="d">${fmtDT(new Date(e.date))} · ${e.deaths||0}✝${e.censored?` · ${e.censored} cens.`:''}${e.flipped?' · 🔄':''}${e.note?' · '+esc(e.note):''}</span>
-        <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="Borrar" onclick="delAging('${cross.id}',${a.events.indexOf(e)})">✕</button></div>`).join('') : '<div class="hint">Sin registros todavía.</div>'}</div>
-      <button class="mini-btn" style="margin-top:12px;width:100%" onclick="openAging('${cross.id}')">+ Registrar pase / conteo</button>
-      <button class="mini-btn" style="margin-top:8px;width:100%;background:var(--mint-soft);color:#3fae8c" onclick="exportCohortCSV('${cross.id}')">⬇ Exportar tabla de supervivencia (CSV)</button>`;
+        <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="${t('aging.evDelete')}" onclick="delAging('${cross.id}',${a.events.indexOf(e)})">✕</button></div>`).join('') : `<div class="hint">${t('aging.noRecords')}</div>`}</div>
+      <button class="mini-btn" style="margin-top:12px;width:100%" onclick="openAging('${cross.id}')">${t('aging.addRecord')}</button>
+      <button class="mini-btn" style="margin-top:8px;width:100%;background:var(--mint-soft);color:#3fae8c" onclick="exportCohortCSV('${cross.id}')">${t('aging.exportCohort')}</button>`;
   }
-  return `<button class="timeline-btn" onclick="toggleAging('${cross.id}', this)">🧬 Envejecimiento ▾</button>
+  return `<button class="timeline-btn" onclick="toggleAging('${cross.id}', this)">${t('aging.toggle')}</button>
     <div class="aging-panel"><div class="aging-inner">${body}</div></div>`;
 }
 
@@ -1199,8 +1367,8 @@ function renderStats(){
     }
   });
   document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="num">${active}</div><div class="lbl">cruzas activas</div></div>
-    <div class="stat"><div class="num">${next?fmtDate(next):'—'}</div><div class="lbl">próxima eclosión</div></div>`;
+    <div class="stat"><div class="num">${active}</div><div class="lbl">${t('stat.active')}</div></div>
+    <div class="stat"><div class="num">${next?fmtDate(next):'—'}</div><div class="lbl">${t('stat.nextEcl')}</div></div>`;
 }
 
 /* --- Panel "Tareas pendientes" (agrega acciones de todas las cruzas) --- */
@@ -1213,9 +1381,9 @@ let tasksPanelOpen = false;
 let _taskMap = {};
 function toggleTasksPanel(){ tasksPanelOpen = !tasksPanelOpen; renderTasks(); }
 function markTaskDone(id){
-  const t = _taskMap[id]; if(!t) return;
+  const m = _taskMap[id]; if(!m) return;
   const done = loadTaskDone();
-  done[id] = { doneAt: Date.now(), text:t.text, c:t.c, name:t.name, genotype:t.genotype };
+  done[id] = { doneAt: Date.now(), text:m.text, c:m.c, genotype:m.genotype, crossId:m.crossId };
   saveTaskDone(done); renderTasks();
 }
 function unmarkTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }
@@ -1251,23 +1419,24 @@ function renderTasks(){
   // genotipo (identifica la cruza) + experimento (desambigua cruzas con el mismo genotipo)
   const rowName = (geno, exp)=> `<span class="tname" title="${esc(geno)}">${esc(geno)}</span>${exp?`<span class="texp" title="${esc(exp)}">${esc(exp)}</span>`:''}`;
   const expOf = crossId => { const c = crosses.find(x=>x.id===crossId); return c ? (c.experiments||[]).join(', ') : ''; };
-  const pendingHTML = pending.map(t=>`
-    <div class="task" onclick="scrollToCard('${t.crossId}')">
-      ${rowName(t.genotype, t.exp)}
-      <span class="chip ${t.r.c}">${t.r.pulse?'<span class="pulse"></span>':''}${esc(t.r.t)}</span>
-      <input type="checkbox" class="task-check" title="Marcar como hecha" onclick="event.stopPropagation();markTaskDone('${t.id}')" />
+  const T_MARK = t('task.markDone'), T_UNMARK = t('task.unmark'), T_REMOVE = t('task.remove');
+  const pendingHTML = pending.map(it=>`
+    <div class="task" onclick="scrollToCard('${it.crossId}')">
+      ${rowName(it.genotype, it.exp)}
+      <span class="chip ${it.r.c}">${it.r.pulse?'<span class="pulse"></span>':''}${esc(it.r.t)}</span>
+      <input type="checkbox" class="task-check" title="${T_MARK}" onclick="event.stopPropagation();markTaskDone('${it.id}')" />
     </div>`).join('');
   const doneHTML = doneList.map(d=>`
     <div class="task done">
       ${rowName(d.genotype, expOf(d.crossId || d.id.split(':')[0]))}
       <span class="chip ${d.c}">${esc(d.text)}</span>
-      <input type="checkbox" class="task-check" checked title="Desmarcar" onclick="unmarkTask('${d.id}')" />
-      <button class="task-del" title="Quitar" onclick="deleteTask('${d.id}')">✕</button>
+      <input type="checkbox" class="task-check" checked title="${T_UNMARK}" onclick="unmarkTask('${d.id}')" />
+      <button class="task-del" title="${T_REMOVE}" onclick="deleteTask('${d.id}')">✕</button>
     </div>`).join('');
-  const inner = (pendingHTML+doneHTML) || '<div class="hint" style="padding:6px 2px">Sin tareas pendientes 🎉</div>';
+  const inner = (pendingHTML+doneHTML) || `<div class="hint" style="padding:6px 2px">${t('tasks.empty')}</div>`;
   el.innerHTML = `<div class="tasks ${alert?'alert':''}">
     <button class="tasks-head" onclick="toggleTasksPanel()">
-      <span>📋 Tareas pendientes <span class="badge">${pending.length}</span></span>
+      <span>${t('tasks.title')} <span class="badge">${pending.length}</span></span>
       <span class="tasks-arrow">${tasksPanelOpen?'▴':'▾'}</span>
     </button>
     <div class="task-list" style="${tasksPanelOpen?'':'display:none'}">${inner}</div>
@@ -1288,9 +1457,9 @@ function render(){
   if(crosses.length===0){
     content.innerHTML = `<div class="empty">
       <svg viewBox="0 0 80 80">${art('adult')}</svg>
-      <h3>Todavía no hay cruzas registradas</h3>
-      <p>Agregá tu primera cruza con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.</p>
-      <button class="btn" onclick="openForm()" style="margin:0 auto">+ Nueva cruza</button>
+      <h3>${t('empty.title')}</h3>
+      <p>${t('empty.text')}</p>
+      <button class="btn" onclick="openForm()" style="margin:0 auto">${t('empty.btn')}</button>
     </div>`;
     return;
   }
@@ -1306,7 +1475,7 @@ function render(){
   });
   content.innerHTML = _expOrder.map((exp,i)=>{
     const cards = groups[exp];
-    const title = exp==='__none__' ? 'Sin experimento' : esc(exp);
+    const title = exp==='__none__' ? t('group.none') : esc(exp);
     const open = !collapsedExps.has(exp);
     return `<section class="exp-group">
       <button class="exp-head" onclick="toggleExp(${i})">
@@ -1330,7 +1499,7 @@ function toggleExp(i){
 function toggleTL(btn){
   const tl = btn.closest('.card').querySelector('.timeline');
   const open = tl.classList.toggle('open');
-  btn.textContent = open ? 'Ocultar cronología ▴' : 'Ver cronología ▾';
+  btn.textContent = open ? t('card.hideTimeline') : t('card.viewTimeline');
   const card = btn.closest('.card');
   const id = card ? card.id.replace('card-','') : null;
   if(id){ if(open) openTLIds.add(id); else openTLIds.delete(id); }
@@ -1348,18 +1517,18 @@ function toggleAging(id, btn){
   btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
   if(open) openAgingIds.add(id); else openAgingIds.delete(id);
 }
-function reopenPanel(id, keyword){
+function reopenPanel(id, onclickKey){
   const card = document.getElementById('card-'+id); if(!card) return;
-  const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>b.textContent.includes(keyword));
+  const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes(onclickKey));
   if(btn){ btn.nextElementSibling.classList.add('open'); btn.textContent = btn.textContent.replace('▾','▴'); }
 }
-/* re-aplica el estado abierto de los paneles colapsables tras un render */
+/* re-aplica el estado abierto de los paneles colapsables tras un render (por onclick, no por texto → i18n) */
 function restorePanels(){
-  openAgingIds.forEach(id=>reopenPanel(id,'Envejecimiento'));
+  openAgingIds.forEach(id=>reopenPanel(id,'toggleAging'));
   openTLIds.forEach(id=>{
     const card = document.getElementById('card-'+id); if(!card) return;
-    const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>b.textContent.includes('cronología'));
-    if(btn){ card.querySelector('.timeline').classList.add('open'); btn.textContent='Ocultar cronología ▴'; }
+    const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleTL'));
+    if(btn){ card.querySelector('.timeline').classList.add('open'); btn.textContent=t('card.hideTimeline'); }
   });
   updateGridAlign();
 }
@@ -1371,7 +1540,7 @@ function cloneCross(id){
   if(computeState(c).planned) return;  // "nueva generación" no aplica hasta montar la cruza
   openForm();
   newGenSourceId = id;  // los parentales de `id` se retiran recién al CONFIRMAR la nueva generación (saveCross)
-  document.getElementById('modalTitle').textContent = 'Nueva generación';
+  document.getElementById('modalTitle').textContent = t('form.newGenTitle');
   formExperiments = (c.experiments||[]).slice(); renderExpTags();
   document.getElementById('genotype').value = c.genotype;
   document.getElementById('objective').value = c.objective||'';
@@ -1384,7 +1553,7 @@ function cloneCross(id){
 /* --- Acciones de envejecimiento --- */
 function setCohort(id){
   const n = parseInt(document.getElementById('cohortN-'+id).value);
-  if(!n || n<1){ alert('Ingresá un N inicial válido de adultos.'); return; }
+  if(!n || n<1){ alert(t('al.cohortN')); return; }
   const c = crosses.find(x=>x.id===id); ensureAging(c);
   c.aging.startN = n;
   c.aging.sex = document.getElementById('cohortSex-'+id).value;
@@ -1399,7 +1568,7 @@ function openAging(id){
   const c = crosses.find(x=>x.id===id);
   document.getElementById('agingForm').reset();
   document.getElementById('agingId').value = id;
-  document.getElementById('agingSub').textContent = c.name || c.genotype;
+  document.getElementById('agingSub').textContent = c.genotype || '';
   document.getElementById('agingDate').value = toLocalInput(new Date());
   document.getElementById('agingDeaths').value = 0;
   document.getElementById('agingCensored').value = 0;
@@ -1446,8 +1615,8 @@ function importJSON(e){
   r.onload = ()=>{
     try{
       const data = JSON.parse(r.result);
-      if(!Array.isArray(data)) throw new Error('El archivo no contiene una lista de cruzas.');
-      if(data.length===0) throw new Error('El archivo no contiene ninguna cruza.');
+      if(!Array.isArray(data)) throw new Error(t('err.notList'));
+      if(data.length===0) throw new Error(t('err.empty'));
       // validar cada entrada ANTES de reemplazar nada (evita romper la app con un backup dañado)
       const isValid = c => c && typeof c==='object'
         && typeof c.genotype==='string' && c.genotype.trim()!==''
@@ -1455,16 +1624,16 @@ function importJSON(e){
         && !Number.isNaN(new Date(c.crossDate.includes('T') ? c.crossDate : c.crossDate+'T00:00:00').getTime())
         && typeof c.temp==='number' && isFinite(c.temp);
       const bad = data.filter(c=>!isValid(c)).length;
-      if(bad>0) throw new Error(`${bad} de ${data.length} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.`);
-      if(crosses.length && !confirm(`Importar reemplazará las ${crosses.length} cruzas actuales por ${data.length}. ¿Continuar?`)) return;
+      if(bad>0) throw new Error(t('err.badFormat',{bad, total:data.length}));
+      if(crosses.length && !confirm(t('cf.importReplace',{n:crosses.length, m:data.length}))) return;
       // completar campos no críticos que pudieran faltar
       data.forEach(c=>{
         if(!c.id) c.id = 'c'+Date.now()+Math.random().toString(36).slice(2,5);
         if(typeof c.parentsRemoved!=='boolean') c.parentsRemoved = false;
       });
       crosses = data; save(crosses); render();
-      alert(`Importadas ${data.length} cruzas.`);
-    }catch(err){ alert('No se pudo importar: '+err.message); }
+      alert(t('al.imported',{n:data.length}));
+    }catch(err){ alert(t('al.importFail',{e:err.message})); }
   };
   r.readAsText(f);
   e.target.value=''; closeMenu();
@@ -1488,7 +1657,7 @@ function exportSurvivalCSV(){
     const curDay = Math.max(st.adultAge, 0).toFixed(2);
     for(let i=0;i<alive;i++){ base(curDay,0,'censored'); any=true; }  // vivos = censurados a la edad actual
   });
-  if(!any){ alert('No hay cohortes de envejecimiento con datos para exportar.'); return; }
+  if(!any){ alert(t('al.noCohorts')); return; }
   downloadBlob(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}),
     `drosotracker-supervivencia-${new Date().toISOString().slice(0,10)}.csv`);
   closeMenu();
@@ -1498,7 +1667,7 @@ function exportSurvivalCSV(){
 function exportCohortCSV(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const a = c.aging;
-  if(!a || a.startN==null){ alert('Definí la cohorte antes de exportar.'); return; }
+  if(!a || a.startN==null){ alert(t('al.defineCohort')); return; }
   const st = computeState(c); const ecl = st.eclosionDate;
   const rows = [['day','status','status_label']];
   let deaths=0, cens=0;
@@ -1525,7 +1694,7 @@ function onPlanObjChange(){
 }
 function openPlan(){
   planEditId = null;
-  document.getElementById('planTitle').textContent = 'Planificación';
+  document.getElementById('planTitle').textContent = t('plan.title');
   renderAgenda();
   document.getElementById('planForm').reset();
   document.getElementById('planStage').value = 'adult';
@@ -1544,15 +1713,15 @@ function closePlan(){ document.getElementById('planOverlay').classList.remove('o
 function renderAgenda(){
   const now = new Date(); const items = [];
   crosses.forEach(c=>{
-    const st = computeState(c); const start = parseCross(c); const label = c.name||c.genotype;
-    st.bounds.forEach(b=>{ const d = addDays(start, b.start); if(d>now) items.push({d, label:`${b.name} — ${label}`}); });
-    const ecl = addDays(start, st.total); if(ecl>now) items.push({d:ecl, label:`Eclosión — ${label}`});
+    const st = computeState(c); const start = parseCross(c); const label = c.genotype;
+    st.bounds.forEach(b=>{ const d = addDays(start, b.start); if(d>now) items.push({d, label:`${stageName(b)} — ${label}`}); });
+    const ecl = addDays(start, st.total); if(ecl>now) items.push({d:ecl, label:`${t('agenda.eclosion')} — ${label}`});
   });
   items.sort((a,b)=> a.d-b.d);
   const box = document.getElementById('agendaBox');
   box.innerHTML = items.length
     ? `<div class="agenda">${items.slice(0,15).map(it=>`<div class="agenda-item"><span class="ad">${fmtDT(it.d)}</span><span class="al">${esc(it.label)}</span></div>`).join('')}</div>`
-    : '<div class="hint" style="margin-bottom:6px">No hay eventos próximos.</div>';
+    : `<div class="hint" style="margin-bottom:6px">${t('plan.noEvents')}</div>`;
 }
 function computePlan(e){
   e.preventDefault();
@@ -1565,19 +1734,19 @@ function computePlan(e){
   const crossDate = new Date(target.getTime() - offsetDays*86400000);
   const local = toLocalInput(crossDate);
   const past = crossDate < new Date();
-  const virginNote = stage==='adult' ? ` Ventana de vírgenes ~${Math.round(8*(total/REF_TOTAL))} h tras la eclosión.` : '';
+  const virginNote = stage==='adult' ? t('plan.rVirgin',{h:Math.round(8*(total/REF_TOTAL))}) : '';
   document.getElementById('planResult').innerHTML = `<div class="plan-result">
-    <div class="pr-main">Montá la cruza el<br><b>${fmtDT(crossDate)}</b></div>
-    <div class="hint">A ${temp} °C, llegar a <b>${stObj.name}</b> tarda ~${offsetDays.toFixed(1)} d desde la puesta.${virginNote}</div>
-    ${past ? '<div class="hint" style="color:#d98162;margin-top:6px">⚠ Esa fecha ya pasó: no llegás a tiempo a esa temperatura.</div>' : ''}
+    <div class="pr-main">${t('plan.rMain',{date:fmtDT(crossDate)})}</div>
+    <div class="hint">${t('plan.rDetail',{t:temp, stage:stageName(stObj), d:offsetDays.toFixed(1)})}${virginNote}</div>
+    ${past ? `<div class="hint" style="color:#d98162;margin-top:6px">${t('plan.rPast')}</div>` : ''}
     ${planEditId
-      ? `<button class="mini-btn" style="width:100%;margin-top:10px" onclick="updateFromPlan('${planEditId}','${local}',${temp})">✓ Actualizar cruza planificada</button>`
-      : `<button class="mini-btn" style="width:100%;margin-top:10px" onclick="createFromPlan('${local}',${temp})">+ Crear cruza con esta fecha</button>`}
+      ? `<button class="mini-btn" style="width:100%;margin-top:10px" onclick="updateFromPlan('${planEditId}','${local}',${temp})">${t('plan.rUpdate')}</button>`
+      : `<button class="mini-btn" style="width:100%;margin-top:10px" onclick="createFromPlan('${local}',${temp})">${t('plan.rCreate')}</button>`}
   </div>`;
 }
 function createFromPlan(dateStr, temp){
   const genotype = document.getElementById('planGeno').value.trim();
-  if(!genotype){ alert('Escribí el genotipo para crear la cruza.'); return; }
+  if(!genotype){ alert(t('al.genoForCross')); return; }
   const experiments = document.getElementById('planExp').value.split(',').map(s=>s.trim()).filter(Boolean);
   const objective = document.getElementById('planObjective').value;
   const dissectStage = objective==='dissect' ? document.getElementById('planDissectStage').value : null;
@@ -1592,7 +1761,7 @@ function createFromPlan(dateStr, temp){
 function updateFromPlan(id, dateStr, temp){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const genotype = document.getElementById('planGeno').value.trim();
-  if(!genotype){ alert('Escribí el genotipo.'); return; }
+  if(!genotype){ alert(t('al.geno')); return; }
   c.experiments = document.getElementById('planExp').value.split(',').map(s=>s.trim()).filter(Boolean);
   c.genotype = genotype;
   c.objective = document.getElementById('planObjective').value;
@@ -1607,7 +1776,7 @@ function openPlanEdit(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   openPlan();              // resetea (planEditId=null) y abre
   planEditId = id;
-  document.getElementById('planTitle').textContent = 'Editar cruza planificada';
+  document.getElementById('planTitle').textContent = t('plan.titleEdit');
   document.getElementById('planExp').value = (c.experiments||[]).join(', ');
   document.getElementById('planGeno').value = c.genotype||'';
   document.getElementById('planObjective').value = c.objective||'';
@@ -1636,13 +1805,13 @@ function updateNotifBtn(){
   const b = document.getElementById('notifBtn'); if(!b) return;
   if(!('Notification' in window)){ b.style.display='none'; return; }
   const p = Notification.permission;
-  b.textContent = p==='granted' ? '🔔 Recordatorios activos' : '🔔 Activar recordatorios';
+  b.textContent = p==='granted' ? t('hdr.notifActive') : t('hdr.notifActivate');
   b.style.opacity = p==='denied' ? .6 : 1;
 }
 function toggleNotif(){
-  if(!('Notification' in window)){ alert('Tu navegador no soporta notificaciones.'); return; }
-  if(Notification.permission==='granted'){ new Notification('DrosoTracker', {body:'Los recordatorios ya están activos ✓'}); return; }
-  if(Notification.permission==='denied'){ alert('Las notificaciones están bloqueadas. Habilitalas para este sitio desde la configuración del navegador.'); return; }
+  if(!('Notification' in window)){ alert(t('al.notifUnsupported')); return; }
+  if(Notification.permission==='granted'){ new Notification('DrosoTracker', {body:t('notif.alreadyOn')}); return; }
+  if(Notification.permission==='denied'){ alert(t('al.notifBlocked')); return; }
   Notification.requestPermission().then(updateNotifBtn);
 }
 function fireNotif(key, title, body){
@@ -1653,19 +1822,19 @@ function fireNotif(key, title, body){
 function checkNotifications(){
   if(!('Notification' in window) || Notification.permission!=='granted') return;
   crosses.forEach(c=>{
-    const st = computeState(c); const label = c.name || c.genotype;
+    const st = computeState(c); const label = c.genotype;
     if(st.isAdult){
-      fireNotif(`${c.id}:eclosion`, 'Eclosión 🪰', `Eclosionaron los adultos de "${label}".`);
+      fireNotif(`${c.id}:eclosion`, t('notif.eclTitle'), t('notif.eclBody',{label}));
       const windowH = 8*(st.total/REF_TOTAL);
-      if(st.adultAge*24 < windowH) fireNotif(`${c.id}:virgin`, 'Recolectar vírgenes ⏳', `Ventana de recolección de vírgenes abierta para "${label}".`);
+      if(st.adultAge*24 < windowH) fireNotif(`${c.id}:virgin`, t('notif.virginTitle'), t('notif.virginBody',{label}));
     } else {
       const next = st.bounds.find(b=>b.start>st.elapsedDays);
       const hN = (st.nextBoundaryDays-st.elapsedDays)*24;
       if(st.stage.key==='pupa'){
         const hE=(st.total-st.elapsedDays)*24;
-        if(hE<=24) fireNotif(`${c.id}:ecl-soon`, 'Eclosión inminente', `"${label}" eclosiona en ~${fmtH(hE)}.`);
+        if(hE<=24) fireNotif(`${c.id}:ecl-soon`, t('notif.eclSoonTitle'), t('notif.eclSoonBody',{label, h:fmtH(hE)}));
       } else if(next && hN<=8){
-        fireNotif(`${c.id}:molt-${next.key}`, 'Muda próxima', `"${label}" muda a ${next.short} en ~${fmtH(hN)}.`);
+        fireNotif(`${c.id}:molt-${next.key}`, t('notif.moltTitle'), t('notif.moltBody',{label, s:stageShort(next), h:fmtH(hN)}));
       }
     }
   });
@@ -1709,16 +1878,16 @@ function loadLabDB(){ try{ return JSON.parse(localStorage.getItem(LABDB_KEY)) ||
 let labDB = loadLabDB();
 function saveLabDB(db){ labDB = db; localStorage.setItem(LABDB_KEY, JSON.stringify(db)); rebuildAutocompleteCache(); }
 function clearLabDB(){
-  if(!labDB || !labDB.list || !labDB.list.length){ alert('No hay base del laboratorio cargada.'); return; }
-  if(confirm(`¿Borrar la base del laboratorio (${labDB.list.length} genotipos)?`)){
+  if(!labDB || !labDB.list || !labDB.list.length){ alert(t('al.noLabDB')); return; }
+  if(confirm(t('cf.clearLabDB',{n:labDB.list.length}))){
     labDB = null; localStorage.removeItem(LABDB_KEY); rebuildAutocompleteCache(); updateLabStatus();
   }
 }
 function updateLabStatus(){
   const el = document.getElementById('labStatus'); if(!el) return;
   el.innerHTML = (labDB && labDB.list && labDB.list.length)
-    ? `<div class="lab-stat-line">✓ Base del lab: <b>&nbsp;${labDB.list.length}&nbsp;</b> genotipos<button class="lab-clear" onclick="clearLabDB()">borrar</button></div>`
-    : `<div class="lab-stat-line">Sin base del lab cargada.</div>`;
+    ? `<div class="lab-stat-line">✓ ${t('lab.loaded',{n:labDB.list.length})}<button class="lab-clear" onclick="clearLabDB()">${t('lab.clear')}</button></div>`
+    : `<div class="lab-stat-line">${t('al.noLabDB')}</div>`;
 }
 
 /* Parser de CSV / tabulado con soporte de comillas; detecta el separador */
@@ -1753,24 +1922,24 @@ function importLabDB(e){
   r.onload = ()=>{
     try{
       const rows = parseDelimited(r.result);
-      if(rows.length < 2) throw new Error('Se espera una fila de títulos + al menos una fila de datos.');
+      if(rows.length < 2) throw new Error(t('err.labFormat'));
       const headers = rows[0].map(h=>h.trim());
       const dataRows = rows.slice(1);
       let gi = headers.findIndex(h=>/genot[iy]p/i.test(h));
       if(gi<0 && headers.length===1) gi=0;
       labImportData = { headers, dataRows, file: f.name };
       openLabModal(gi);
-    }catch(err){ alert('No se pudo leer el archivo: '+err.message); }
+    }catch(err){ alert(t('al.readFail',{e:err.message})); }
   };
   r.readAsText(f);
   e.target.value=''; closeMenu();
 }
 function openLabModal(gi){
   const sel = document.getElementById('labCol');
-  sel.innerHTML = labImportData.headers.map((h,i)=>`<option value="${i}">${esc(h||('Columna '+(i+1)))}</option>`).join('');
+  sel.innerHTML = labImportData.headers.map((h,i)=>`<option value="${i}">${esc(h||t('lab.colN',{n:i+1}))}</option>`).join('');
   sel.value = gi>=0 ? String(gi) : '0';
   document.getElementById('labSub').textContent =
-    `${labImportData.file} · ${labImportData.dataRows.length} filas. Elegí la columna del genotipo y confirmá.`;
+    t('lab.sub',{file:labImportData.file, n:labImportData.dataRows.length});
   renderLabPreview();
   document.getElementById('labOverlay').classList.add('open');
 }
@@ -1780,17 +1949,17 @@ function renderLabPreview(){
   const sample = labImportData.dataRows.map(r=>(r[gi]||'').trim()).filter(Boolean).slice(0,6);
   document.getElementById('labPreview').innerHTML = sample.length
     ? sample.map(s=>`<div class="lab-pv-row">${esc(s)}</div>`).join('')
-    : '<div class="hint">La columna elegida no tiene genotipos.</div>';
+    : `<div class="hint">${t('lab.noCol')}</div>`;
 }
 function confirmLabImport(){
   if(!labImportData) return;
   const gi = +document.getElementById('labCol').value;
   const list = [...new Set(labImportData.dataRows.map(r=>(r[gi]||'').trim()).filter(Boolean))];
-  if(!list.length){ alert('La columna elegida no tiene genotipos.'); return; }
+  if(!list.length){ alert(t('lab.noCol')); return; }
   saveLabDB({ name: labImportData.file, date: new Date().toISOString(), list });
   labImportData = null;
   closeLabModal(); updateLabStatus();
-  alert(`Base del laboratorio importada: ${list.length} genotipos.`);
+  alert(t('al.labImported',{n:list.length}));
 }
 function closeLabModal(){ document.getElementById('labOverlay').classList.remove('open'); }
 
@@ -1852,7 +2021,7 @@ function showGenoAC(){
   genoAC.items = items; genoAC.active = -1;
   if(!items.length){ pop.classList.remove('open'); pop.innerHTML=''; return; }
   pop.innerHTML = items.map((it,i)=>`<div class="ac-item" data-i="${i}" onmousedown="selectGenoAC(event,${i})">
-    <span class="ac-label">${esc(it.label)}</span><span class="ac-tag ${it.type}">${it.type==='comp'?'común':it.type}</span></div>`).join('');
+    <span class="ac-label">${esc(it.label)}</span><span class="ac-tag ${it.type}">${it.type==='comp'?t('ac.comp'):t('ac.stock')}</span></div>`).join('');
   pop.classList.add('open');
 }
 function hideGenoAC(){ const pop=document.getElementById('genoAC'); if(pop) pop.classList.remove('open'); }
@@ -1908,7 +2077,7 @@ function openForm(id){
   document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on'));
   if(id){
     const c = crosses.find(x=>x.id===id);
-    document.getElementById('modalTitle').textContent='Editar cruza';
+    document.getElementById('modalTitle').textContent=t('form.editTitle');
     document.getElementById('editId').value=c.id;
     formExperiments = (c.experiments||[]).slice();
     document.getElementById('genotype').value=c.genotype;
@@ -1917,7 +2086,7 @@ function openForm(id){
     document.getElementById('crossDate').value = c.crossDate.includes('T') ? c.crossDate : c.crossDate + 'T09:00';
     document.getElementById('temp').value=c.temp;
   } else {
-    document.getElementById('modalTitle').textContent='Nueva cruza';
+    document.getElementById('modalTitle').textContent=t('form.newTitle');
     document.getElementById('editId').value='';
     formExperiments = [];
     document.getElementById('crossDate').value = toLocalInput(new Date());
@@ -1970,7 +2139,7 @@ function saveCross(e){
 
 function delCross(id){
   const c = crosses.find(x=>x.id===id);
-  if(confirm(`¿Eliminar la cruza "${c.name||c.genotype}"? Esta acción no se puede deshacer.`)){
+  if(confirm(t('cf.deleteCross',{name:c.genotype}))){
     crosses = crosses.filter(x=>x.id!==id);
     // limpiar los avisos ya notificados de esta cruza (no dejar basura en localStorage)
     const seen = getNotified(); let changed = false;
@@ -2010,6 +2179,8 @@ function autoRender(){
   if(el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
   render();
 }
+document.documentElement.lang = lang;
+applyStaticI18n();
 updateNotifBtn();
 updateLabStatus();
 rebuildAutocompleteCache();
@@ -2026,19 +2197,19 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 </script>
 
 <!-- ===== Asistente de cruzas (IA) ===== -->
-<button class="chat-fab" id="chatFab" onclick="toggleChat()" title="Asistente de cruzas con IA">
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" data-i18n-title="chat.fabTitle" title="AI cross assistant">
   <svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9.5L5 21v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="#fff" opacity=".92"/></svg>
-  <span>Asistente</span>
+  <span data-i18n="chat.fab">Assistant</span>
 </button>
 <div class="chat-panel" id="chatPanel">
   <div class="chat-head">
-    <div class="ct">🧬 Asistente de cruzas</div>
-    <button class="cx" onclick="toggleChat()" title="Cerrar">✕</button>
+    <div class="ct" data-i18n="chat.title">🧬 Cross assistant</div>
+    <button class="cx" onclick="toggleChat()" data-i18n-title="chat.close" title="Close">✕</button>
   </div>
   <div class="chat-msgs" id="chatMsgs"></div>
   <div class="chat-input">
-    <textarea id="chatInput" rows="1" placeholder="Ej: quiero expresar UAS-Atg8 en neuronas…" onkeydown="chatKey(event)"></textarea>
-    <button class="chat-send" id="chatSend" onclick="sendChat()" title="Enviar">➤</button>
+    <textarea id="chatInput" rows="1" placeholder="e.g. I want to express UAS-Atg8 in neurons…" data-i18n-ph="chat.placeholder" onkeydown="chatKey(event)"></textarea>
+    <button class="chat-send" id="chatSend" onclick="sendChat()" data-i18n-title="chat.send" title="Send">➤</button>
   </div>
 </div>
 <script>
@@ -2051,10 +2222,16 @@ function toggleChat(){
   document.getElementById('chatFab').style.display = open ? 'none' : 'flex';
   if(open){
     if(!chatHistory.length){
-      addChatMsg('bot', '¡Hola! Soy tu asistente de cruzas de *Drosophila*. Contame qué objetivo querés lograr (por ej. expresar un transgén UAS en cierto tejido) y te propongo el esquema de cruza. Cuantos más datos me des de tus stocks y genotipos, mejor.');
+      addChatMsg('bot', t('chat.welcome'));
     }
     document.getElementById('chatInput').focus();
   }
+}
+/* al cambiar de idioma: se reinicia el chat para que arranque en el nuevo idioma */
+function chatReset(){
+  chatHistory.length = 0;
+  const box = document.getElementById('chatMsgs'); if(box) box.innerHTML = '';
+  if(document.getElementById('chatPanel').classList.contains('open')) addChatMsg('bot', t('chat.welcome'));
 }
 function chatKey(e){ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } }
 function chatEsc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -2080,24 +2257,22 @@ async function sendChat(){
   sendBtn.disabled = true;
   const box = document.getElementById('chatMsgs');
   const typing = document.createElement('div');
-  typing.className = 'chat-typing'; typing.textContent = 'pensando…';
+  typing.className = 'chat-typing'; typing.textContent = t('chat.typing');
   box.appendChild(typing); box.scrollTop = box.scrollHeight;
   try{
     const r = await fetch('/api/chat', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ messages: chatHistory.slice(-16) }),
+      body: JSON.stringify({ messages: chatHistory.slice(-16), lang }),
     });
     if(!r.ok){
-      addChatMsg('err', r.status === 404
-        ? 'El asistente solo funciona en la versión publicada online (con la clave configurada), no en el archivo local.'
-        : 'El asistente no está disponible (error ' + r.status + ').');
+      addChatMsg('err', r.status === 404 ? t('chat.errNotDeployed') : t('chat.errUnavailable',{s:r.status}));
     } else {
       const data = await r.json();
       if(data.error){ addChatMsg('err', data.error); }
       else { addChatMsg('bot', data.text); chatHistory.push({ role:'assistant', text: data.text }); }
     }
   }catch(e){
-    addChatMsg('err', 'No pude conectar con el asistente. Probá de nuevo en un momento.');
+    addChatMsg('err', t('chat.errConnect'));
   }finally{
     typing.remove();
     chatBusy = false; sendBtn.disabled = false; input.focus();
@@ -2107,6 +2282,8 @@ document.getElementById('chatInput').addEventListener('input', function(){
   this.style.height = 'auto';
   this.style.height = Math.min(this.scrollHeight, 90) + 'px';
 });
+/* traducir también el FAB/panel del chat (se parsean después del primer script) */
+applyStaticI18n();
 </script>
 </body>
 </html>
