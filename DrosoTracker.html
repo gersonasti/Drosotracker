@@ -2223,13 +2223,13 @@ setInterval(autoRender, 60000);
     tip.classList.add('show');
   }
   function hide(){ clearTimeout(hoverTimer); tip.classList.remove('show'); }
-  // Desktop: hover con retardo de 1,5 s (no molesta al pasar el cursor de largo).
+  // Desktop: hover con retardo de 1 s (no molesta al pasar el cursor de largo).
   // Ignora los eventos de mouse "fantasma" que dispara el touch.
   document.addEventListener('mouseover', e=>{
     if(Date.now()-lastTouch < 800) return;
     const el = e.target.closest('[data-tip]'); if(!el) return;
     clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(()=>show(el), 1500);
+    hoverTimer = setTimeout(()=>show(el), 1000);
   });
   document.addEventListener('mouseout', e=>{
     const el = e.target.closest('[data-tip]'); if(el && !el.contains(e.relatedTarget)) hide();
