@@ -217,6 +217,7 @@
   .task .texp{font-size:.76rem;color:var(--ink-soft);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .task .tgeno{font-size:.8rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
   .task .chip{margin-left:auto;flex:none}
+  .tmain{display:contents}
   .tasks.alert{background:#fdeeee;border-color:#f4cccc}
   .tasks-head{width:100%;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'Poppins';font-weight:600;font-size:1rem;color:var(--ink);padding:0}
   .tasks-head .badge{background:var(--lav-soft);color:var(--lav);font-size:.75rem;padding:2px 9px;border-radius:999px;margin-left:8px}
@@ -229,6 +230,17 @@
   .task.done .chip{filter:grayscale(.35)}
   .task-del{flex:none;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:.85rem;line-height:1;padding:3px 5px;border-radius:7px}
   .task-del:hover{background:var(--peach-soft);color:var(--coral)}
+  /* En celular la fila de tarea pasa a 2 líneas (nombre arriba, chip abajo) para no desbordar */
+  @media (max-width:560px){
+    .task{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"main aux" "chip aux";column-gap:10px;row-gap:6px;align-items:center}
+    .tmain{display:flex;grid-area:main;align-items:center;gap:8px;min-width:0}
+    .task .tname{max-width:62%}
+    .task .chip{grid-area:chip;margin-left:0;justify-self:start;max-width:100%;white-space:normal}
+    .task-check{grid-area:aux;justify-self:end}
+    .task.done{grid-template-areas:"main check" "chip del"}
+    .task.done .task-check{grid-area:check;justify-self:end}
+    .task.done .task-del{grid-area:del;justify-self:end;align-self:center}
+  }
   /* Experimento(s): etiquetas en el formulario */
   .tags-input{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;border-radius:13px;border:1.5px solid var(--line);background:var(--bg-2);cursor:text}
   .tags-input:focus-within{border-color:var(--lav)}
@@ -1432,7 +1444,7 @@ function renderTasks(){
 
   const alert = pending.length>0 && !tasksPanelOpen;   // rojo pastel sólo cuando está cerrado y hay tareas
   // genotipo (identifica la cruza) + experimento (desambigua cruzas con el mismo genotipo)
-  const rowName = (geno, exp)=> `<span class="tname" title="${esc(geno)}">${esc(geno)}</span>${exp?`<span class="texp" title="${esc(exp)}">${esc(exp)}</span>`:''}`;
+  const rowName = (geno, exp)=> `<span class="tmain"><span class="tname" title="${esc(geno)}">${esc(geno)}</span>${exp?`<span class="texp" title="${esc(exp)}">${esc(exp)}</span>`:''}</span>`;
   const expOf = crossId => { const c = crosses.find(x=>x.id===crossId); return c ? (c.experiments||[]).join(', ') : ''; };
   const T_MARK = t('task.markDone'), T_UNMARK = t('task.unmark'), T_REMOVE = t('task.remove');
   const pendingHTML = pending.map(it=>`
