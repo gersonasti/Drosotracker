@@ -2253,7 +2253,7 @@ setInterval(autoRender, 60000);
   }, {passive:true});
   document.addEventListener('touchmove', e=>{
     const tch = e.touches[0];
-    if(tch && (Math.abs(tch.clientX-startX) > 12 || Math.abs(tch.clientY-startY) > 12)){ moved = true; clearTimeout(pressTimer); hide(); }
+    if(tch && (Math.abs(tch.clientX-startX) > 20 || Math.abs(tch.clientY-startY) > 20)){ moved = true; clearTimeout(pressTimer); hide(); }
   }, {passive:true});
   document.addEventListener('touchend', ()=>{ lastTouch = Date.now(); clearTimeout(pressTimer); pressEl = null; if(tip.classList.contains('show')) scheduleHide(2000); });
   document.addEventListener('touchcancel', ()=>{ lastTouch = Date.now(); clearTimeout(pressTimer); longShow(); pressEl = null; });
@@ -2268,6 +2268,48 @@ setInterval(autoRender, 60000);
   document.addEventListener('click', e=>{ hide(); if(longPressed){ longPressed = false; e.preventDefault(); e.stopPropagation(); } }, true);
   window.addEventListener('scroll', hide, {passive:true});
   window.addEventListener('resize', hide);
+})();
+
+/* === PANEL DE DEBUG TÁCTIL (TEMPORAL) — muestra en pantalla qué eventos dispara el
+   dispositivo al mantener apretado un botón. Se quita cuando resolvamos el tooltip. === */
+(function(){
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;max-height:42vh;overflow:auto;z-index:99999;background:rgba(20,18,34,.95);color:#c8f7d0;font:11px/1.35 ui-monospace,Menlo,Consolas,monospace;padding:6px 8px;border-top:2px solid #6c63b5;-webkit-user-select:text;user-select:text';
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;gap:8px;align-items:center;color:#fff;font-weight:700;margin-bottom:4px;position:sticky;top:0;background:rgba(20,18,34,.99);padding:2px 0';
+  bar.innerHTML = '<span style="flex:1">🐞 DEBUG táctil — mantené apretado un botón</span>';
+  const mkBtn = (txt)=>{ const b=document.createElement('button'); b.textContent=txt; b.style.cssText='font:11px sans-serif;padding:3px 8px;border:0;border-radius:6px;background:#6c63b5;color:#fff'; return b; };
+  const btnClear = mkBtn('limpiar'), btnHide = mkBtn('ocultar');
+  bar.appendChild(btnClear); bar.appendChild(btnHide);
+  const logEl = document.createElement('div');
+  box.appendChild(bar); box.appendChild(logEl);
+  document.body.appendChild(box);
+  let t0 = Date.now(), n = 0;
+  function log(msg, color){
+    const line = document.createElement('div');
+    if(color) line.style.color = color;
+    line.textContent = ('0000'+(Date.now()-t0)).slice(-5)+'ms  '+msg;
+    logEl.insertBefore(line, logEl.firstChild);
+    if(++n > 70){ logEl.removeChild(logEl.lastChild); n--; }
+  }
+  btnClear.onclick = ()=>{ logEl.innerHTML=''; n=0; t0=Date.now(); };
+  btnHide.onclick  = ()=>{ box.style.display='none'; };
+  log('panel cargado ✓  (tenés la versión nueva)', '#fff');
+  const info = e=>{
+    const el = e.target && e.target.closest && e.target.closest('[data-tip]');
+    return (e.target && e.target.tagName || '?') + (el ? ' [DATA-TIP]' : ' (sin tip)');
+  };
+  ['touchstart','touchmove','touchend','touchcancel','contextmenu','pointerdown','pointerup','pointercancel','click']
+    .forEach(type=> document.addEventListener(type, e=> log(type+' → '+info(e)), {capture:true, passive:true}));
+  const tip = document.querySelector('.tip');
+  if(tip){
+    new MutationObserver(()=>{
+      if(tip.classList.contains('show')){
+        const r = tip.getBoundingClientRect(), op = getComputedStyle(tip).opacity;
+        log('★ TIP MOSTRADO  pos='+Math.round(r.left)+','+Math.round(r.top)+'  '+Math.round(r.width)+'x'+Math.round(r.height)+'  opacity='+op, '#ffe08a');
+      } else { log('TIP oculto', '#9aa'); }
+    }).observe(tip, {attributes:true, attributeFilter:['class']});
+  } else { log('⚠ no encontré el elemento .tip', '#ff9a9a'); }
 })();
 
 /* PWA: registrar el service worker. Solo cuando la app está ALOJADA (http/https);
