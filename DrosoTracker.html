@@ -419,8 +419,8 @@
     box-shadow:0 10px 28px rgba(31,27,54,.28);pointer-events:none;opacity:0;transform:translateY(4px);
     transition:opacity .12s ease,transform .12s ease;left:0;top:0}
   .tip.show{opacity:1;transform:translateY(0)}
-  /* al mantener apretado, evitar el resaltado/selección del sistema en los botones con tooltip */
-  [data-tip]{-webkit-touch-callout:none}
+  /* al mantener apretado, evitar que el navegador seleccione/copie el texto o abra el menú del sistema */
+  [data-tip]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 </style>
 </head>
 <body>
@@ -2208,7 +2208,7 @@ setInterval(autoRender, 60000);
   const tip = document.createElement('div');
   tip.className = 'tip';
   document.body.appendChild(tip);
-  let pressTimer = null, longPressed = false, lastTouch = 0, hoverTimer = null;
+  let pressTimer = null, longPressed = false, lastTouch = 0, hoverTimer = null, startX = 0, startY = 0;
   function show(el){
     const txt = el.getAttribute('data-tip'); if(!txt) return;
     tip.textContent = txt;
@@ -2234,15 +2234,22 @@ setInterval(autoRender, 60000);
   document.addEventListener('mouseout', e=>{
     const el = e.target.closest('[data-tip]'); if(el && !el.contains(e.relatedTarget)) hide();
   });
-  // Touch: mantener apretado ~0,45 s
+  // Touch: mantener apretado ~0,45 s. Se ignora el temblor del dedo (< 10px);
+  // solo un movimiento real (scroll) cancela el tooltip.
   document.addEventListener('touchstart', e=>{
     lastTouch = Date.now(); clearTimeout(pressTimer); longPressed = false;
     const el = e.target.closest('[data-tip]');
-    if(el) pressTimer = setTimeout(()=>{ longPressed = true; show(el); }, 450);
+    if(el){
+      const tch = e.touches[0]; startX = tch.clientX; startY = tch.clientY;
+      pressTimer = setTimeout(()=>{ longPressed = true; show(el); }, 450);
+    }
   }, {passive:true});
   function endTouch(){ lastTouch = Date.now(); clearTimeout(pressTimer); if(tip.classList.contains('show')) setTimeout(hide, 1600); }
   document.addEventListener('touchend', endTouch);
-  document.addEventListener('touchmove', ()=>{ clearTimeout(pressTimer); hide(); }, {passive:true});
+  document.addEventListener('touchmove', e=>{
+    const tch = e.touches[0];
+    if(tch && (Math.abs(tch.clientX-startX) > 10 || Math.abs(tch.clientY-startY) > 10)){ clearTimeout(pressTimer); hide(); }
+  }, {passive:true});
   document.addEventListener('touchcancel', endTouch);
   // Un tooltip abierto por long-press NO debe activar el botón ni abrir el menú del sistema
   document.addEventListener('click', e=>{ hide(); if(longPressed){ longPressed = false; e.preventDefault(); e.stopPropagation(); } }, true);
