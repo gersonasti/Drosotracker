@@ -2208,7 +2208,7 @@ setInterval(autoRender, 60000);
   const tip = document.createElement('div');
   tip.className = 'tip';
   document.body.appendChild(tip);
-  let pressTimer = null, longPressed = false, lastTouch = 0;
+  let pressTimer = null, longPressed = false, lastTouch = 0, hoverTimer = null;
   function show(el){
     const txt = el.getAttribute('data-tip'); if(!txt) return;
     tip.textContent = txt;
@@ -2222,11 +2222,14 @@ setInterval(autoRender, 60000);
     tip.style.top  = Math.round(top) + 'px';
     tip.classList.add('show');
   }
-  function hide(){ tip.classList.remove('show'); }
-  // Desktop: hover (ignora los mouse "fantasma" que dispara el touch)
+  function hide(){ clearTimeout(hoverTimer); tip.classList.remove('show'); }
+  // Desktop: hover con retardo de 1,5 s (no molesta al pasar el cursor de largo).
+  // Ignora los eventos de mouse "fantasma" que dispara el touch.
   document.addEventListener('mouseover', e=>{
     if(Date.now()-lastTouch < 800) return;
-    const el = e.target.closest('[data-tip]'); if(el) show(el);
+    const el = e.target.closest('[data-tip]'); if(!el) return;
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(()=>show(el), 1500);
   });
   document.addEventListener('mouseout', e=>{
     const el = e.target.closest('[data-tip]'); if(el && !el.contains(e.relatedTarget)) hide();
