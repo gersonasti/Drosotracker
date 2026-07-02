@@ -66,7 +66,10 @@
       radial-gradient(1200px 600px at 10% -10%, rgba(201,189,240,.10), transparent 60%),
       radial-gradient(1000px 600px at 110% 10%, rgba(159,224,201,.14), transparent 55%),
       linear-gradient(180deg,#1b1828,#141019);
+    background-repeat:no-repeat;
+    background-attachment:fixed;   /* el glow queda fijo como en modo claro (el shorthand de arriba resetea attachment) */
   }
+  html[data-theme="dark"]{ background:#141019; }   /* canvas oscuro: sin franja clara al final / en el overscroll */
   html[data-theme="dark"] .btn.ghost{background:var(--card);border:1px solid var(--line)}
   html[data-theme="dark"] .temp-presets button{background:var(--bg-2)}
   html[data-theme="dark"] .tl-dot{border-color:var(--card)}
@@ -267,14 +270,12 @@
   .task-del:hover{background:var(--peach-soft);color:var(--coral)}
   /* En celular la fila de tarea pasa a 2 líneas (nombre arriba, chip abajo) para no desbordar */
   @media (max-width:560px){
-    .task{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"main aux" "chip aux";column-gap:10px;row-gap:6px;align-items:center}
+    .task{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"main check" "chip del";column-gap:10px;row-gap:6px;align-items:center}
     .tmain{display:flex;grid-area:main;align-items:center;gap:8px;min-width:0}
     .task .tname{max-width:62%}
     .task .chip{grid-area:chip;margin-left:0;justify-self:start;max-width:100%;white-space:normal}
-    .task-check{grid-area:aux;justify-self:end}
-    .task.done{grid-template-areas:"main check" "chip del"}
-    .task.done .task-check{grid-area:check;justify-self:end}
-    .task.done .task-del{grid-area:del;justify-self:end;align-self:center}
+    .task-check{grid-area:check;justify-self:end;align-self:center}
+    .task-del{grid-area:del;justify-self:end;align-self:center}
   }
   /* Experimento(s): etiquetas en el formulario */
   .tags-input{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;border-radius:13px;border:1.5px solid var(--line);background:var(--bg-2);cursor:text}
@@ -528,8 +529,8 @@
           </div>
           <button class="set-group" onclick="toggleSetGroup(this)">🎨 <span data-i18n="set.appearance">Appearance</span><span class="set-caret">▾</span></button>
           <div class="set-sub">
-            <button data-mode="light" onclick="setMode('light')"><span class="set-tick">✓</span><span data-i18n="set.light">☀️ Light</span></button>
-            <button data-mode="dark" onclick="setMode('dark')"><span class="set-tick">✓</span><span data-i18n="set.dark">🌙 Dark</span></button>
+            <button data-mode="light" onclick="setMode('light')"><span class="set-tick">✓</span><span data-i18n="set.light">Light</span></button>
+            <button data-mode="dark" onclick="setMode('dark')"><span class="set-tick">✓</span><span data-i18n="set.dark">Dark</span></button>
           </div>
         </div>
       </div>
@@ -601,9 +602,9 @@
         <label for="crossDate" data-i18n="form.crossDate">Set-up date *</label>
         <input id="crossDate" type="date" required />
         <select id="crossPeriod" style="margin-top:8px">
-          <option value="morning" data-i18n="period.morning">🌅 Morning (7–12h)</option>
-          <option value="afternoon" data-i18n="period.afternoon">🌤 Afternoon (12–17h)</option>
-          <option value="night" data-i18n="period.night">🌙 Night (17–22h)</option>
+          <option value="morning" data-i18n="period.morning">Morning (7–12h)</option>
+          <option value="afternoon" data-i18n="period.afternoon">Afternoon (12–17h)</option>
+          <option value="night" data-i18n="period.night">Night (17–22h)</option>
         </select>
         <div class="hint" data-i18n="form.crossDateHint">The day it was set up (egg-laying) and roughly when — refines the estimates.</div>
       </div>
@@ -787,12 +788,12 @@ const I18N = {
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
     'menu.exportSurvival':'📊 Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv',
-    'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'☀️ Light','set.dark':'🌙 Dark',
+    'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'Light','set.dark':'Dark',
     'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
     'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
     'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active records','stat.nextEcl':'next eclosion',
-    'tasks.title':'📋 Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
+    'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
     'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.',
     'foot.notif':'Reminders fire while this tab is open.',
     'empty.title':'No records yet','empty.text':'Add your first record with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New record','group.none':'No experiment',
@@ -812,7 +813,7 @@ const I18N = {
     'card.newGen':'↪ New generation','card.newGenTitle':'Create the next generation (same genotype and objective, clock reset)','card.newGenDisabled':'Available once the record is set up',
     'card.viewTimeline':'View timeline ▾','card.hideTimeline':'Hide timeline ▴','tl.eclosionAdult':'Eclosion → Adult','tl.inProgress':'in progress','tl.agingDay':'day {d} of aging',
     // envejecimiento
-    'aging.toggle':'🧬 Aging ▾','aging.mAlive':'alive','aging.mSurv':'survival','aging.mAge':'cohort age',
+    'aging.toggle':'Aging ▾','aging.mAlive':'alive','aging.mSurv':'survival','aging.mAge':'cohort age',
     'aging.sexF':'♀ Females','aging.sexM':'♂ Males','aging.sexMixed':'⚥ Mixed','aging.vials':'vials','aging.censored':'censored','aging.edit':'edit',
     'aging.densHigh':'⚠ High density ({d}/vial) · recommended ≤25–30/vial','aging.median':'Median survival: <b>{d} d</b>','aging.medianNone':'Median: — (still >50% alive)','aging.maxObs':'Max observed: <b>{d} d</b>',
     'aging.noRecords':'No records yet.','aging.evDelete':'Delete','aging.addRecord':'+ Log flip / count','aging.exportCohort':'⬇ Export survival table (CSV)',
@@ -824,7 +825,7 @@ const I18N = {
     'form.experiments':'Experiment(s)','form.expPh':'e.g. Eye phenotype…','form.expHint':'Group records by experiment. You can add more than one (Enter or comma). Optional.',
     'form.genotype':'Genotype *','form.genoHint':'Autocompletes from your history, the lab database and common components (CyO, UAS-GFP, elav-GAL4…). Start typing.',
     'form.objective':'Objective','form.dissectStage':'Stage to dissect:','form.objHint':'This drives the <b>pending tasks</b>. Optional.',
-    'form.crossDate':'Set-up date *','form.crossDateHint':'The day it was set up (egg-laying) and roughly when — refines the estimates.','period.morning':'🌅 Morning (7–12h)','period.afternoon':'🌤 Afternoon (12–17h)','period.night':'🌙 Night (17–22h)',
+    'form.crossDate':'Set-up date *','form.crossDateHint':'The day it was set up (egg-laying) and roughly when — refines the estimates.','period.morning':'Morning (7–12h)','period.afternoon':'Afternoon (12–17h)','period.night':'Night (17–22h)',
     'form.temp':'Incubation temperature (°C) *','form.tempHint':'Speeds up or slows down the whole cycle. Useful range: 18–29 °C.','form.cancel':'Cancel','form.save':'Save record',
     'form.adults':'Adult flies <span class="opt">(optional)</span>','form.adultsHint':'Total number, and optionally females/males separately.','form.adultsTotalPh':'total','form.container':'Container <span class="opt">(optional)</span>','form.nContTitle':'Number of containers','cont.vial':'Vial','cont.bottle':'Bottle','cont.plate':'Plate','form.notes':'Comments <span class="opt">(optional)</span>','form.notesPh':'Notes about this record…',
     'card.info':'Details ▾','card.hideInfo':'Details ▴','info.adults':'Adult flies','info.container':'Container','info.notes':'Comments','info.empty':'No extra details yet — edit the record to add them.','tip.info':'Extra details: adult count, container and comments.',
@@ -861,12 +862,12 @@ const I18N = {
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
     'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv',
-    'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'☀️ Claro','set.dark':'🌙 Oscuro',
+    'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'Claro','set.dark':'Oscuro',
     'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
     'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
     'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
-    'tasks.title':'📋 Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
+    'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
     'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10 °C · ~148 grados-día). Tiempos estimados · Datos guardados localmente en tu navegador.',
     'foot.notif':'Los recordatorios se notifican mientras esta pestaña esté abierta.',
     'empty.title':'Todavía no hay registros','empty.text':'Agregá tu primer registro con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nuevo registro','group.none':'Sin experimento',
@@ -881,7 +882,7 @@ const I18N = {
     'card.edit':'Editar','card.delete':'Eliminar','card.markParents':'✓ Marcar parentales retirados',
     'card.newGen':'↪ Nueva generación','card.newGenTitle':'Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)','card.newGenDisabled':'Disponible cuando se monte el registro',
     'card.viewTimeline':'Ver cronología ▾','card.hideTimeline':'Ocultar cronología ▴','tl.eclosionAdult':'Eclosión → Adulto','tl.inProgress':'en curso','tl.agingDay':'día {d} de envejecimiento',
-    'aging.toggle':'🧬 Envejecimiento ▾','aging.mAlive':'vivos','aging.mSurv':'supervivencia','aging.mAge':'edad cohorte',
+    'aging.toggle':'Envejecimiento ▾','aging.mAlive':'vivos','aging.mSurv':'supervivencia','aging.mAge':'edad cohorte',
     'aging.sexF':'♀ Hembras','aging.sexM':'♂ Machos','aging.sexMixed':'⚥ Mixto','aging.vials':'viales','aging.censored':'censurados','aging.edit':'editar',
     'aging.densHigh':'⚠ Densidad alta ({d}/vial) · recomendado ≤25–30/vial','aging.median':'Mediana de supervivencia: <b>{d} d</b>','aging.medianNone':'Mediana: — (aún >50% vivos)','aging.maxObs':'Máx. observado: <b>{d} d</b>',
     'aging.noRecords':'Sin registros todavía.','aging.evDelete':'Borrar','aging.addRecord':'+ Registrar pase / conteo','aging.exportCohort':'⬇ Exportar tabla de supervivencia (CSV)',
@@ -892,7 +893,7 @@ const I18N = {
     'form.experiments':'Experimento(s)','form.expPh':'ej. Fenotipo del ojo…','form.expHint':'Agrupá los registros por experimento. Podés agregar más de uno (Enter o coma). Opcional.',
     'form.genotype':'Genotipo *','form.genoHint':'Autocompleta con tu historial, la base del laboratorio y componentes comunes (CyO, UAS-GFP, elav-GAL4…). Empezá a escribir.',
     'form.objective':'Objetivo','form.dissectStage':'Estadio a disecar:','form.objHint':'De esto se desprenden las <b>tareas pendientes</b>. Opcional.',
-    'form.crossDate':'Fecha de montaje *','form.crossDateHint':'El día en que se montó (puesta de huevos) y aproximadamente cuándo — afina las estimaciones.','period.morning':'🌅 Mañana (7–12 h)','period.afternoon':'🌤 Tarde (12–17 h)','period.night':'🌙 Noche (17–22 h)',
+    'form.crossDate':'Fecha de montaje *','form.crossDateHint':'El día en que se montó (puesta de huevos) y aproximadamente cuándo — afina las estimaciones.','period.morning':'Mañana (7–12 h)','period.afternoon':'Tarde (12–17 h)','period.night':'Noche (17–22 h)',
     'form.temp':'Temperatura de incubación (°C) *','form.tempHint':'Acelera o ralentiza todo el ciclo. Rango útil: 18–29 °C.','form.cancel':'Cancelar','form.save':'Guardar registro',
     'form.adults':'Moscas adultas <span class="opt">(opcional)</span>','form.adultsHint':'Número total, y opcionalmente hembras y machos por separado.','form.adultsTotalPh':'total','form.container':'Recipiente <span class="opt">(opcional)</span>','form.nContTitle':'Cantidad de recipientes','cont.vial':'Vial','cont.bottle':'Botella','cont.plate':'Placa','form.notes':'Comentarios <span class="opt">(opcional)</span>','form.notesPh':'Notas sobre este registro…',
     'card.info':'Detalles ▾','card.hideInfo':'Detalles ▴','info.adults':'Moscas adultas','info.container':'Recipiente','info.notes':'Comentarios','info.empty':'Sin datos adicionales — editá el registro para agregarlos.','tip.info':'Datos adicionales: cantidad de adultos, recipiente y comentarios.',
@@ -948,10 +949,15 @@ function updateSettingsUI(){
   document.querySelectorAll('#settingsPop [data-lang]').forEach(b=> b.classList.toggle('active', b.dataset.lang===lang));
   document.querySelectorAll('#settingsPop [data-mode]').forEach(b=> b.classList.toggle('active', b.dataset.mode===mode));
 }
+function applyThemeColor(){
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if(tc) tc.setAttribute('content', mode==='dark' ? '#1b1828' : '#c9bdf0');
+}
 function setMode(m){
   mode = (m==='dark') ? 'dark' : 'light';
   localStorage.setItem(MODE_KEY, mode);
   document.documentElement.setAttribute('data-theme', mode);
+  applyThemeColor();
   updateSettingsUI();
 }
 function setLang(l){
@@ -963,6 +969,11 @@ function setLang(l){
   render();
   updateSettingsUI();
 }
+/* Cerrar los menús desplegables (Datos, ⚙️) al tocar fuera; al abrir uno se cierra el otro */
+document.addEventListener('click', e=>{
+  const menu = e.target.closest('.menu');
+  document.querySelectorAll('.menu-pop.open').forEach(p=>{ if(!menu || !menu.contains(p)) p.classList.remove('open'); });
+});
 
 /* --- Modelo de desarrollo dependiente de temperatura ---
    Suma térmica (degree-days): D(T) = DD / (T - T0)
@@ -1547,6 +1558,13 @@ function markTaskDone(id){
 }
 function unmarkTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }
 function deleteTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }
+/* ✕ en una tarea pendiente: la descarta (se oculta, no cuenta como "hecha"); reaparece a las 24 h si sigue vigente */
+function dismissTask(id){
+  const m = _taskMap[id];
+  const done = loadTaskDone();
+  done[id] = { doneAt: Date.now(), dismissed:true, text:m?m.text:'', c:m?m.c:'', genotype:m?m.genotype:'', crossId:m?m.crossId:id.split(':')[0] };
+  saveTaskDone(done); renderTasks();
+}
 
 function renderTasks(){
   const el = document.getElementById('tasks');
@@ -1572,7 +1590,7 @@ function renderTasks(){
   });
   // orden: más urgente arriba (menor "urgency" = antes); empates por orden de cruza
   const pending = live.filter(t=> !done[t.id]).sort((a,b)=> (a.r.urgency??9e9)-(b.r.urgency??9e9));
-  const doneList = Object.keys(done).map(id=>({id, ...done[id]})).sort((a,b)=> b.doneAt-a.doneAt);
+  const doneList = Object.keys(done).filter(id=>!done[id].dismissed).map(id=>({id, ...done[id]})).sort((a,b)=> b.doneAt-a.doneAt);
 
   const alert = pending.length>0 && !tasksPanelOpen;   // rojo pastel sólo cuando está cerrado y hay tareas
   // genotipo (identifica la cruza) + experimento (desambigua cruzas con el mismo genotipo)
@@ -1584,6 +1602,7 @@ function renderTasks(){
       ${rowName(it.genotype, it.exp)}
       <span class="chip ${it.r.c}">${it.r.pulse?'<span class="pulse"></span>':''}${esc(it.r.t)}</span>
       <input type="checkbox" class="task-check" title="${T_MARK}" onclick="event.stopPropagation();markTaskDone('${it.id}')" />
+      <button class="task-del" title="${T_REMOVE}" onclick="event.stopPropagation();dismissTask('${it.id}')">✕</button>
     </div>`).join('');
   const doneHTML = doneList.map(d=>`
     <div class="task done">
@@ -1681,7 +1700,7 @@ function toggleTL(btn){
   const card = btn.closest('.card');
   const id = card ? card.id.replace('card-','') : null;
   if(id){ if(open) openTLIds.add(id); else openTLIds.delete(id); }
-  updateGridAlign();
+  if(open) updateGridAlign(); else setTimeout(updateGridAlign, 380);  // al cerrar, esperar a que termine el colapso (no estira la vecina)
 }
 function toggleInfo(btn){
   const card = btn.closest('.card'); if(!card) return;
@@ -1689,12 +1708,12 @@ function toggleInfo(btn){
   btn.textContent = open ? t('card.hideInfo') : t('card.info');
   const id = card.id.replace('card-','');
   if(open) openInfoIds.add(id); else openInfoIds.delete(id);
-  updateGridAlign();
+  if(open) updateGridAlign(); else setTimeout(updateGridAlign, 380);
 }
 /* Marca las grillas con una cronología o panel de detalles abierto para que NO estiren las vecinas.
    Sin nada abierto, la grilla vuelve a "stretch" y todas las tarjetas igualan altura. */
 function updateGridAlign(){
-  document.querySelectorAll('.grid').forEach(g=> g.classList.toggle('tl-open', !!g.querySelector('.timeline.open, .info-panel.open')));
+  document.querySelectorAll('.grid').forEach(g=> g.classList.toggle('tl-open', !!g.querySelector('.timeline.open, .info-panel.open, .aging-panel.open')));
 }
 const openAgingIds = new Set();
 const openTLIds = new Set();
@@ -1703,6 +1722,7 @@ function toggleAging(id, btn){
   const open = btn.nextElementSibling.classList.toggle('open');
   btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
   if(open) openAgingIds.add(id); else openAgingIds.delete(id);
+  if(open) updateGridAlign(); else setTimeout(updateGridAlign, 420);
 }
 function reopenPanel(id, onclickKey){
   const card = document.getElementById('card-'+id); if(!card) return;
@@ -2391,6 +2411,7 @@ function autoRender(){
 }
 document.documentElement.lang = lang;
 document.documentElement.setAttribute('data-theme', mode);
+applyThemeColor();
 applyStaticI18n();
 updateSettingsUI();
 updateNotifBtn();
