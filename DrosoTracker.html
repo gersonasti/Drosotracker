@@ -488,7 +488,7 @@
       </div>
       <button class="btn" onclick="openForm()" data-tip-key="tip.newCross">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
-        <span class="lbl" data-i18n="hdr.newCross">New cross</span>
+        <span class="lbl" data-i18n="hdr.newCross">New record</span>
       </button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(event)" />
       <input type="file" id="labFile" accept=".csv,.tsv,.tab,.txt,text/csv,text/tab-separated-values,text/plain" style="display:none" onchange="importLabDB(event)" />
@@ -510,8 +510,8 @@
 <!-- Modal -->
 <div class="overlay" id="overlay">
   <div class="modal">
-    <h2 id="modalTitle">New cross</h2>
-    <div class="sub" data-i18n="form.sub">Enter the genotype, cross date and incubation temperature.</div>
+    <h2 id="modalTitle">New record</h2>
+    <div class="sub" data-i18n="form.sub">Enter the genotype, set-up date and incubation temperature.</div>
     <form id="crossForm" onsubmit="saveCross(event)">
       <input type="hidden" id="editId" />
       <div class="field">
@@ -520,7 +520,7 @@
           <input id="expInput" list="expList" autocomplete="off" placeholder="e.g. Eye phenotype…" data-i18n-ph="form.expPh" onkeydown="expInputKey(event)" />
         </div>
         <datalist id="expList"></datalist>
-        <div class="hint" data-i18n="form.expHint">Group crosses by experiment. You can add more than one (Enter or comma). Optional.</div>
+        <div class="hint" data-i18n="form.expHint">Group records by experiment. You can add more than one (Enter or comma). Optional.</div>
       </div>
       <div class="field">
         <label for="genotype" data-i18n="form.genotype">Genotype *</label>
@@ -551,9 +551,9 @@
         <div class="hint" data-i18n-html="form.objHint">This drives the <b>pending tasks</b>. Optional.</div>
       </div>
       <div class="field">
-        <label for="crossDate" data-i18n="form.crossDate">Cross date and time *</label>
+        <label for="crossDate" data-i18n="form.crossDate">Set-up date and time *</label>
         <input id="crossDate" type="datetime-local" required />
-        <div class="hint" data-i18n="form.crossDateHint">When the cross was set up (egg-laying). The time refines the calculations and the virgin window.</div>
+        <div class="hint" data-i18n="form.crossDateHint">When it was set up (egg-laying). The time refines the calculations and the virgin window.</div>
       </div>
       <div class="field">
         <label for="temp" data-i18n="form.temp">Incubation temperature (°C) *</label>
@@ -593,7 +593,7 @@
       </div>
       <div class="modal-actions">
         <button type="button" class="btn ghost" onclick="closeForm()" data-i18n="form.cancel">Cancel</button>
-        <button type="submit" class="btn" data-i18n="form.save">Save cross</button>
+        <button type="submit" class="btn" data-i18n="form.save">Save record</button>
       </div>
     </form>
   </div>
@@ -603,11 +603,11 @@
 <div class="overlay" id="planOverlay">
   <div class="modal">
     <h2 id="planTitle">Planning</h2>
-    <div class="sub" data-i18n="plan.sub">Upcoming events and reverse cross scheduling.</div>
+    <div class="sub" data-i18n="plan.sub">Upcoming events and reverse scheduling.</div>
     <h3 style="font-size:1rem;margin:6px 0 10px" data-i18n="plan.upcoming">📆 Upcoming events</h3>
     <div id="agendaBox"></div>
     <h3 style="font-size:1rem;margin:18px 0 6px" data-i18n="plan.backward">⏪ Plan backward</h3>
-    <div class="sub" style="margin-bottom:14px" data-i18n="plan.backwardSub">When to set up the cross to reach a stage by a target date?</div>
+    <div class="sub" style="margin-bottom:14px" data-i18n="plan.backwardSub">When to set it up to reach a stage by a target date?</div>
     <form id="planForm" onsubmit="computePlan(event)">
       <div class="field">
         <label for="planExp" data-i18n="form.experiments">Experiment(s)</label>
@@ -649,7 +649,7 @@
       </div>
       <div class="field"><label for="planDate" data-i18n="plan.onDay">On</label><input id="planDate" type="datetime-local" required /></div>
       <div class="field"><label for="planTemp" data-i18n="plan.temp">Temperature (°C)</label><input id="planTemp" type="number" min="12" max="30" step="0.5" value="25" required /></div>
-      <button class="btn" type="submit" style="width:100%;justify-content:center" data-i18n="plan.calc">Calculate cross date</button>
+      <button class="btn" type="submit" style="width:100%;justify-content:center" data-i18n="plan.calc">Calculate set-up date</button>
     </form>
     <div id="planResult"></div>
     <div class="modal-actions"><button type="button" class="btn ghost" onclick="closePlan()" style="flex:1;justify-content:center" data-i18n="plan.close">Close</button></div>
@@ -728,34 +728,34 @@ let lang = localStorage.getItem(LANG_KEY) || 'en';
 const I18N = {
   en: {
     'hdr.notifActivate':'🔔 Activate reminders','hdr.notifActive':'🔔 Reminders on',
-    'hdr.plan':'🗓 Plan','hdr.data':'⇅ Data','hdr.newCross':'New cross','hdr.settings':'Settings',
+    'hdr.plan':'🗓 Plan','hdr.data':'⇅ Data','hdr.newCross':'New record','hdr.settings':'Settings',
     'brand.sub':'Life cycle of <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker — Drosophila melanogaster life cycle',
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
     'menu.exportSurvival':'📊 Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv',
     'set.language':'Language','set.english':'English','set.spanish':'Español',
-    'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set up a cross to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Register a new cross: genotype, date and incubation temperature.',
-    'tip.exportBackup':'Download all your crosses as a JSON file (backup or move to another device).','tip.importBackup':'Load crosses from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
-    'tip.edit':'Edit this cross.','tip.delete':'Delete this cross.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the cross has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
-    'stat.active':'active crosses','stat.nextEcl':'next eclosion',
+    'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
+    'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
+    'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
+    'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'📋 Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
     'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.',
     'foot.notif':'Reminders fire while this tab is open.',
-    'empty.title':'No crosses yet','empty.text':'Add your first cross with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New cross','group.none':'No experiment',
+    'empty.title':'No records yet','empty.text':'Add your first record with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New record','group.none':'No experiment',
     // objetivos
     'obj.none':'— No specific objective','obj.cross':'Genetic cross','obj.amplify':'Line amplification','obj.stock':'Stock maintenance','obj.aging':'Aging cohort','obj.dissect':'Larval dissection',
     // estadios
     'stage.egg':'Embryo','stage.l1':'Larva L1','stage.l2':'Larva L2','stage.l3':'Larva L3','stage.pupa':'Pupa','stage.adult':'Adult',
     'stage.short.egg':'Embryo','stage.short.l1':'L1','stage.short.l2':'L2','stage.short.l3':'L3','stage.short.pupa':'Pupa','stage.short.adult':'Adult',
     // avisos / tareas
-    'rem.montar':'Set up the cross (in {h})','rem.virgenesPrep':'Collect virgins: eclosion in {h}','rem.eclosionEn':'Eclosion in {h}','rem.muda':'Molt to {s} in {h}',
+    'rem.montar':'Set up (in {h})','rem.virgenesPrep':'Collect virgins: eclosion in {h}','rem.eclosionEn':'Eclosion in {h}','rem.muda':'Molt to {s} in {h}',
     'rem.retirarParentales':'Remove parents','rem.disecar':'Dissect larvae ({s})','rem.proxDiseccion':'Next dissection: {s}',
     'rem.adultosEclosionados':'Adults eclosed','rem.virgenes':'Collect virgins ({h})','rem.botellas':'Move adults to fresh bottles','rem.cohorte':'Define aging cohort','rem.comida':'Flip to fresh food','rem.edad':'Adult age: day {d}',
     // tarjeta
     'card.plannedBadge':'Planned','card.setupIn':'Set up in <b>{h}</b>','card.postEcl':'<b>{d}</b> days post-eclosion','card.dayOf':'Day <b>{d}</b> of {t}',
-    'card.metaSetup':'Set up','card.metaCross':'Cross','card.metaEclosed':'Eclosed','card.metaEclEst':'Est. eclosion',
+    'card.metaSetup':'Set up','card.metaCross':'Start','card.metaEclosed':'Eclosed','card.metaEclEst':'Est. eclosion',
     'card.edit':'Edit','card.delete':'Delete','card.markParents':'✓ Mark parents removed',
-    'card.newGen':'↪ New generation','card.newGenTitle':'Create the next generation (same genotype and objective, clock reset)','card.newGenDisabled':'Available once the cross is set up',
+    'card.newGen':'↪ New generation','card.newGenTitle':'Create the next generation (same genotype and objective, clock reset)','card.newGenDisabled':'Available once the record is set up',
     'card.viewTimeline':'View timeline ▾','card.hideTimeline':'Hide timeline ▴','tl.eclosionAdult':'Eclosion → Adult','tl.inProgress':'in progress','tl.agingDay':'day {d} of aging',
     // envejecimiento
     'aging.toggle':'🧬 Aging ▾','aging.mAlive':'alive','aging.mSurv':'survival','aging.mAge':'cohort age',
@@ -766,21 +766,21 @@ const I18N = {
     'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Define cohort','cohort.save':'Save','cohort.cancel':'Cancel',
     'cohort.hint':'Log the adult cohort to follow its survival curve (Kaplan-Meier). Recommended density: ≤25–30 flies/vial.','cohort.nPh':'e.g. 100','cohort.vialsPh':'optional',
     // form nueva cruza
-    'form.newTitle':'New cross','form.editTitle':'Edit cross','form.newGenTitle':'New generation','form.sub':'Enter the genotype, cross date and incubation temperature.',
-    'form.experiments':'Experiment(s)','form.expPh':'e.g. Eye phenotype…','form.expHint':'Group crosses by experiment. You can add more than one (Enter or comma). Optional.',
+    'form.newTitle':'New record','form.editTitle':'Edit record','form.newGenTitle':'New generation','form.sub':'Enter the genotype, set-up date and incubation temperature.',
+    'form.experiments':'Experiment(s)','form.expPh':'e.g. Eye phenotype…','form.expHint':'Group records by experiment. You can add more than one (Enter or comma). Optional.',
     'form.genotype':'Genotype *','form.genoHint':'Autocompletes from your history, the lab database and common components (CyO, UAS-GFP, elav-GAL4…). Start typing.',
     'form.objective':'Objective','form.dissectStage':'Stage to dissect:','form.objHint':'This drives the <b>pending tasks</b>. Optional.',
-    'form.crossDate':'Cross date and time *','form.crossDateHint':'When the cross was set up (egg-laying). The time refines the calculations and the virgin window.',
-    'form.temp':'Incubation temperature (°C) *','form.tempHint':'Speeds up or slows down the whole cycle. Useful range: 18–29 °C.','form.cancel':'Cancel','form.save':'Save cross',
+    'form.crossDate':'Set-up date and time *','form.crossDateHint':'When it was set up (egg-laying). The time refines the calculations and the virgin window.',
+    'form.temp':'Incubation temperature (°C) *','form.tempHint':'Speeds up or slows down the whole cycle. Useful range: 18–29 °C.','form.cancel':'Cancel','form.save':'Save record',
     'form.adults':'Adult flies <span class="opt">(optional)</span>','form.adultsHint':'Total number, and optionally females/males separately.','form.adultsTotalPh':'total','form.container':'Container <span class="opt">(optional)</span>','form.nContTitle':'Number of containers','cont.vial':'Vial','cont.bottle':'Bottle','cont.plate':'Plate','form.notes':'Comments <span class="opt">(optional)</span>','form.notesPh':'Notes about this record…',
     'card.info':'Details ▾','card.hideInfo':'Details ▴','info.adults':'Adult flies','info.container':'Container','info.notes':'Comments','info.empty':'No extra details yet — edit the record to add them.','tip.info':'Extra details: adult count, container and comments.',
     // planificación
-    'plan.title':'Planning','plan.titleEdit':'Edit planned cross','plan.sub':'Upcoming events and reverse cross scheduling.',
-    'plan.upcoming':'📆 Upcoming events','plan.backward':'⏪ Plan backward','plan.backwardSub':'When to set up the cross to reach a stage by a target date?',
+    'plan.title':'Planning','plan.titleEdit':'Edit planned record','plan.sub':'Upcoming events and reverse scheduling.',
+    'plan.upcoming':'📆 Upcoming events','plan.backward':'⏪ Plan backward','plan.backwardSub':'When to set it up to reach a stage by a target date?',
     'plan.expPh':'e.g. Eye phenotype (comma-separated)','plan.reachStage':'I want to reach','plan.stEgg':'Embryo (egg-lay)','plan.stAdult':'Adults / virgins (eclosion)',
-    'plan.onDay':'On','plan.temp':'Temperature (°C)','plan.calc':'Calculate cross date','plan.close':'Close','plan.noEvents':'No upcoming events.','agenda.eclosion':'Eclosion',
-    'plan.rMain':'Set up the cross on<br><b>{date}</b>','plan.rDetail':'At {t} °C, reaching <b>{stage}</b> takes ~{d} d from egg-lay.','plan.rVirgin':' Virgin window ~{h} h after eclosion.',
-    'plan.rPast':'⚠ That date has passed: you can\'t make it in time at that temperature.','plan.rUpdate':'✓ Update planned cross','plan.rCreate':'+ Create cross with this date',
+    'plan.onDay':'On','plan.temp':'Temperature (°C)','plan.calc':'Calculate set-up date','plan.close':'Close','plan.noEvents':'No upcoming events.','agenda.eclosion':'Eclosion',
+    'plan.rMain':'Set it up on<br><b>{date}</b>','plan.rDetail':'At {t} °C, reaching <b>{stage}</b> takes ~{d} d from egg-lay.','plan.rVirgin':' Virgin window ~{h} h after eclosion.',
+    'plan.rPast':'⚠ That date has passed: you can\'t make it in time at that temperature.','plan.rUpdate':'✓ Update planned record','plan.rCreate':'+ Create record with this date',
     // modal envejecimiento
     'agm.title':'Log flip / count','agm.date':'Check date and time','agm.deaths':'Dead flies at this check','agm.censored':'Censored (escaped, stuck, accidents)',
     'agm.censoredHint':'Removed from the at-risk group without counting as deaths (Kaplan-Meier).','agm.flip':'Flipped the cohort to fresh food','agm.note':'Note (optional)','agm.notePh':'e.g. females, 2 vials','agm.sub':'{geno} · cohort day {d}',
@@ -792,40 +792,40 @@ const I18N = {
     'chat.welcome':'Hi! I\'m your *Drosophila* cross assistant. Tell me the objective you want to reach (e.g. express a UAS transgene in a tissue) and I\'ll propose the crossing scheme. The more you tell me about your stocks and genotypes, the better.',
     'chat.errNotDeployed':'The assistant only works on the published version online (with the key set), not on the local file.','chat.errUnavailable':'The assistant is unavailable (error {s}).','chat.errConnect':'Couldn\'t reach the assistant. Try again in a moment.',
     // alertas / confirmaciones / notificaciones
-    'al.cohortN':'Enter a valid initial N of adults.','cf.importReplace':'Importing will replace the {n} current crosses with {m}. Continue?','al.imported':'Imported {n} crosses.','al.importFail':'Import failed: {e}',
-    'err.notList':'The file does not contain a list of crosses.','err.empty':'The file contains no crosses.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
-    'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the cross.','al.geno':'Enter the genotype.',
+    'al.cohortN':'Enter a valid initial N of adults.','cf.importReplace':'Importing will replace the {n} current records with {m}. Continue?','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
+    'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
+    'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
     'al.notifUnsupported':'Your browser doesn\'t support notifications.','notif.alreadyOn':'Reminders are already on ✓','al.notifBlocked':'Notifications are blocked. Enable them for this site in your browser settings.',
-    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the cross "{name}"? This can\'t be undone.',
+    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.',
     'notif.eclTitle':'Eclosion 🪰','notif.eclBody':'Adults of "{label}" have eclosed.','notif.virginTitle':'Collect virgins ⏳','notif.virginBody':'Virgin collection window open for "{label}".',
     'notif.eclSoonTitle':'Eclosion imminent','notif.eclSoonBody':'"{label}" ecloses in ~{h}.','notif.moltTitle':'Molt soon','notif.moltBody':'"{label}" molts to {s} in ~{h}.',
   },
   es: {
     'hdr.notifActivate':'🔔 Activar recordatorios','hdr.notifActive':'🔔 Recordatorios activos',
-    'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.newCross':'Nueva cruza','hdr.settings':'Ajustes',
+    'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
     'brand.sub':'Ciclo de vida de <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker — Ciclo de vida de Drosophila melanogaster',
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
     'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv',
     'set.language':'Idioma','set.english':'English','set.spanish':'Español',
-    'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montar una cruza para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Registrá una cruza nueva: genotipo, fecha y temperatura de incubación.',
-    'tip.exportBackup':'Descargá todas tus cruzas como archivo JSON (backup o pasarlas a otro dispositivo).','tip.importBackup':'Cargá cruzas desde un backup JSON (reemplaza las actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
-    'tip.edit':'Editar esta cruza.','tip.delete':'Eliminar esta cruza.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte la cruza.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
-    'stat.active':'cruzas activas','stat.nextEcl':'próxima eclosión',
+    'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
+    'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
+    'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
+    'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'📋 Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
     'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10 °C · ~148 grados-día). Tiempos estimados · Datos guardados localmente en tu navegador.',
     'foot.notif':'Los recordatorios se notifican mientras esta pestaña esté abierta.',
-    'empty.title':'Todavía no hay cruzas registradas','empty.text':'Agregá tu primera cruza con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nueva cruza','group.none':'Sin experimento',
+    'empty.title':'Todavía no hay registros','empty.text':'Agregá tu primer registro con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nuevo registro','group.none':'Sin experimento',
     'obj.none':'— Sin objetivo específico','obj.cross':'Cruza genética','obj.amplify':'Amplificación de línea','obj.stock':'Mantenimiento de stock','obj.aging':'Cohorte de envejecimiento','obj.dissect':'Disección larval',
     'stage.egg':'Embrión','stage.l1':'Larva L1','stage.l2':'Larva L2','stage.l3':'Larva L3','stage.pupa':'Pupa','stage.adult':'Adulto',
     'stage.short.egg':'Embrión','stage.short.l1':'L1','stage.short.l2':'L2','stage.short.l3':'L3','stage.short.pupa':'Pupa','stage.short.adult':'Adulto',
-    'rem.montar':'Montar la cruza (en {h})','rem.virgenesPrep':'Recolectar vírgenes: eclosión en {h}','rem.eclosionEn':'Eclosión en {h}','rem.muda':'Muda a {s} en {h}',
+    'rem.montar':'Montar (en {h})','rem.virgenesPrep':'Recolectar vírgenes: eclosión en {h}','rem.eclosionEn':'Eclosión en {h}','rem.muda':'Muda a {s} en {h}',
     'rem.retirarParentales':'Retirar parentales','rem.disecar':'Disecar larvas ({s})','rem.proxDiseccion':'Próxima disección: {s}',
     'rem.adultosEclosionados':'Adultos eclosionados','rem.virgenes':'Recolectar vírgenes ({h})','rem.botellas':'Pasar adultos a botellas nuevas','rem.cohorte':'Definir cohorte de envejecimiento','rem.comida':'Pasar a comida fresca','rem.edad':'Edad adulta: día {d}',
     'card.plannedBadge':'Planificada','card.setupIn':'Se monta en <b>{h}</b>','card.postEcl':'<b>{d}</b> días post-eclosión','card.dayOf':'Día <b>{d}</b> de {t}',
-    'card.metaSetup':'Se monta','card.metaCross':'Cruza','card.metaEclosed':'Eclosionó','card.metaEclEst':'Eclosión est.',
+    'card.metaSetup':'Se monta','card.metaCross':'Inicio','card.metaEclosed':'Eclosionó','card.metaEclEst':'Eclosión est.',
     'card.edit':'Editar','card.delete':'Eliminar','card.markParents':'✓ Marcar parentales retirados',
-    'card.newGen':'↪ Nueva generación','card.newGenTitle':'Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)','card.newGenDisabled':'Disponible cuando se monte la cruza',
+    'card.newGen':'↪ Nueva generación','card.newGenTitle':'Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)','card.newGenDisabled':'Disponible cuando se monte el registro',
     'card.viewTimeline':'Ver cronología ▾','card.hideTimeline':'Ocultar cronología ▴','tl.eclosionAdult':'Eclosión → Adulto','tl.inProgress':'en curso','tl.agingDay':'día {d} de envejecimiento',
     'aging.toggle':'🧬 Envejecimiento ▾','aging.mAlive':'vivos','aging.mSurv':'supervivencia','aging.mAge':'edad cohorte',
     'aging.sexF':'♀ Hembras','aging.sexM':'♂ Machos','aging.sexMixed':'⚥ Mixto','aging.vials':'viales','aging.censored':'censurados','aging.edit':'editar',
@@ -834,20 +834,20 @@ const I18N = {
     'surv.day0':'día 0','surv.dayN':'día {n}',
     'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Definir cohorte','cohort.save':'Guardar','cohort.cancel':'Cancelar',
     'cohort.hint':'Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.','cohort.nPh':'ej. 100','cohort.vialsPh':'opcional',
-    'form.newTitle':'Nueva cruza','form.editTitle':'Editar cruza','form.newGenTitle':'Nueva generación','form.sub':'Registrá el genotipo, la fecha de cruza y la temperatura de incubación.',
-    'form.experiments':'Experimento(s)','form.expPh':'ej. Fenotipo del ojo…','form.expHint':'Agrupá las cruzas por experimento. Podés agregar más de uno (Enter o coma). Opcional.',
+    'form.newTitle':'Nuevo registro','form.editTitle':'Editar registro','form.newGenTitle':'Nueva generación','form.sub':'Registrá el genotipo, la fecha de montaje y la temperatura de incubación.',
+    'form.experiments':'Experimento(s)','form.expPh':'ej. Fenotipo del ojo…','form.expHint':'Agrupá los registros por experimento. Podés agregar más de uno (Enter o coma). Opcional.',
     'form.genotype':'Genotipo *','form.genoHint':'Autocompleta con tu historial, la base del laboratorio y componentes comunes (CyO, UAS-GFP, elav-GAL4…). Empezá a escribir.',
     'form.objective':'Objetivo','form.dissectStage':'Estadio a disecar:','form.objHint':'De esto se desprenden las <b>tareas pendientes</b>. Opcional.',
-    'form.crossDate':'Fecha y hora de cruza *','form.crossDateHint':'Momento en que se montó la cruza (puesta de huevos). La hora afina los cálculos y la ventana de vírgenes.',
-    'form.temp':'Temperatura de incubación (°C) *','form.tempHint':'Acelera o ralentiza todo el ciclo. Rango útil: 18–29 °C.','form.cancel':'Cancelar','form.save':'Guardar cruza',
+    'form.crossDate':'Fecha y hora de montaje *','form.crossDateHint':'Momento en que se montó (puesta de huevos). La hora afina los cálculos y la ventana de vírgenes.',
+    'form.temp':'Temperatura de incubación (°C) *','form.tempHint':'Acelera o ralentiza todo el ciclo. Rango útil: 18–29 °C.','form.cancel':'Cancelar','form.save':'Guardar registro',
     'form.adults':'Moscas adultas <span class="opt">(opcional)</span>','form.adultsHint':'Número total, y opcionalmente hembras y machos por separado.','form.adultsTotalPh':'total','form.container':'Recipiente <span class="opt">(opcional)</span>','form.nContTitle':'Cantidad de recipientes','cont.vial':'Vial','cont.bottle':'Botella','cont.plate':'Placa','form.notes':'Comentarios <span class="opt">(opcional)</span>','form.notesPh':'Notas sobre este registro…',
     'card.info':'Detalles ▾','card.hideInfo':'Detalles ▴','info.adults':'Moscas adultas','info.container':'Recipiente','info.notes':'Comentarios','info.empty':'Sin datos adicionales — editá el registro para agregarlos.','tip.info':'Datos adicionales: cantidad de adultos, recipiente y comentarios.',
-    'plan.title':'Planificación','plan.titleEdit':'Editar cruza planificada','plan.sub':'Agenda de próximos eventos y cálculo inverso de cruzas.',
-    'plan.upcoming':'📆 Próximos eventos','plan.backward':'⏪ Planificar hacia atrás','plan.backwardSub':'¿Cuándo montar la cruza para llegar a un estadio en una fecha objetivo?',
+    'plan.title':'Planificación','plan.titleEdit':'Editar registro planificado','plan.sub':'Agenda de próximos eventos y cálculo inverso de fechas.',
+    'plan.upcoming':'📆 Próximos eventos','plan.backward':'⏪ Planificar hacia atrás','plan.backwardSub':'¿Cuándo montarlo para llegar a un estadio en una fecha objetivo?',
     'plan.expPh':'ej. Fenotipo del ojo (separá con comas)','plan.reachStage':'Quiero llegar a','plan.stEgg':'Embrión (puesta)','plan.stAdult':'Adultos / vírgenes (eclosión)',
-    'plan.onDay':'El día','plan.temp':'Temperatura (°C)','plan.calc':'Calcular fecha de cruza','plan.close':'Cerrar','plan.noEvents':'No hay eventos próximos.','agenda.eclosion':'Eclosión',
-    'plan.rMain':'Montá la cruza el<br><b>{date}</b>','plan.rDetail':'A {t} °C, llegar a <b>{stage}</b> tarda ~{d} d desde la puesta.','plan.rVirgin':' Ventana de vírgenes ~{h} h tras la eclosión.',
-    'plan.rPast':'⚠ Esa fecha ya pasó: no llegás a tiempo a esa temperatura.','plan.rUpdate':'✓ Actualizar cruza planificada','plan.rCreate':'+ Crear cruza con esta fecha',
+    'plan.onDay':'El día','plan.temp':'Temperatura (°C)','plan.calc':'Calcular fecha de montaje','plan.close':'Cerrar','plan.noEvents':'No hay eventos próximos.','agenda.eclosion':'Eclosión',
+    'plan.rMain':'Montalo el<br><b>{date}</b>','plan.rDetail':'A {t} °C, llegar a <b>{stage}</b> tarda ~{d} d desde la puesta.','plan.rVirgin':' Ventana de vírgenes ~{h} h tras la eclosión.',
+    'plan.rPast':'⚠ Esa fecha ya pasó: no llegás a tiempo a esa temperatura.','plan.rUpdate':'✓ Actualizar registro planificado','plan.rCreate':'+ Crear registro con esta fecha',
     'agm.title':'Registrar pase / conteo','agm.date':'Fecha y hora del control','agm.deaths':'Moscas muertas en este control','agm.censored':'Censuradas (escapadas, pegadas, accidentes)',
     'agm.censoredHint':'Se descuentan del grupo en riesgo sin contar como muerte (Kaplan-Meier).','agm.flip':'Pasé la cohorte a comida fresca','agm.note':'Nota (opcional)','agm.notePh':'ej. hembras, 2 viales','agm.sub':'{geno} · día {d} de cohorte',
     'lab.title':'Importar base de genotipos','lab.col':'¿Qué columna tiene el genotipo?','lab.colHint':'Se asume que la primera fila son los títulos de las columnas.','lab.preview':'Vista previa','lab.cancel':'Cancelar','lab.import':'Importar genotipos',
@@ -855,11 +855,11 @@ const I18N = {
     'chat.title':'🧬 Asistente de cruzas','chat.fab':'Asistente','chat.fabTitle':'Asistente de cruzas con IA','chat.close':'Cerrar','chat.placeholder':'Ej: quiero expresar UAS-Atg8 en neuronas…','chat.send':'Enviar','chat.typing':'pensando…','ac.comp':'común','ac.stock':'stock',
     'chat.welcome':'¡Hola! Soy tu asistente de cruzas de *Drosophila*. Contame qué objetivo querés lograr (por ej. expresar un transgén UAS en cierto tejido) y te propongo el esquema de cruza. Cuantos más datos me des de tus stocks y genotipos, mejor.',
     'chat.errNotDeployed':'El asistente solo funciona en la versión publicada online (con la clave configurada), no en el archivo local.','chat.errUnavailable':'El asistente no está disponible (error {s}).','chat.errConnect':'No pude conectar con el asistente. Probá de nuevo en un momento.',
-    'al.cohortN':'Ingresá un N inicial válido de adultos.','cf.importReplace':'Importar reemplazará las {n} cruzas actuales por {m}. ¿Continuar?','al.imported':'Importadas {n} cruzas.','al.importFail':'No se pudo importar: {e}',
-    'err.notList':'El archivo no contiene una lista de cruzas.','err.empty':'El archivo no contiene ninguna cruza.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
-    'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear la cruza.','al.geno':'Escribí el genotipo.',
+    'al.cohortN':'Ingresá un N inicial válido de adultos.','cf.importReplace':'Importar reemplazará los {n} registros actuales por {m}. ¿Continuar?','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
+    'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
+    'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
     'al.notifUnsupported':'Tu navegador no soporta notificaciones.','notif.alreadyOn':'Los recordatorios ya están activos ✓','al.notifBlocked':'Las notificaciones están bloqueadas. Habilitalas para este sitio desde la configuración del navegador.',
-    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar la cruza "{name}"? Esta acción no se puede deshacer.',
+    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.',
     'notif.eclTitle':'Eclosión 🪰','notif.eclBody':'Eclosionaron los adultos de "{label}".','notif.virginTitle':'Recolectar vírgenes ⏳','notif.virginBody':'Ventana de recolección de vírgenes abierta para "{label}".',
     'notif.eclSoonTitle':'Eclosión inminente','notif.eclSoonBody':'"{label}" eclosiona en ~{h}.','notif.moltTitle':'Muda próxima','notif.moltBody':'"{label}" muda a {s} en ~{h}.',
   },
