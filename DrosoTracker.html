@@ -189,6 +189,13 @@
   .timeline{max-height:0;overflow:hidden;transition:max-height .35s ease}
   .timeline.open{max-height:640px}
   .tl-inner{padding-top:14px}
+  /* Panel "Detalles" (info adicional que no satura la tarjeta) */
+  .info-panel{max-height:0;overflow:hidden;transition:max-height .35s ease}
+  .info-panel.open{max-height:600px}
+  .info-inner{padding-top:14px;display:flex;flex-direction:column;gap:9px}
+  .info-row{display:flex;gap:10px;font-size:.85rem;align-items:baseline}
+  .info-row .ik{flex:none;width:112px;color:var(--ink-soft);font-weight:700}
+  .info-row .iv{color:var(--ink);min-width:0;word-break:break-word;white-space:pre-wrap}
   .tl-item{display:flex;gap:12px;position:relative;padding-bottom:14px}
   .tl-item:last-child{padding-bottom:0}
   .tl-item::before{content:"";position:absolute;left:8px;top:20px;bottom:-2px;width:2px;background:var(--line)}
@@ -368,6 +375,14 @@
     font-family:'Nunito';font-size:.95rem;color:var(--ink);background:var(--bg-2);transition:border .12s;
   }
   .field input:focus{outline:none;border-color:var(--lav)}
+  .field textarea{width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);font-family:'Nunito';font-size:.95rem;color:var(--ink);background:var(--bg-2);resize:vertical;min-height:46px}
+  .field textarea:focus{outline:none;border-color:var(--lav)}
+  .field label .opt{font-weight:400;color:var(--ink-soft);font-size:.82em}
+  .trio{display:flex;gap:8px}
+  .trio input{flex:1;min-width:0;text-align:center}
+  .duo{display:flex;gap:8px}
+  .duo select{flex:1}
+  .duo input{width:82px;flex:none;text-align:center}
   .field .hint{font-size:.74rem;color:var(--ink-soft);margin-top:5px}
   .temp-presets{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
   .temp-presets button{
@@ -551,6 +566,31 @@
         </div>
         <div class="hint" data-i18n="form.tempHint">Speeds up or slows down the whole cycle. Useful range: 18–29 °C.</div>
       </div>
+      <div class="field">
+        <label data-i18n-html="form.adults">Adult flies <span class="opt">(optional)</span></label>
+        <div class="trio">
+          <input id="fAdults" type="number" min="0" step="1" placeholder="total" data-i18n-ph="form.adultsTotalPh" />
+          <input id="fFemales" type="number" min="0" step="1" placeholder="♀" />
+          <input id="fMales" type="number" min="0" step="1" placeholder="♂" />
+        </div>
+        <div class="hint" data-i18n="form.adultsHint">Total number, and optionally females/males separately.</div>
+      </div>
+      <div class="field">
+        <label for="fContainer" data-i18n-html="form.container">Container <span class="opt">(optional)</span></label>
+        <div class="duo">
+          <select id="fContainer">
+            <option value="">—</option>
+            <option value="vial" data-i18n="cont.vial">Vial</option>
+            <option value="bottle" data-i18n="cont.bottle">Bottle</option>
+            <option value="plate" data-i18n="cont.plate">Plate</option>
+          </select>
+          <input id="fNCont" type="number" min="1" step="1" placeholder="nº" data-i18n-title="form.nContTitle" title="Number of containers" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="fNotes" data-i18n-html="form.notes">Comments <span class="opt">(optional)</span></label>
+        <textarea id="fNotes" rows="2" maxlength="500" placeholder="Notes about this record…" data-i18n-ph="form.notesPh"></textarea>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn ghost" onclick="closeForm()" data-i18n="form.cancel">Cancel</button>
         <button type="submit" class="btn" data-i18n="form.save">Save cross</button>
@@ -732,6 +772,8 @@ const I18N = {
     'form.objective':'Objective','form.dissectStage':'Stage to dissect:','form.objHint':'This drives the <b>pending tasks</b>. Optional.',
     'form.crossDate':'Cross date and time *','form.crossDateHint':'When the cross was set up (egg-laying). The time refines the calculations and the virgin window.',
     'form.temp':'Incubation temperature (°C) *','form.tempHint':'Speeds up or slows down the whole cycle. Useful range: 18–29 °C.','form.cancel':'Cancel','form.save':'Save cross',
+    'form.adults':'Adult flies <span class="opt">(optional)</span>','form.adultsHint':'Total number, and optionally females/males separately.','form.adultsTotalPh':'total','form.container':'Container <span class="opt">(optional)</span>','form.nContTitle':'Number of containers','cont.vial':'Vial','cont.bottle':'Bottle','cont.plate':'Plate','form.notes':'Comments <span class="opt">(optional)</span>','form.notesPh':'Notes about this record…',
+    'card.info':'Details ▾','card.hideInfo':'Details ▴','info.adults':'Adult flies','info.container':'Container','info.notes':'Comments','info.empty':'No extra details yet — edit the record to add them.','tip.info':'Extra details: adult count, container and comments.',
     // planificación
     'plan.title':'Planning','plan.titleEdit':'Edit planned cross','plan.sub':'Upcoming events and reverse cross scheduling.',
     'plan.upcoming':'📆 Upcoming events','plan.backward':'⏪ Plan backward','plan.backwardSub':'When to set up the cross to reach a stage by a target date?',
@@ -798,6 +840,8 @@ const I18N = {
     'form.objective':'Objetivo','form.dissectStage':'Estadio a disecar:','form.objHint':'De esto se desprenden las <b>tareas pendientes</b>. Opcional.',
     'form.crossDate':'Fecha y hora de cruza *','form.crossDateHint':'Momento en que se montó la cruza (puesta de huevos). La hora afina los cálculos y la ventana de vírgenes.',
     'form.temp':'Temperatura de incubación (°C) *','form.tempHint':'Acelera o ralentiza todo el ciclo. Rango útil: 18–29 °C.','form.cancel':'Cancelar','form.save':'Guardar cruza',
+    'form.adults':'Moscas adultas <span class="opt">(opcional)</span>','form.adultsHint':'Número total, y opcionalmente hembras y machos por separado.','form.adultsTotalPh':'total','form.container':'Recipiente <span class="opt">(opcional)</span>','form.nContTitle':'Cantidad de recipientes','cont.vial':'Vial','cont.bottle':'Botella','cont.plate':'Placa','form.notes':'Comentarios <span class="opt">(opcional)</span>','form.notesPh':'Notas sobre este registro…',
+    'card.info':'Detalles ▾','card.hideInfo':'Detalles ▴','info.adults':'Moscas adultas','info.container':'Recipiente','info.notes':'Comentarios','info.empty':'Sin datos adicionales — editá el registro para agregarlos.','tip.info':'Datos adicionales: cantidad de adultos, recipiente y comentarios.',
     'plan.title':'Planificación','plan.titleEdit':'Editar cruza planificada','plan.sub':'Agenda de próximos eventos y cálculo inverso de cruzas.',
     'plan.upcoming':'📆 Próximos eventos','plan.backward':'⏪ Planificar hacia atrás','plan.backwardSub':'¿Cuándo montar la cruza para llegar a un estadio en una fecha objetivo?',
     'plan.expPh':'ej. Fenotipo del ojo (separá con comas)','plan.reachStage':'Quiero llegar a','plan.stEgg':'Embrión (puesta)','plan.stAdult':'Adultos / vírgenes (eclosión)',
@@ -1226,6 +1270,19 @@ function card(cross){
     <div class="tl-body"><div class="tl-name">${t('tl.eclosionAdult')}</div>
     <div class="tl-date">${fmtDT(eclDate)}${st.isAdult?' · '+t('tl.agingDay',{d:Math.floor(st.adultAge)}):''}</div></div></div>`;
 
+  // Panel "Detalles": datos adicionales que no van en la vista compacta de la tarjeta
+  const contLabel = cross.container ? t('cont.'+cross.container) : '';
+  const contStr = contLabel ? contLabel + (cross.nContainers ? ` ×${cross.nContainers}` : '') : '';
+  const _f = cross.females, _m = cross.males, _tot = cross.adults;
+  const hasSex = (_f!=null && _f!=='') || (_m!=null && _m!=='');
+  const totVal = (_tot!=null && _tot!=='') ? _tot : (hasSex ? (Number(_f)||0)+(Number(_m)||0) : null);
+  const adultsStr = totVal!=null ? (totVal + (hasSex ? ` (${Number(_f)||0}♀ · ${Number(_m)||0}♂)` : '')) : '';
+  const infoRows = [];
+  if(contStr)     infoRows.push(`<div class="info-row"><span class="ik">${t('info.container')}</span><span class="iv">${esc(contStr)}</span></div>`);
+  if(adultsStr)   infoRows.push(`<div class="info-row"><span class="ik">${t('info.adults')}</span><span class="iv">${esc(adultsStr)}</span></div>`);
+  if(cross.notes) infoRows.push(`<div class="info-row"><span class="ik">${t('info.notes')}</span><span class="iv">${esc(cross.notes)}</span></div>`);
+  const infoHtml = infoRows.length ? infoRows.join('') : `<div class="hint">${t('info.empty')}</div>`;
+
   return `<div class="card ${st.planned?'planned':''}" id="card-${cross.id}">
     <div class="card-top">
       <div>
@@ -1257,11 +1314,13 @@ function card(cross){
     ${(['l1','l2','l3'].includes(st.stageKey) && !cross.parentsRemoved)
       ? `<button class="timeline-btn" style="margin-top:10px" onclick="markParents('${cross.id}')" data-tip="${esc(t('tip.markParents'))}">${t('card.markParents')}</button>` : ''}
 
+    <button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>
     <div class="btn-row">
-      <button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>
       <button class="timeline-btn" onclick="toggleTL(this)" data-tip="${esc(t('tip.timeline'))}">${t('card.viewTimeline')}</button>
+      <button class="timeline-btn" onclick="toggleInfo(this)" data-tip="${esc(t('tip.info'))}">${t('card.info')}</button>
     </div>
     <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
+    <div class="info-panel"><div class="info-inner">${infoHtml}</div></div>
 
     ${st.isAdult && (cross.objective==='aging' || (cross.aging && cross.aging.startN!=null)) ? agingPanel(cross, st) : ''}
   </div>`;
@@ -1532,13 +1591,22 @@ function toggleTL(btn){
   if(id){ if(open) openTLIds.add(id); else openTLIds.delete(id); }
   updateGridAlign();
 }
-/* Marca las grillas que tienen una cronología abierta para que NO estiren las vecinas.
-   Sin cronologías abiertas, la grilla vuelve a "stretch" y todas las tarjetas igualan altura. */
+function toggleInfo(btn){
+  const card = btn.closest('.card'); if(!card) return;
+  const open = card.querySelector('.info-panel').classList.toggle('open');
+  btn.textContent = open ? t('card.hideInfo') : t('card.info');
+  const id = card.id.replace('card-','');
+  if(open) openInfoIds.add(id); else openInfoIds.delete(id);
+  updateGridAlign();
+}
+/* Marca las grillas con una cronología o panel de detalles abierto para que NO estiren las vecinas.
+   Sin nada abierto, la grilla vuelve a "stretch" y todas las tarjetas igualan altura. */
 function updateGridAlign(){
-  document.querySelectorAll('.grid').forEach(g=> g.classList.toggle('tl-open', !!g.querySelector('.timeline.open')));
+  document.querySelectorAll('.grid').forEach(g=> g.classList.toggle('tl-open', !!g.querySelector('.timeline.open, .info-panel.open')));
 }
 const openAgingIds = new Set();
 const openTLIds = new Set();
+const openInfoIds = new Set();
 function toggleAging(id, btn){
   const open = btn.nextElementSibling.classList.toggle('open');
   btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
@@ -1557,6 +1625,11 @@ function restorePanels(){
     const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleTL'));
     if(btn){ card.querySelector('.timeline').classList.add('open'); btn.textContent=t('card.hideTimeline'); }
   });
+  openInfoIds.forEach(id=>{
+    const card = document.getElementById('card-'+id); if(!card) return;
+    const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleInfo'));
+    if(btn){ card.querySelector('.info-panel').classList.add('open'); btn.textContent=t('card.hideInfo'); }
+  });
   updateGridAlign();
 }
 /* Nueva generación: form pre-cargado con el mismo genotipo/objetivo/temperatura,
@@ -1573,6 +1646,7 @@ function cloneCross(id){
   document.getElementById('objective').value = c.objective||'';
   document.getElementById('dissectStage').value = c.dissectStage||'l3';
   document.getElementById('temp').value = c.temp;
+  document.getElementById('fContainer').value = c.container||'';  // el repique suele usar el mismo tipo de recipiente
   document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on', b.dataset.t==String(c.temp)));
   onObjectiveChange();
 }
@@ -2112,6 +2186,12 @@ function openForm(id){
     document.getElementById('dissectStage').value=c.dissectStage||'l3';
     document.getElementById('crossDate').value = c.crossDate.includes('T') ? c.crossDate : c.crossDate + 'T09:00';
     document.getElementById('temp').value=c.temp;
+    document.getElementById('fAdults').value = c.adults ?? '';
+    document.getElementById('fFemales').value = c.females ?? '';
+    document.getElementById('fMales').value = c.males ?? '';
+    document.getElementById('fContainer').value = c.container || '';
+    document.getElementById('fNCont').value = c.nContainers ?? '';
+    document.getElementById('fNotes').value = c.notes || '';
   } else {
     document.getElementById('modalTitle').textContent=t('form.newTitle');
     document.getElementById('editId').value='';
@@ -2144,6 +2224,7 @@ function saveCross(e){
   const id = document.getElementById('editId').value;
   const objective = document.getElementById('objective').value;
   addExpTag(document.getElementById('expInput').value); document.getElementById('expInput').value=''; // capturar texto sin Enter
+  const numOr = v => { v = String(v).trim(); if(v==='') return null; const n = parseInt(v,10); return (isNaN(n) || n<0) ? null : n; };
   const data = {
     experiments: [...formExperiments],
     genotype: document.getElementById('genotype').value.trim(),
@@ -2151,6 +2232,12 @@ function saveCross(e){
     dissectStage: objective==='dissect' ? document.getElementById('dissectStage').value : null,
     crossDate: document.getElementById('crossDate').value,
     temp: parseFloat(document.getElementById('temp').value),
+    adults: numOr(document.getElementById('fAdults').value),
+    females: numOr(document.getElementById('fFemales').value),
+    males: numOr(document.getElementById('fMales').value),
+    container: document.getElementById('fContainer').value,
+    nContainers: numOr(document.getElementById('fNCont').value),
+    notes: document.getElementById('fNotes').value.trim(),
   };
   if(id){
     const c = crosses.find(x=>x.id===id);
