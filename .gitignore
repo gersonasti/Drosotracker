@@ -10,5 +10,6 @@
 drosotracker-backup*.json
 drosotracker-*.csv
 
-# Documento de trabajo interno (no se despliega al sitio público)
+# Documentos de trabajo internos (no se despliegan al sitio público)
 DrosoTracker-funcionalidades.md
+DrosoTracker-*.md
