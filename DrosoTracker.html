@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>DrosoTracker — Drosophila melanogaster life cycle</title>
+<!-- Aplica el modo oscuro antes de pintar (evita el parpadeo claro al cargar) -->
+<script>try{if(localStorage.getItem('drosotrack.mode.v1')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
 <!-- Fase de pruebas: que los buscadores no lo indexen. Quitar al lanzar públicamente. -->
 <meta name="robots" content="noindex, nofollow" />
 <!-- PWA: instalable y con apariencia de app -->
@@ -46,6 +48,32 @@
     --shadow-sm:0 4px 14px -8px rgba(99,86,150,.35);
     --radius:22px;
   }
+
+  /* ---------- Modo oscuro: superficies oscuras + glow verde/lavanda; los pasteles
+     quedan como acento (chips, badges) que resaltan sobre lo oscuro ---------- */
+  html[data-theme="dark"]{
+    --bg-1:#252137;
+    --bg-2:#1e1b2b;
+    --ink:#ece9f6;
+    --ink-soft:#a8a3c4;
+    --card:#2b2740;
+    --line:#3a3552;
+    --shadow:0 12px 32px -12px rgba(0,0,0,.6);
+    --shadow-sm:0 4px 14px -8px rgba(0,0,0,.55);
+  }
+  html[data-theme="dark"] body{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(201,189,240,.10), transparent 60%),
+      radial-gradient(1000px 600px at 110% 10%, rgba(159,224,201,.14), transparent 55%),
+      linear-gradient(180deg,#1b1828,#141019);
+  }
+  html[data-theme="dark"] .btn.ghost{background:var(--card);border:1px solid var(--line)}
+  html[data-theme="dark"] .temp-presets button{background:var(--bg-2)}
+  html[data-theme="dark"] .tl-dot{border-color:var(--card)}
+  html[data-theme="dark"] .obj-chip{background:var(--line);color:var(--ink-soft)}
+  html[data-theme="dark"] .plan-result{background:rgba(159,224,201,.14)}
+  html[data-theme="dark"] .tasks.alert{background:#3a2531;border-color:#5b3543}
+  html[data-theme="dark"] .chat-msg.err{background:#3a2531;border-color:#5b3543;color:#f3b6b6}
 
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -218,7 +246,7 @@
   .tasks h3{font-size:1rem;font-family:'Poppins';margin-bottom:12px;display:flex;align-items:center;gap:8px}
   .tasks h3 .badge{background:var(--lav-soft);color:var(--lav);font-size:.75rem;padding:2px 9px;border-radius:999px}
   .task-list{display:flex;flex-direction:column;gap:8px}
-  .task{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:var(--bg-1);cursor:pointer;transition:background .12s}
+  .task{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:var(--bg-1);cursor:pointer;transition:background .15s,box-shadow .2s}
   .task:hover{background:var(--lav-soft)}
   .task .tname{font-weight:700;font-size:.84rem;flex:none;max-width:56%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .task .texp{font-size:.76rem;color:var(--ink-soft);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -448,6 +476,18 @@
   .tip.show{opacity:1;transform:translateY(0)}
   /* al mantener apretado, evitar que el navegador seleccione/copie el texto o abra el menú del sistema */
   [data-tip]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  /* Menú de ajustes: grupos desplegables (idioma / apariencia) con tick en el activo */
+  #settingsPop{min-width:210px}
+  #settingsPop .set-group{display:flex;align-items:center;gap:8px;font-weight:700}
+  #settingsPop .set-group .set-caret{margin-left:auto;color:var(--ink-soft);font-size:.72rem;transition:transform .2s}
+  #settingsPop .set-group.open .set-caret{transform:rotate(180deg)}
+  #settingsPop .set-sub{display:none;flex-direction:column;gap:2px;margin:0 0 4px 6px;padding-left:8px;border-left:2px solid var(--line)}
+  #settingsPop .set-group.open + .set-sub{display:flex}
+  #settingsPop .set-sub button{display:flex;align-items:center;gap:8px;font-weight:600}
+  #settingsPop .set-tick{width:13px;flex:none;color:var(--mint);font-weight:900;visibility:hidden}
+  #settingsPop .set-sub button.active .set-tick{visibility:visible}
+  /* Al tocar una tarjeta, sus tareas pendientes parpadean en el panel */
+  .task.flash{box-shadow:0 0 0 2.5px var(--lav);background:var(--lav-soft)}
 </style>
 </head>
 <body>
@@ -481,9 +521,16 @@
       <div class="menu">
         <button class="btn ghost" onclick="toggleSettings()" data-tip-key="tip.settings" style="padding:12px 14px">⚙️</button>
         <div class="menu-pop" id="settingsPop">
-          <div class="menu-fmt" data-i18n="set.language">Language</div>
-          <button onclick="setLang('en')" data-i18n="set.english">English</button>
-          <button onclick="setLang('es')" data-i18n="set.spanish">Español</button>
+          <button class="set-group" onclick="toggleSetGroup(this)">🌐 <span data-i18n="set.language">Language</span><span class="set-caret">▾</span></button>
+          <div class="set-sub">
+            <button data-lang="en" onclick="setLang('en')"><span class="set-tick">✓</span><span data-i18n="set.english">English</span></button>
+            <button data-lang="es" onclick="setLang('es')"><span class="set-tick">✓</span><span data-i18n="set.spanish">Español</span></button>
+          </div>
+          <button class="set-group" onclick="toggleSetGroup(this)">🎨 <span data-i18n="set.appearance">Appearance</span><span class="set-caret">▾</span></button>
+          <div class="set-sub">
+            <button data-mode="light" onclick="setMode('light')"><span class="set-tick">✓</span><span data-i18n="set.light">☀️ Light</span></button>
+            <button data-mode="dark" onclick="setMode('dark')"><span class="set-tick">✓</span><span data-i18n="set.dark">🌙 Dark</span></button>
+          </div>
         </div>
       </div>
       <button class="btn" onclick="openForm()" data-tip-key="tip.newCross">
@@ -730,6 +777,8 @@ const STORE_KEY = 'drosotrack.crosses.v1';
    ============================================================ */
 const LANG_KEY = 'drosotrack.lang.v1';
 let lang = localStorage.getItem(LANG_KEY) || 'en';
+const MODE_KEY = 'drosotrack.mode.v1';
+let mode = localStorage.getItem(MODE_KEY) || 'light';   // apariencia: 'light' (por defecto) | 'dark'
 const I18N = {
   en: {
     'hdr.notifActivate':'🔔 Activate reminders','hdr.notifActive':'🔔 Reminders on',
@@ -738,7 +787,7 @@ const I18N = {
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
     'menu.exportSurvival':'📊 Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv',
-    'set.language':'Language','set.english':'English','set.spanish':'Español',
+    'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'☀️ Light','set.dark':'🌙 Dark',
     'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
     'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
     'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
@@ -812,7 +861,7 @@ const I18N = {
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
     'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv',
-    'set.language':'Idioma','set.english':'English','set.spanish':'Español',
+    'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'☀️ Claro','set.dark':'🌙 Oscuro',
     'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
     'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
     'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
@@ -887,15 +936,32 @@ function applyStaticI18n(){
   document.querySelectorAll('[data-tip-key]').forEach(el=> el.setAttribute('data-tip', t(el.getAttribute('data-tip-key'))));
   document.title = t('doc.title');
 }
-function toggleSettings(){ document.getElementById('settingsPop').classList.toggle('open'); }
+function toggleSettings(){ const open = document.getElementById('settingsPop').classList.toggle('open'); if(open) updateSettingsUI(); }
+/* grupos desplegables del menú de ajustes (acordeón: sólo uno abierto a la vez) */
+function toggleSetGroup(btn){
+  const was = btn.classList.contains('open');
+  document.querySelectorAll('#settingsPop .set-group').forEach(b=>b.classList.remove('open'));
+  if(!was) btn.classList.add('open');
+}
+/* marca con ✓ el idioma y la apariencia activos */
+function updateSettingsUI(){
+  document.querySelectorAll('#settingsPop [data-lang]').forEach(b=> b.classList.toggle('active', b.dataset.lang===lang));
+  document.querySelectorAll('#settingsPop [data-mode]').forEach(b=> b.classList.toggle('active', b.dataset.mode===mode));
+}
+function setMode(m){
+  mode = (m==='dark') ? 'dark' : 'light';
+  localStorage.setItem(MODE_KEY, mode);
+  document.documentElement.setAttribute('data-theme', mode);
+  updateSettingsUI();
+}
 function setLang(l){
   lang = l; localStorage.setItem(LANG_KEY, l);
   document.documentElement.lang = l;
-  document.getElementById('settingsPop').classList.remove('open');
   applyStaticI18n();
   updateNotifBtn();
   chatReset();
   render();
+  updateSettingsUI();
 }
 
 /* --- Modelo de desarrollo dependiente de temperatura ---
@@ -1290,7 +1356,7 @@ function card(cross){
   if(cross.notes) infoRows.push(`<div class="info-row"><span class="ik">${t('info.notes')}</span><span class="iv">${esc(cross.notes)}</span></div>`);
   const infoHtml = infoRows.length ? infoRows.join('') : `<div class="hint">${t('info.empty')}</div>`;
 
-  return `<div class="card ${st.planned?'planned':''}" id="card-${cross.id}">
+  return `<div class="card ${st.planned?'planned':''}" id="card-${cross.id}" onclick="cardToTasks(event,'${cross.id}')">
     <div class="card-top">
       <div>
         <div class="card-title">${esc(cross.genotype)}</div>
@@ -1514,7 +1580,7 @@ function renderTasks(){
   const expOf = crossId => { const c = crosses.find(x=>x.id===crossId); return c ? (c.experiments||[]).join(', ') : ''; };
   const T_MARK = t('task.markDone'), T_UNMARK = t('task.unmark'), T_REMOVE = t('task.remove');
   const pendingHTML = pending.map(it=>`
-    <div class="task" onclick="scrollToCard('${it.crossId}')">
+    <div class="task" data-cross="${it.crossId}" onclick="scrollToCard('${it.crossId}')">
       ${rowName(it.genotype, it.exp)}
       <span class="chip ${it.r.c}">${it.r.pulse?'<span class="pulse"></span>':''}${esc(it.r.t)}</span>
       <input type="checkbox" class="task-check" title="${T_MARK}" onclick="event.stopPropagation();markTaskDone('${it.id}')" />
@@ -1540,6 +1606,25 @@ function scrollToCard(id){
   if(el){ el.scrollIntoView({behavior:'smooth',block:'center'});
     el.style.boxShadow='0 0 0 3px var(--lav)';
     setTimeout(()=>{ el.style.boxShadow=''; }, 1300); }
+}
+/* Inverso: al tocar una tarjeta, abre el panel de tareas y resalta las tareas
+   pendientes de ese registro. Ignora clics en botones/campos/paneles desplegados. */
+function cardToTasks(e, id){
+  if(e.target.closest('button, input, select, textarea, a, .timeline, .info-panel, .aging-panel')) return;
+  const flashRows = () => {
+    const rows = [...document.querySelectorAll(`.task[data-cross="${id}"]`)];
+    if(rows.length){
+      const panel = document.getElementById('tasks');
+      if(panel) panel.scrollIntoView({behavior:'smooth', block:'start'});
+      rows.forEach(r=>{ r.classList.add('flash'); setTimeout(()=>r.classList.remove('flash'), 1500); });
+    } else {
+      // sin tareas pendientes → destello verde en la propia tarjeta
+      const card = document.getElementById('card-'+id);
+      if(card){ card.style.boxShadow='0 0 0 3px var(--mint)'; setTimeout(()=>{ card.style.boxShadow=''; }, 1000); }
+    }
+  };
+  if(!tasksPanelOpen){ tasksPanelOpen = true; renderTasks(); setTimeout(flashRows, 60); }
+  else flashRows();
 }
 
 /* --- Render principal --- */
@@ -2305,7 +2390,9 @@ function autoRender(){
   render();
 }
 document.documentElement.lang = lang;
+document.documentElement.setAttribute('data-theme', mode);
 applyStaticI18n();
+updateSettingsUI();
 updateNotifBtn();
 updateLabStatus();
 rebuildAutocompleteCache();
