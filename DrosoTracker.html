@@ -494,6 +494,26 @@
   #confirmOverlay{z-index:100}
   .confirm-modal{max-width:380px}
   .confirm-msg{font-size:.95rem;color:var(--ink);line-height:1.45;margin-bottom:20px}
+  /* Calibración */
+  .calib-head{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .calib-head h2{margin:0}
+  .help-q{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--lav);background:var(--lav-soft);color:var(--lav);font-weight:800;font-size:.85rem;cursor:pointer;line-height:1;font-family:'Nunito'}
+  .help-q:hover{background:var(--lav);color:#fff}
+  .calib-help{display:none;background:var(--bg-1);border-radius:14px;padding:14px 16px;margin:12px 0 6px;font-size:.86rem;line-height:1.5;color:var(--ink-soft)}
+  .calib-help.open{display:block}
+  .calib-help b{color:var(--ink)}
+  .calib-help ol{margin:8px 0 0 18px;display:flex;flex-direction:column;gap:6px}
+  .calib-status{font-size:.78rem;margin-top:6px;color:var(--ink-soft);line-height:1.4}
+  .calib-status b{color:var(--ink)}
+  .calib-list-title{font-size:1rem;margin:20px 0 8px}
+  .calib-row{display:flex;align-items:baseline;gap:10px;padding:9px 12px;background:var(--bg-1);border-radius:11px;margin-bottom:6px;font-size:.83rem}
+  .calib-row .cg{font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .calib-row .cd{color:var(--ink-soft);flex:none;white-space:nowrap}
+  .calib-row .cx{flex:none;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:.85rem;padding:2px 6px;border-radius:7px}
+  .calib-row .cx:hover{background:var(--peach-soft);color:var(--coral)}
+  .t50-opts{display:flex;flex-direction:column;gap:9px}
+  .t50-opts .btn{width:100%;justify-content:center}
+  .calib-done{background:var(--mint-soft);color:#3fae8c;border-radius:14px;padding:11px 14px;margin-top:10px;font-size:.85rem;font-weight:700;text-align:center;line-height:1.35}
 </style>
 </head>
 <body>
@@ -539,6 +559,7 @@
           </div>
         </div>
       </div>
+      <button class="btn ghost" onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
       <button class="btn" onclick="openForm()" data-tip-key="tip.newCross">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
         <span class="lbl" data-i18n="hdr.newCross">New record</span>
@@ -771,6 +792,53 @@
   </div>
 </div>
 
+<!-- Calibrar el ciclo de un genotipo con una observación real -->
+<div class="overlay" id="calibOverlay">
+  <div class="modal">
+    <div class="calib-head">
+      <h2 data-i18n="calib.title">Calibrate a genotype</h2>
+      <button type="button" class="help-q" onclick="toggleCalibHelp()" data-i18n-title="calib.helpTitle" title="What is this?">?</button>
+    </div>
+    <div class="sub" data-i18n="calib.sub">Fine-tune the development model for a specific genotype using a real observation.</div>
+    <div class="calib-help" id="calibHelp" data-i18n-html="calib.help"></div>
+    <form id="calibForm" onsubmit="startCalib(event)">
+      <div class="field">
+        <label for="calibGeno" data-i18n="form.genotype">Genotype *</label>
+        <input id="calibGeno" list="calibGenoList" autocomplete="off" placeholder="e.g. w[1118] ; UAS-GFP / CyO" required maxlength="120" oninput="renderCalibStatus()" />
+        <datalist id="calibGenoList"></datalist>
+        <div class="calib-status" id="calibGenoStatus"></div>
+      </div>
+      <div class="field">
+        <label for="calibT0" data-i18n="calib.t0">Egg-lay start (t₀) *</label>
+        <input id="calibT0" type="datetime-local" required />
+        <div class="hint" data-i18n="calib.t0Hint">Keep the egg-lay window short (3–6 h): remove the parents afterwards so all eggs are ~the same age. That short window is what gives a good calibration.</div>
+      </div>
+      <div class="field">
+        <label for="calibTemp" data-i18n="calib.temp">Incubation temperature (°C) *</label>
+        <input id="calibTemp" type="number" min="12" max="30" step="0.5" value="25" required />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" onclick="closeCalib()" data-i18n="form.cancel">Cancel</button>
+        <button type="submit" class="btn" data-i18n="calib.start">Start calibration</button>
+      </div>
+    </form>
+    <h3 class="calib-list-title" data-i18n="calib.existing">Calibrated genotypes</h3>
+    <div id="calibList"></div>
+  </div>
+</div>
+
+<!-- Registrar el T50 (eclosión de la mitad) sin pedir cálculos -->
+<div class="overlay" id="t50Overlay" onclick="if(event.target===this)closeT50()">
+  <div class="modal confirm-modal">
+    <div class="confirm-msg" id="t50Msg" data-i18n="calib.q">Has about half of the flies eclosed?</div>
+    <div class="t50-opts">
+      <button type="button" class="btn" onclick="recordT50('half')" data-i18n="calib.qHalf">~Half</button>
+      <button type="button" class="btn ghost" onclick="recordT50('past')" data-i18n="calib.qPast">Past half already</button>
+      <button type="button" class="btn ghost" onclick="closeT50()" data-i18n="calib.qNotYet">Not yet</button>
+    </div>
+  </div>
+</div>
+
 <!-- Confirmación reutilizable (borrar tarjetas / tareas) -->
 <div class="overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm()">
   <div class="modal confirm-modal">
@@ -845,6 +913,12 @@ const I18N = {
     'form.temp':'Incubation temperature (°C) *','form.tempHint':'Speeds up or slows down the whole cycle. Useful range: 18–29 °C.','form.cancel':'Cancel','form.save':'Save record',
     'form.adults':'Adult flies <span class="opt">(optional)</span>','form.adultsHint':'Total number, and optionally females/males separately.','form.adultsTotalPh':'total','form.container':'Container <span class="opt">(optional)</span>','form.nContTitle':'Number of containers','cont.vial':'Vial','cont.bottle':'Bottle','cont.plate':'Plate','form.notes':'Comments <span class="opt">(optional)</span>','form.notesPh':'Notes about this record…',
     'card.info':'Details ▾','card.hideInfo':'Details ▴','info.adults':'Adult flies','info.container':'Container','info.notes':'Comments','info.empty':'No extra details yet — edit the record to add them.','tip.info':'Extra details: adult count, container and comments.',
+    'calib.btn':'Calibrate','tip.calib':'Calibrate the development model for a specific genotype using a real observation.','obj.calibrate':'Calibration',
+    'calib.title':'Calibrate a genotype','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
+    'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and adjusts. More calibrations (N) → higher confidence.',
+    'calib.t0':'Egg-lay start (t₀) *','calib.t0Hint':'Keep the egg-lay window short (3–6 h): remove the parents afterwards so every egg is about the same age. That short window is what gives a good calibration.','calib.temp':'Incubation temperature (°C) *','calib.start':'Start calibration','calib.existing':'Calibrated genotypes','calib.none':'No calibrations yet.',
+    'card.calibRecord':'Log eclosion (T₅₀)','calib.q':'Has about half of the flies eclosed?','calib.qHalf':'~ Half (record now)','calib.qPast':'Past half already','calib.qNotYet':'Not yet','calib.slower':'slower','calib.faster':'faster','calib.confLow':'low','calib.confMed':'medium','calib.confHigh':'high',
+    'calib.adjusted':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype runs ~{pct}% {dir} than the base model.','calib.adjusted0':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype matches the base model.','card.calibResult':'Calibrated · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrated · matches base ({n} obs)','calib.pendingHint':'When ~half of the flies have eclosed, tap "Log eclosion (T₅₀)".',
     // planificación
     'plan.title':'Planning','plan.titleEdit':'Edit planned record','plan.sub':'Upcoming events and reverse scheduling.',
     'plan.upcoming':'📆 Upcoming events','plan.backward':'⏪ Plan backward','plan.backwardSub':'When to set it up to reach a stage by a target date?',
@@ -867,7 +941,7 @@ const I18N = {
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
     'al.notifUnsupported':'Your browser doesn\'t support notifications.','notif.alreadyOn':'Reminders are already on ✓','al.notifBlocked':'Notifications are blocked. Enable them for this site in your browser settings.',
-    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.',
+    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.',
     'notif.eclTitle':'Eclosion 🪰','notif.eclBody':'Adults of "{label}" have eclosed.','notif.virginTitle':'Collect virgins ⏳','notif.virginBody':'Virgin collection window open for "{label}".',
     'notif.eclSoonTitle':'Eclosion imminent','notif.eclSoonBody':'"{label}" ecloses in ~{h}.','notif.moltTitle':'Molt soon','notif.moltBody':'"{label}" molts to {s} in ~{h}.',
   },
@@ -913,6 +987,12 @@ const I18N = {
     'form.temp':'Temperatura de incubación (°C) *','form.tempHint':'Acelera o ralentiza todo el ciclo. Rango útil: 18–29 °C.','form.cancel':'Cancelar','form.save':'Guardar registro',
     'form.adults':'Moscas adultas <span class="opt">(opcional)</span>','form.adultsHint':'Número total, y opcionalmente hembras y machos por separado.','form.adultsTotalPh':'total','form.container':'Recipiente <span class="opt">(opcional)</span>','form.nContTitle':'Cantidad de recipientes','cont.vial':'Vial','cont.bottle':'Botella','cont.plate':'Placa','form.notes':'Comentarios <span class="opt">(opcional)</span>','form.notesPh':'Notas sobre este registro…',
     'card.info':'Detalles ▾','card.hideInfo':'Detalles ▴','info.adults':'Moscas adultas','info.container':'Recipiente','info.notes':'Comentarios','info.empty':'Sin datos adicionales — editá el registro para agregarlos.','tip.info':'Datos adicionales: cantidad de adultos, recipiente y comentarios.',
+    'calib.btn':'Calibrar','tip.calib':'Calibrá el modelo de desarrollo de un genotipo con una observación real.','obj.calibrate':'Calibración',
+    'calib.title':'Calibrar un genotipo','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
+    'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y ajusta. Más calibraciones (N) → mayor confianza.',
+    'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Hint':'Ventana de puesta corta (3–6 h): retirá los parentales después, para que todos los huevos tengan ~la misma edad. Esa ventana corta es lo que da una buena calibración.','calib.temp':'Temperatura de incubación (°C) *','calib.start':'Iniciar calibración','calib.existing':'Genotipos calibrados','calib.none':'Todavía no hay calibraciones.',
+    'card.calibRecord':'Registrar eclosión (T₅₀)','calib.q':'¿Ya eclosionó ~la mitad de las moscas?','calib.qHalf':'~ La mitad (registrar ahora)','calib.qPast':'Ya pasó la mitad','calib.qNotYet':'Todavía no','calib.slower':'más lento','calib.faster':'más rápido','calib.confLow':'baja','calib.confMed':'media','calib.confHigh':'alta',
+    'calib.adjusted':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo va ~{pct}% {dir} que el modelo base.','calib.adjusted0':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo coincide con el modelo base.','card.calibResult':'Calibrado · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrado · igual al base ({n} obs)','calib.pendingHint':'Cuando haya eclosionado ~la mitad, tocá "Registrar eclosión (T₅₀)".',
     'plan.title':'Planificación','plan.titleEdit':'Editar registro planificado','plan.sub':'Agenda de próximos eventos y cálculo inverso de fechas.',
     'plan.upcoming':'📆 Próximos eventos','plan.backward':'⏪ Planificar hacia atrás','plan.backwardSub':'¿Cuándo montarlo para llegar a un estadio en una fecha objetivo?',
     'plan.expPh':'ej. Fenotipo del ojo (separá con comas)','plan.reachStage':'Quiero llegar a','plan.stEgg':'Embrión (puesta)','plan.stAdult':'Adultos / vírgenes (eclosión)',
@@ -930,7 +1010,7 @@ const I18N = {
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
     'al.notifUnsupported':'Tu navegador no soporta notificaciones.','notif.alreadyOn':'Los recordatorios ya están activos ✓','al.notifBlocked':'Las notificaciones están bloqueadas. Habilitalas para este sitio desde la configuración del navegador.',
-    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.',
+    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.',
     'notif.eclTitle':'Eclosión 🪰','notif.eclBody':'Eclosionaron los adultos de "{label}".','notif.virginTitle':'Recolectar vírgenes ⏳','notif.virginBody':'Ventana de recolección de vírgenes abierta para "{label}".',
     'notif.eclSoonTitle':'Eclosión inminente','notif.eclSoonBody':'"{label}" eclosiona en ~{h}.','notif.moltTitle':'Muda próxima','notif.moltBody':'"{label}" muda a {s} en ~{h}.',
   },
@@ -1001,6 +1081,72 @@ function askConfirm(message, onYes, okKey){
 function closeConfirm(){ document.getElementById('confirmOverlay').classList.remove('open'); _confirmCb = null; }
 function doConfirm(){ const cb = _confirmCb; closeConfirm(); if(cb) cb(); }
 
+/* ---- Calibración por genotipo: modal, estado y flujo de T50 ---- */
+function confLabel(conf){ return t(conf==='high'?'calib.confHigh':conf==='med'?'calib.confMed':'calib.confLow'); }
+function calibStatusText(geno){
+  const ci = calibInfo(geno); if(!ci) return '';
+  if(ci.pct===0) return t('calib.adjusted0',{n:ci.n, conf:confLabel(ci.conf)});
+  return t('calib.adjusted',{n:ci.n, conf:confLabel(ci.conf), pct:Math.abs(ci.pct), dir: ci.pct>0?t('calib.slower'):t('calib.faster')});
+}
+function openCalib(){
+  const f = document.getElementById('calibForm'); f.reset();
+  document.getElementById('calibHelp').classList.remove('open');
+  document.getElementById('calibT0').value = toLocalInput(new Date());
+  document.getElementById('calibTemp').value = 25;
+  const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  document.getElementById('calibGenoList').innerHTML = genos.map(v=>`<option value="${esc(v)}"></option>`).join('');
+  renderCalibStatus(); renderCalibList();
+  document.getElementById('calibOverlay').classList.add('open');
+}
+function closeCalib(){ document.getElementById('calibOverlay').classList.remove('open'); }
+function toggleCalibHelp(){ document.getElementById('calibHelp').classList.toggle('open'); }
+function renderCalibStatus(){
+  const g = document.getElementById('calibGeno').value;
+  document.getElementById('calibGenoStatus').textContent = g.trim() ? calibStatusText(g) : '';
+}
+let _calibKeys = [];
+function renderCalibList(){
+  const all = loadCalib();
+  _calibKeys = Object.keys(all).filter(k=>calibInfo(k));
+  const box = document.getElementById('calibList');
+  if(!_calibKeys.length){ box.innerHTML = `<div class="hint">${t('calib.none')}</div>`; return; }
+  box.innerHTML = _calibKeys.map((k,i)=>{
+    const ci = calibInfo(k);
+    const detail = ci.pct===0
+      ? `= base · ${ci.n} obs · ${confLabel(ci.conf)}`
+      : `~${Math.abs(ci.pct)}% ${ci.pct>0?t('calib.slower'):t('calib.faster')} · ${ci.n} obs · ${confLabel(ci.conf)}`;
+    return `<div class="calib-row"><span class="cg" title="${esc(k)}">${esc(k)}</span><span class="cd">${esc(detail)}</span><button class="cx" title="${esc(t('task.remove'))}" onclick="clearCalibGeno(${i})">✕</button></div>`;
+  }).join('');
+}
+function clearCalibGeno(i){
+  const geno = _calibKeys[i]; if(!geno) return;
+  askConfirm(t('cf.clearCalib'), ()=>{ clearCalib(geno); renderCalibList(); renderCalibStatus(); render(); });
+}
+function startCalib(e){
+  e.preventDefault();
+  const genotype = document.getElementById('calibGeno').value.trim();
+  if(!genotype){ alert(t('al.geno')); return; }
+  crosses.push({
+    id:'c'+Date.now()+Math.random().toString(36).slice(2,5),
+    calib:true, calibDone:false, parentsRemoved:true, experiments:[],
+    genotype, crossDate: document.getElementById('calibT0').value, temp: parseFloat(document.getElementById('calibTemp').value),
+  });
+  save(crosses); closeCalib(); render();
+}
+let _t50Id = null;
+function openT50(id){ _t50Id = id; document.getElementById('t50Overlay').classList.add('open'); }
+function closeT50(){ document.getElementById('t50Overlay').classList.remove('open'); _t50Id = null; }
+function recordT50(kind){
+  const c = crosses.find(x=>x.id===_t50Id);
+  if(c){
+    const t50 = toLocalInput(new Date());
+    addCalibObs(c.genotype, c.crossDate, t50, c.temp, kind==='past');
+    c.calibDone = true; c.calibT50 = t50;
+    save(crosses);
+  }
+  closeT50(); render();
+}
+
 /* --- Modelo de desarrollo dependiente de temperatura ---
    Suma térmica (degree-days): D(T) = DD / (T - T0)
    Anclado a datos clásicos: 25°C≈10 d, 29°C≈8 d, 18°C≈19 d (huevo→eclosión)
@@ -1029,14 +1175,15 @@ const STAGES = [
 const ADULT = { key:'adult', name:'Adulto', short:'Adulto', color:'var(--pink)', soft:'var(--pink-soft)', txt:'#d96fa0' };
 const REF_TOTAL = STAGES.reduce((s,x)=>s+x.dur,0); // 10 días
 
-function totalDays(temp){
+/* factor = corrección de calibración por genotipo (1 = modelo base; >1 = más lento) */
+function totalDays(temp, factor=1){
   const t = Math.max(temp, T0 + 1.5); // evitar división extrema
-  return DEGREE_DAYS / (t - T0);
+  return factor * DEGREE_DAYS / (t - T0);
 }
 
 /* Devuelve límites cumulativos de cada estadio (en días) para una temperatura */
-function stageBounds(temp){
-  const scale = totalDays(temp) / REF_TOTAL;
+function stageBounds(temp, factor=1){
+  const scale = totalDays(temp, factor) / REF_TOTAL;
   let acc = 0;
   return STAGES.map(s=>{
     const start = acc * scale;
@@ -1046,13 +1193,53 @@ function stageBounds(temp){
   });
 }
 
+/* ============================================================
+   Calibración por genotipo: ajusta el modelo de desarrollo con
+   observaciones reales. Cada observación aporta:
+     t0  = inicio de la puesta (ventana corta 3–6 h)
+     t50 = momento en que eclosionó ~la mitad de las moscas
+   factor observado = tiempo real (t50−t0) / tiempo del modelo base a esa T.
+   El factor del genotipo = promedio de sus observaciones (>1 = más lento).
+   ============================================================ */
+const CALIB_KEY = 'drosotrack.calib.v1';
+let _calibCache = null;
+function loadCalib(){ if(_calibCache) return _calibCache; try{ _calibCache = JSON.parse(localStorage.getItem(CALIB_KEY)) || {}; }catch(e){ _calibCache = {}; } return _calibCache; }
+function saveCalib(o){ _calibCache = o; localStorage.setItem(CALIB_KEY, JSON.stringify(o)); }
+function normGeno(g){ return String(g||'').trim().replace(/\s+/g,' '); }
+function obsFactor(o){
+  const observedDays = (new Date(o.t50) - new Date(o.t0)) / 86400000;
+  const baseDays = totalDays(o.temp);   // modelo base (factor 1) a esa temperatura
+  return (observedDays>0 && baseDays>0) ? observedDays/baseDays : null;
+}
+/* resumen de calibración de un genotipo: {n, factor, pct, conf} o null si no hay */
+function calibInfo(geno){
+  const all = loadCalib()[normGeno(geno)];
+  if(!all || !all.length) return null;
+  const fs = all.map(obsFactor).filter(x=>x!=null && isFinite(x) && x>0);
+  if(!fs.length) return null;
+  const factor = fs.reduce((s,x)=>s+x,0)/fs.length;
+  const n = fs.length;
+  let conf = n>=3 ? 'high' : (n>=2 ? 'med' : 'low');
+  if(all.some(o=>o.late) && conf==='high') conf='med';   // observaciones "ya pasó la mitad" bajan la confianza
+  return { n, factor, pct: Math.round((factor-1)*100), conf };
+}
+function calibFactorValue(geno){ const c = calibInfo(geno); return c ? c.factor : 1; }
+function addCalibObs(geno, t0, t50, temp, late){
+  const all = loadCalib();
+  const key = normGeno(geno);
+  (all[key] = all[key] || []).push({ t0, t50, temp, late: !!late });
+  saveCalib(all);
+}
+function clearCalib(geno){ const all = loadCalib(); delete all[normGeno(geno)]; saveCalib(all); }
+
 /* --- Cálculo del estado actual de una cruza --- */
 function computeState(cross, now=new Date()){
   const start = parseCross(cross);
   const elapsedMs = now - start;
   const elapsedDays = elapsedMs / 86400000;
-  const total = totalDays(cross.temp);
-  const bounds = stageBounds(cross.temp);
+  const factor = calibFactorValue(cross.genotype);   // corrección por genotipo si está calibrado
+  const total = totalDays(cross.temp, factor);
+  const bounds = stageBounds(cross.temp, factor);
 
   if(elapsedDays < 0){
     /* cruza PLANIFICADA (fecha futura): todavía no se montó */
@@ -1105,6 +1292,7 @@ function buildReminders(cross, st, now=new Date()){
     push(t('rem.montar',{h:fmtH(st.daysToCross*24)}), 'action', true, st.daysToCross<=1, 'montar', st.daysToCross*24);
     return out;
   }
+  if(cross.calib) return out;   // los registros de calibración no generan tareas (se registra el T50 desde su tarjeta)
   if(!st.isAdult){
     /* --- AVISOS de desarrollo (no son tareas) --- */
     const next = st.bounds.find(b => b.start > st.elapsedDays);
@@ -1344,6 +1532,7 @@ function tempInfo(t){
 
 /* etiqueta legible del objetivo de la cruza */
 function objLabel(cross){
+  if(cross.calib) return t('obj.calibrate');
   if(!cross.objective) return '';
   let l = t('obj.'+cross.objective);
   if(cross.objective==='dissect' && cross.dissectStage) l += ` (${cross.dissectStage.toUpperCase()})`;
@@ -1393,7 +1582,33 @@ function card(cross){
   if(contStr)     infoRows.push(`<div class="info-row"><span class="ik">${t('info.container')}</span><span class="iv">${esc(contStr)}</span></div>`);
   if(adultsStr)   infoRows.push(`<div class="info-row"><span class="ik">${t('info.adults')}</span><span class="iv">${esc(adultsStr)}</span></div>`);
   if(cross.notes) infoRows.push(`<div class="info-row"><span class="ik">${t('info.notes')}</span><span class="iv">${esc(cross.notes)}</span></div>`);
+  if(!cross.calib){ const cs = calibStatusText(cross.genotype); if(cs) infoRows.push(`<div class="info-row"><span class="ik">${t('obj.calibrate')}</span><span class="iv">${esc(cs)}</span></div>`); }
   const infoHtml = infoRows.length ? infoRows.join('') : `<div class="hint">${t('info.empty')}</div>`;
+
+  // Acciones de la tarjeta. Los registros de calibración muestran registrar-T50 (o el resultado);
+  // el resto muestra "Nueva generación" + cronología + detalles + panel de envejecimiento.
+  const tlBlock = `<div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>`;
+  let actionHtml;
+  if(cross.calib){
+    const tlBtn = `<div class="btn-row"><button class="timeline-btn" onclick="toggleTL(this)" data-tip="${esc(t('tip.timeline'))}">${t('card.viewTimeline')}</button></div>`;
+    if(cross.calibDone){
+      const ci = calibInfo(cross.genotype);
+      const res = ci ? (ci.pct===0 ? t('card.calibResult0',{n:ci.n}) : t('card.calibResult',{pct:Math.abs(ci.pct), dir: ci.pct>0?t('calib.slower'):t('calib.faster'), n:ci.n})) : '';
+      actionHtml = `<div class="calib-done">✓ ${esc(res)}</div>${tlBtn}${tlBlock}`;
+    } else {
+      actionHtml = `<button class="timeline-btn gen-btn" onclick="openT50('${cross.id}')">${t('card.calibRecord')}</button>
+    <div class="hint" style="margin-top:8px">${t('calib.pendingHint')}</div>${tlBtn}${tlBlock}`;
+    }
+  } else {
+    actionHtml = `<button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>
+    <div class="btn-row">
+      <button class="timeline-btn" onclick="toggleTL(this)" data-tip="${esc(t('tip.timeline'))}">${t('card.viewTimeline')}</button>
+      <button class="timeline-btn" onclick="toggleInfo(this)" data-tip="${esc(t('tip.info'))}">${t('card.info')}</button>
+    </div>
+    ${tlBlock}
+    <div class="info-panel"><div class="info-inner">${infoHtml}</div></div>
+    ${st.isAdult && (cross.objective==='aging' || (cross.aging && cross.aging.startN!=null)) ? agingPanel(cross, st) : ''}`;
+  }
 
   return `<div class="card ${st.planned?'planned':''}" id="card-${cross.id}" onclick="cardToTasks(event,'${cross.id}')">
     <div class="card-top">
@@ -1423,15 +1638,7 @@ function card(cross){
 
     ${remHtml ? `<div class="reminders">${remHtml}</div>` : ''}
 
-    <button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>
-    <div class="btn-row">
-      <button class="timeline-btn" onclick="toggleTL(this)" data-tip="${esc(t('tip.timeline'))}">${t('card.viewTimeline')}</button>
-      <button class="timeline-btn" onclick="toggleInfo(this)" data-tip="${esc(t('tip.info'))}">${t('card.info')}</button>
-    </div>
-    <div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>
-    <div class="info-panel"><div class="info-inner">${infoHtml}</div></div>
-
-    ${st.isAdult && (cross.objective==='aging' || (cross.aging && cross.aging.startN!=null)) ? agingPanel(cross, st) : ''}
+    ${actionHtml}
   </div>`;
 }
 
@@ -1972,7 +2179,8 @@ function computePlan(e){
   const stage = document.getElementById('planStage').value;
   const target = new Date(document.getElementById('planDate').value);
   const temp = parseFloat(document.getElementById('planTemp').value);
-  const bounds = stageBounds(temp); const total = totalDays(temp);
+  const factor = calibFactorValue(document.getElementById('planGeno').value);  // usa la calibración del genotipo si existe
+  const bounds = stageBounds(temp, factor); const total = totalDays(temp, factor);
   const stObj = stage==='adult' ? ADULT : STAGES.find(s=>s.key===stage);
   const offsetDays = stage==='adult' ? total : bounds.find(b=>b.key===stage).start;
   const crossDate = new Date(target.getTime() - offsetDays*86400000);
