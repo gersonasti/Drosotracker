@@ -61,15 +61,16 @@
     --shadow:0 12px 32px -12px rgba(0,0,0,.6);
     --shadow-sm:0 4px 14px -8px rgba(0,0,0,.55);
   }
-  html[data-theme="dark"] body{
+  html[data-theme="dark"]{ background:#141019; }        /* base sólida uniforme (color plano: no puede tener costuras) */
+  html[data-theme="dark"] body{ background:transparent; }
+  /* Glow como CAPA FIJA (pseudo-elemento): cubre el viewport, no se repite ni deja línea al scrollear en páginas largas */
+  html[data-theme="dark"] body::before{
+    content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
     background:
       radial-gradient(1200px 600px at 10% -10%, rgba(201,189,240,.10), transparent 60%),
       radial-gradient(1000px 600px at 110% 10%, rgba(159,224,201,.14), transparent 55%),
       linear-gradient(180deg,#1b1828,#141019);
-    background-repeat:no-repeat;
-    background-attachment:fixed;   /* el glow queda fijo como en modo claro (el shorthand de arriba resetea attachment) */
   }
-  html[data-theme="dark"]{ background:#141019; }   /* canvas oscuro: sin franja clara al final / en el overscroll */
   html[data-theme="dark"] .btn.ghost{background:var(--card);border:1px solid var(--line)}
   html[data-theme="dark"] .temp-presets button{background:var(--bg-2)}
   html[data-theme="dark"] .tl-dot{border-color:var(--card)}
@@ -489,6 +490,10 @@
   #settingsPop .set-sub button.active .set-tick{visibility:visible}
   /* Al tocar una tarjeta, sus tareas pendientes parpadean en el panel */
   .task.flash{box-shadow:0 0 0 2.5px var(--lav);background:var(--lav-soft)}
+  /* Diálogo de confirmación (borrar) */
+  #confirmOverlay{z-index:100}
+  .confirm-modal{max-width:380px}
+  .confirm-msg{font-size:.95rem;color:var(--ink);line-height:1.45;margin-bottom:20px}
 </style>
 </head>
 <body>
@@ -766,6 +771,17 @@
   </div>
 </div>
 
+<!-- Confirmación reutilizable (borrar tarjetas / tareas) -->
+<div class="overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm()">
+  <div class="modal confirm-modal">
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" onclick="closeConfirm()" data-i18n="form.cancel">Cancel</button>
+      <button type="button" class="btn danger" id="confirmOkBtn" onclick="doConfirm()" data-i18n="confirm.delete">Delete</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ============================================================
    DrosoTracker — modelo de ciclo de vida de D. melanogaster
@@ -851,7 +867,7 @@ const I18N = {
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
     'al.notifUnsupported':'Your browser doesn\'t support notifications.','notif.alreadyOn':'Reminders are already on ✓','al.notifBlocked':'Notifications are blocked. Enable them for this site in your browser settings.',
-    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.',
+    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.',
     'notif.eclTitle':'Eclosion 🪰','notif.eclBody':'Adults of "{label}" have eclosed.','notif.virginTitle':'Collect virgins ⏳','notif.virginBody':'Virgin collection window open for "{label}".',
     'notif.eclSoonTitle':'Eclosion imminent','notif.eclSoonBody':'"{label}" ecloses in ~{h}.','notif.moltTitle':'Molt soon','notif.moltBody':'"{label}" molts to {s} in ~{h}.',
   },
@@ -914,7 +930,7 @@ const I18N = {
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
     'al.notifUnsupported':'Tu navegador no soporta notificaciones.','notif.alreadyOn':'Los recordatorios ya están activos ✓','al.notifBlocked':'Las notificaciones están bloqueadas. Habilitalas para este sitio desde la configuración del navegador.',
-    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.',
+    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.',
     'notif.eclTitle':'Eclosión 🪰','notif.eclBody':'Eclosionaron los adultos de "{label}".','notif.virginTitle':'Recolectar vírgenes ⏳','notif.virginBody':'Ventana de recolección de vírgenes abierta para "{label}".',
     'notif.eclSoonTitle':'Eclosión inminente','notif.eclSoonBody':'"{label}" eclosiona en ~{h}.','notif.moltTitle':'Muda próxima','notif.moltBody':'"{label}" muda a {s} en ~{h}.',
   },
@@ -974,6 +990,16 @@ document.addEventListener('click', e=>{
   const menu = e.target.closest('.menu');
   document.querySelectorAll('.menu-pop.open').forEach(p=>{ if(!menu || !menu.contains(p)) p.classList.remove('open'); });
 });
+/* Diálogo de confirmación propio (reemplaza el confirm() del navegador; estilizado + traducido) */
+let _confirmCb = null;
+function askConfirm(message, onYes, okKey){
+  _confirmCb = onYes;
+  document.getElementById('confirmMsg').textContent = message;
+  document.getElementById('confirmOkBtn').textContent = t(okKey || 'confirm.delete');
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm(){ document.getElementById('confirmOverlay').classList.remove('open'); _confirmCb = null; }
+function doConfirm(){ const cb = _confirmCb; closeConfirm(); if(cb) cb(); }
 
 /* --- Modelo de desarrollo dependiente de temperatura ---
    Suma térmica (degree-days): D(T) = DD / (T - T0)
@@ -1559,13 +1585,15 @@ function markTaskDone(id){
   renderTasks();
 }
 function unmarkTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }
-function deleteTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }
+function deleteTask(id){ askConfirm(t('cf.dismissTask'), ()=>{ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }, 'task.remove'); }
 /* ✕ en una tarea pendiente: la descarta (se oculta, no cuenta como "hecha"); reaparece a las 24 h si sigue vigente */
 function dismissTask(id){
   const m = _taskMap[id];
-  const done = loadTaskDone();
-  done[id] = { doneAt: Date.now(), dismissed:true, text:m?m.text:'', c:m?m.c:'', genotype:m?m.genotype:'', crossId:m?m.crossId:id.split(':')[0] };
-  saveTaskDone(done); renderTasks();
+  askConfirm(t('cf.dismissTask'), ()=>{
+    const done = loadTaskDone();
+    done[id] = { doneAt: Date.now(), dismissed:true, text:m?m.text:'', c:m?m.c:'', genotype:m?m.genotype:'', crossId:m?m.crossId:id.split(':')[0] };
+    saveTaskDone(done); renderTasks();
+  }, 'task.remove');
 }
 
 function renderTasks(){
@@ -1807,7 +1835,8 @@ function saveAgingEntry(e){
 }
 function delAging(id, idx){
   const c = crosses.find(x=>x.id===id);
-  if(c && c.aging && c.aging.events[idx]!==undefined){ c.aging.events.splice(idx,1); save(crosses); render(); }
+  if(!(c && c.aging && c.aging.events[idx]!==undefined)) return;
+  askConfirm(t('cf.delAging'), ()=>{ c.aging.events.splice(idx,1); save(crosses); render(); });
 }
 
 /* --- Resguardo y exportación de datos --- */
@@ -2370,15 +2399,15 @@ function saveCross(e){
 }
 
 function delCross(id){
-  const c = crosses.find(x=>x.id===id);
-  if(confirm(t('cf.deleteCross',{name:c.genotype}))){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  askConfirm(t('cf.deleteCross',{name:c.genotype}), ()=>{
     crosses = crosses.filter(x=>x.id!==id);
     // limpiar los avisos ya notificados de esta cruza (no dejar basura en localStorage)
     const seen = getNotified(); let changed = false;
     Object.keys(seen).forEach(k=>{ if(k.startsWith(id+':')){ delete seen[k]; changed = true; } });
     if(changed) setNotified(seen);
     save(crosses); render();
-  }
+  });
 }
 
 function markParents(id){
