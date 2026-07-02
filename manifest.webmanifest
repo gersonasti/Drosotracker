@@ -1,8 +1,8 @@
 {
-  "name": "DrosoTracker — Ciclo de vida de Drosophila",
+  "name": "DrosoTracker",
   "short_name": "DrosoTracker",
-  "description": "Seguimiento del ciclo de vida de Drosophila melanogaster: estadios, mudas, eclosión, tareas y recordatorios.",
-  "lang": "es",
+  "description": "Track the Drosophila melanogaster life cycle: stages, molts, eclosion, tasks and reminders.",
+  "lang": "en",
   "start_url": "DrosoTracker.html",
   "scope": "./",
   "display": "standalone",
