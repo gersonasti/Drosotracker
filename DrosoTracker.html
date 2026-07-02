@@ -804,7 +804,7 @@ const I18N = {
     'stage.short.egg':'Embryo','stage.short.l1':'L1','stage.short.l2':'L2','stage.short.l3':'L3','stage.short.pupa':'Pupa','stage.short.adult':'Adult',
     // avisos / tareas
     'rem.montar':'Set up (in {h})','rem.virgenesPrep':'Collect virgins: eclosion in {h}','rem.eclosionEn':'Eclosion in {h}','rem.muda':'Molt to {s} in {h}',
-    'rem.retirarParentales':'Remove parents','rem.disecar':'Dissect larvae ({s})','rem.proxDiseccion':'Next dissection: {s}',
+    'rem.retirarParentales':'Clear parents','rem.disecar':'Dissect larvae ({s})','rem.proxDiseccion':'Next dissection: {s}',
     'rem.adultosEclosionados':'Adults eclosed','rem.virgenes':'Collect virgins ({h})','rem.botellas':'Move adults to fresh bottles','rem.cohorte':'Define aging cohort','rem.comida':'Flip to fresh food','rem.edad':'Adult age: day {d}',
     // tarjeta
     'card.plannedBadge':'Planned','card.setupIn':'Set up in <b>{h}</b>','card.postEcl':'<b>{d}</b> days post-eclosion','card.dayOf':'Day <b>{d}</b> of {t}',
@@ -1335,8 +1335,10 @@ function card(cross){
     ? `<div class="day-line">${t('card.postEcl',{d:Math.round(st.adultAge)})}</div>`
     : `<div class="day-line">${t('card.dayOf',{d:Math.round(st.elapsedDays),t:Math.ceil(st.total)})}</div>`;
 
-  const remHtml = reminders.map(r=>
-    `<span class="chip ${r.c}">${r.pulse?'<span class="pulse"></span>':''}${r.t}</span>`).join('');
+  // Sólo las tarjetas planificadas muestran un chip (el aviso "Montar…"); en el resto,
+  // los avisos/tareas viven únicamente en el panel de "Tareas pendientes", no en la tarjeta.
+  const remHtml = st.planned ? reminders.map(r=>
+    `<span class="chip ${r.c}">${r.pulse?'<span class="pulse"></span>':''}${r.t}</span>`).join('') : '';
 
   // timeline
   const tl = st.bounds.map((b,i)=>{
@@ -1393,7 +1395,7 @@ function card(cross){
       </div>
     </div>
 
-    <div class="reminders">${remHtml}</div>
+    ${remHtml ? `<div class="reminders">${remHtml}</div>` : ''}
 
     <button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>
     <div class="btn-row">
