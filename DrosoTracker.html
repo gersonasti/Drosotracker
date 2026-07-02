@@ -514,6 +514,7 @@
   .t50-opts{display:flex;flex-direction:column;gap:9px}
   .t50-opts .btn{width:100%;justify-content:center}
   .calib-done{background:var(--mint-soft);color:#3fae8c;border-radius:14px;padding:11px 14px;margin-top:10px;font-size:.85rem;font-weight:700;text-align:center;line-height:1.35}
+  .t50-div{text-align:center;font-size:.73rem;color:var(--ink-soft);margin:6px 0 2px}
 </style>
 </head>
 <body>
@@ -835,6 +836,33 @@
       <button type="button" class="btn" onclick="recordT50('half')" data-i18n="calib.qHalf">~Half</button>
       <button type="button" class="btn ghost" onclick="recordT50('past')" data-i18n="calib.qPast">Past half already</button>
       <button type="button" class="btn ghost" onclick="closeT50()" data-i18n="calib.qNotYet">Not yet</button>
+      <div class="t50-div" data-i18n="calib.orMore">or, for higher quality:</div>
+      <button type="button" class="btn ghost" onclick="openCountFromT50()" data-i18n="calib.byCount">Log by count (more accurate)</button>
+    </div>
+  </div>
+</div>
+
+<!-- T50 por conteo: se registran conteos en el tiempo y se interpola la mitad (más preciso) -->
+<div class="overlay" id="countOverlay" onclick="if(event.target===this)closeCount()">
+  <div class="modal">
+    <h2 data-i18n="count.title">Log by count</h2>
+    <div class="sub" data-i18n="count.sub">Count the eclosed flies at 2+ time points; the app finds T₅₀ by interpolating when half was reached. More accurate than by eye.</div>
+    <div class="field">
+      <label for="countTotal" data-i18n="count.total">Expected total (N)</label>
+      <input id="countTotal" type="number" min="1" step="1" placeholder="e.g. 100" oninput="renderCountPanel()" />
+    </div>
+    <div class="field">
+      <label for="countN" data-i18n="count.add">Eclosed so far (cumulative)</label>
+      <div class="duo">
+        <input id="countN" type="number" min="0" step="1" placeholder="e.g. 24" />
+        <button type="button" class="btn" onclick="addCount()" data-i18n="count.addBtn" style="flex:none;white-space:nowrap">Log now</button>
+      </div>
+    </div>
+    <div id="countList"></div>
+    <div id="countResult"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" onclick="closeCount()" data-i18n="form.cancel">Cancel</button>
+      <button type="button" class="btn" id="countSaveBtn" onclick="saveCountCalib()" data-i18n="count.save" disabled>Save calibration</button>
     </div>
   </div>
 </div>
@@ -915,10 +943,12 @@ const I18N = {
     'card.info':'Details ▾','card.hideInfo':'Details ▴','info.adults':'Adult flies','info.container':'Container','info.notes':'Comments','info.empty':'No extra details yet — edit the record to add them.','tip.info':'Extra details: adult count, container and comments.',
     'calib.btn':'Calibrate','tip.calib':'Calibrate the development model for a specific genotype using a real observation.','obj.calibrate':'Calibration',
     'calib.title':'Calibrate a genotype','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
-    'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and adjusts. More calibrations (N) → higher confidence.',
+    'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and adjusts. More calibrations (N) → higher confidence. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half. The count method is more accurate.',
     'calib.t0':'Egg-lay start (t₀) *','calib.t0Hint':'Keep the egg-lay window short (3–6 h): remove the parents afterwards so every egg is about the same age. That short window is what gives a good calibration.','calib.temp':'Incubation temperature (°C) *','calib.start':'Start calibration','calib.existing':'Calibrated genotypes','calib.none':'No calibrations yet.',
     'card.calibRecord':'Log eclosion (T₅₀)','calib.q':'Has about half of the flies eclosed?','calib.qHalf':'~ Half (record now)','calib.qPast':'Past half already','calib.qNotYet':'Not yet','calib.slower':'slower','calib.faster':'faster','calib.confLow':'low','calib.confMed':'medium','calib.confHigh':'high',
     'calib.adjusted':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype runs ~{pct}% {dir} than the base model.','calib.adjusted0':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype matches the base model.','card.calibResult':'Calibrated · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrated · matches base ({n} obs)','calib.pendingHint':'When ~half of the flies have eclosed, tap "Log eclosion (T₅₀)".',
+    'calib.orMore':'or, for higher quality:','calib.byCount':'Log by count (more accurate)',
+    'count.title':'Log by count','count.sub':'Count the eclosed flies at 2 or more time points; the app finds T₅₀ by interpolating when half was reached. More accurate than by eye.','count.total':'Expected total (N)','count.add':'Eclosed so far (cumulative)','count.addBtn':'Log now','count.empty':'No counts logged yet.','count.needMore':'Log the total (N) and at least two counts that bracket half.','count.t50':'T₅₀ ≈ {date} (interpolated)','count.save':'Save calibration',
     // planificación
     'plan.title':'Planning','plan.titleEdit':'Edit planned record','plan.sub':'Upcoming events and reverse scheduling.',
     'plan.upcoming':'📆 Upcoming events','plan.backward':'⏪ Plan backward','plan.backwardSub':'When to set it up to reach a stage by a target date?',
@@ -989,10 +1019,12 @@ const I18N = {
     'card.info':'Detalles ▾','card.hideInfo':'Detalles ▴','info.adults':'Moscas adultas','info.container':'Recipiente','info.notes':'Comentarios','info.empty':'Sin datos adicionales — editá el registro para agregarlos.','tip.info':'Datos adicionales: cantidad de adultos, recipiente y comentarios.',
     'calib.btn':'Calibrar','tip.calib':'Calibrá el modelo de desarrollo de un genotipo con una observación real.','obj.calibrate':'Calibración',
     'calib.title':'Calibrar un genotipo','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
-    'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y ajusta. Más calibraciones (N) → mayor confianza.',
+    'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y ajusta. Más calibraciones (N) → mayor confianza. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta. El conteo es más preciso.',
     'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Hint':'Ventana de puesta corta (3–6 h): retirá los parentales después, para que todos los huevos tengan ~la misma edad. Esa ventana corta es lo que da una buena calibración.','calib.temp':'Temperatura de incubación (°C) *','calib.start':'Iniciar calibración','calib.existing':'Genotipos calibrados','calib.none':'Todavía no hay calibraciones.',
     'card.calibRecord':'Registrar eclosión (T₅₀)','calib.q':'¿Ya eclosionó ~la mitad de las moscas?','calib.qHalf':'~ La mitad (registrar ahora)','calib.qPast':'Ya pasó la mitad','calib.qNotYet':'Todavía no','calib.slower':'más lento','calib.faster':'más rápido','calib.confLow':'baja','calib.confMed':'media','calib.confHigh':'alta',
     'calib.adjusted':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo va ~{pct}% {dir} que el modelo base.','calib.adjusted0':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo coincide con el modelo base.','card.calibResult':'Calibrado · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrado · igual al base ({n} obs)','calib.pendingHint':'Cuando haya eclosionado ~la mitad, tocá "Registrar eclosión (T₅₀)".',
+    'calib.orMore':'o, para más calidad:','calib.byCount':'Registrar por conteo (más preciso)',
+    'count.title':'Registrar por conteo','count.sub':'Contá las moscas eclosionadas en 2 o más momentos; la app calcula el T₅₀ interpolando cuándo se llegó a la mitad. Más preciso que a ojo.','count.total':'Total esperado (N)','count.add':'Eclosionadas hasta ahora (acumulado)','count.addBtn':'Registrar','count.empty':'Todavía no hay conteos.','count.needMore':'Cargá el total (N) y al menos dos conteos que crucen la mitad.','count.t50':'T₅₀ ≈ {date} (interpolado)','count.save':'Guardar calibración',
     'plan.title':'Planificación','plan.titleEdit':'Editar registro planificado','plan.sub':'Agenda de próximos eventos y cálculo inverso de fechas.',
     'plan.upcoming':'📆 Próximos eventos','plan.backward':'⏪ Planificar hacia atrás','plan.backwardSub':'¿Cuándo montarlo para llegar a un estadio en una fecha objetivo?',
     'plan.expPh':'ej. Fenotipo del ojo (separá con comas)','plan.reachStage':'Quiero llegar a','plan.stEgg':'Embrión (puesta)','plan.stAdult':'Adultos / vírgenes (eclosión)',
@@ -1140,11 +1172,67 @@ function recordT50(kind){
   const c = crosses.find(x=>x.id===_t50Id);
   if(c){
     const t50 = toLocalInput(new Date());
-    addCalibObs(c.genotype, c.crossDate, t50, c.temp, kind==='past');
+    addCalibObs(c.genotype, c.crossDate, t50, c.temp, kind==='past' ? 'past' : 'eye');
     c.calibDone = true; c.calibT50 = t50;
     save(crosses);
   }
   closeT50(); render();
+}
+/* --- T50 por conteo (más preciso): registra conteos y interpola --- */
+let _countId = null;
+function openCountFromT50(){ const id = _t50Id; closeT50(); openCount(id); }
+function openCount(id){
+  _countId = id;
+  const c = crosses.find(x=>x.id===id);
+  document.getElementById('countTotal').value = (c && c.countTotal!=null) ? c.countTotal : '';
+  document.getElementById('countN').value = '';
+  renderCountPanel();
+  document.getElementById('countOverlay').classList.add('open');
+}
+function closeCount(){ document.getElementById('countOverlay').classList.remove('open'); _countId = null; }
+function addCount(){
+  const c = crosses.find(x=>x.id===_countId); if(!c) return;
+  const n = parseInt(document.getElementById('countN').value, 10);
+  if(isNaN(n) || n<0) return;
+  const tot = parseInt(document.getElementById('countTotal').value, 10);
+  if(!isNaN(tot)) c.countTotal = tot;
+  (c.counts = c.counts || []).push({ t: toLocalInput(new Date()), n });
+  save(crosses);
+  document.getElementById('countN').value = '';
+  renderCountPanel();
+}
+function delCount(idx){
+  const c = crosses.find(x=>x.id===_countId); if(!c || !c.counts) return;
+  c.counts.splice(idx,1); save(crosses); renderCountPanel();
+}
+function renderCountPanel(){
+  const c = crosses.find(x=>x.id===_countId); if(!c) return;
+  const tot = parseInt(document.getElementById('countTotal').value, 10);
+  const counts = c.counts || [];
+  document.getElementById('countList').innerHTML = counts.length
+    ? counts.slice().sort((a,b)=>new Date(a.t)-new Date(b.t)).map((o)=>{
+        const i = counts.indexOf(o);
+        return `<div class="calib-row"><span class="cg">${fmtDT(new Date(o.t))}</span><span class="cd">${o.n}${(!isNaN(tot)&&tot)?' / '+tot:''}</span><button class="cx" onclick="delCount(${i})" title="${esc(t('task.remove'))}">✕</button></div>`;
+      }).join('')
+    : `<div class="hint">${t('count.empty')}</div>`;
+  const t50 = computeT50FromCounts(counts, tot);
+  const btn = document.getElementById('countSaveBtn');
+  document.getElementById('countResult').innerHTML = t50
+    ? `<div class="calib-done" style="margin-top:12px">${esc(t('count.t50',{date:fmtDT(new Date(t50))}))}</div>`
+    : `<div class="hint" style="margin-top:10px">${t('count.needMore')}</div>`;
+  btn.disabled = !t50;
+}
+function saveCountCalib(){
+  const c = crosses.find(x=>x.id===_countId); if(!c) return;
+  const tot = parseInt(document.getElementById('countTotal').value, 10);
+  const t50ms = computeT50FromCounts(c.counts || [], tot);
+  if(!t50ms) return;
+  const t50 = toLocalInput(new Date(t50ms));
+  c.countTotal = tot;
+  addCalibObs(c.genotype, c.crossDate, t50, c.temp, 'count');
+  c.calibDone = true; c.calibT50 = t50;
+  save(crosses);
+  closeCount(); render();
 }
 
 /* --- Modelo de desarrollo dependiente de temperatura ---
@@ -1212,23 +1300,36 @@ function obsFactor(o){
   return (observedDays>0 && baseDays>0) ? observedDays/baseDays : null;
 }
 /* resumen de calibración de un genotipo: {n, factor, pct, conf} o null si no hay */
+/* peso por método: el conteo (T50 interpolado) es más preciso que "a ojo" o "ya pasó" */
+function obsWeight(o){ const m = o.method || (o.late ? 'past' : 'eye'); return m==='count' ? 1 : m==='past' ? 0.35 : 0.6; }
 function calibInfo(geno){
-  const all = loadCalib()[normGeno(geno)];
-  if(!all || !all.length) return null;
-  const fs = all.map(obsFactor).filter(x=>x!=null && isFinite(x) && x>0);
-  if(!fs.length) return null;
-  const factor = fs.reduce((s,x)=>s+x,0)/fs.length;
-  const n = fs.length;
-  let conf = n>=3 ? 'high' : (n>=2 ? 'med' : 'low');
-  if(all.some(o=>o.late) && conf==='high') conf='med';   // observaciones "ya pasó la mitad" bajan la confianza
-  return { n, factor, pct: Math.round((factor-1)*100), conf };
+  const all = (loadCalib()[normGeno(geno)] || []).filter(o=>{ const f=obsFactor(o); return f!=null && isFinite(f) && f>0; });
+  if(!all.length) return null;
+  let wf=0, w=0;
+  all.forEach(o=>{ const ww=obsWeight(o); wf += ww*obsFactor(o); w += ww; });
+  const factor = wf/w;                                    // promedio ponderado por calidad del método
+  const conf = w>=2 ? 'high' : (w>=1 ? 'med' : 'low');    // el conteo llega antes a confianza alta
+  return { n: all.length, factor, pct: Math.round((factor-1)*100), conf };
 }
 function calibFactorValue(geno){ const c = calibInfo(geno); return c ? c.factor : 1; }
-function addCalibObs(geno, t0, t50, temp, late){
+function addCalibObs(geno, t0, t50, temp, method){
   const all = loadCalib();
   const key = normGeno(geno);
-  (all[key] = all[key] || []).push({ t0, t50, temp, late: !!late });
+  (all[key] = all[key] || []).push({ t0, t50, temp, method: method || 'eye' });
   saveCalib(all);
+}
+/* T50 por conteo: interpola el momento en que la eclosión acumulada cruza N/2 */
+function computeT50FromCounts(counts, total){
+  if(!counts || counts.length<2 || !total || total<=0) return null;
+  const half = total/2;
+  const pts = counts.map(o=>({ t:new Date(o.t).getTime(), n:o.n })).sort((a,b)=>a.t-b.t);
+  for(let i=1;i<pts.length;i++){
+    if(pts[i-1].n < half && pts[i].n >= half){
+      const frac = (half - pts[i-1].n) / (pts[i].n - pts[i-1].n);
+      return pts[i-1].t + frac*(pts[i].t - pts[i-1].t);
+    }
+  }
+  return null;   // todavía no cruzó la mitad (faltan conteos) o el primero ya la superaba
 }
 function clearCalib(geno){ const all = loadCalib(); delete all[normGeno(geno)]; saveCalib(all); }
 
@@ -1901,15 +2002,21 @@ function render(){
   const sorted = [...crosses].sort((a,b)=> parseCross(b)-parseCross(a));
   const groups = {}; _expOrder = [];
   sorted.forEach(c=>{
+    if(c.calib){   // los registros de calibración van a su propia sección
+      if(!groups['__calib__']){ groups['__calib__']=[]; _expOrder.push('__calib__'); }
+      groups['__calib__'].push(c);
+      return;
+    }
     const exps = (c.experiments && c.experiments.length) ? c.experiments : ['__none__'];
     exps.forEach(exp=>{
       if(!groups[exp]){ groups[exp]=[]; _expOrder.push(exp); }
       groups[exp].push(c);
     });
   });
+  if(groups['__calib__']) _expOrder = ['__calib__', ..._expOrder.filter(e=>e!=='__calib__')];   // calibración arriba de todo
   content.innerHTML = _expOrder.map((exp,i)=>{
     const cards = groups[exp];
-    const title = exp==='__none__' ? t('group.none') : esc(exp);
+    const title = exp==='__calib__' ? t('obj.calibrate') : exp==='__none__' ? t('group.none') : esc(exp);
     const open = !collapsedExps.has(exp);
     return `<section class="exp-group">
       <button class="exp-head" onclick="toggleExp(${i})">
