@@ -115,24 +115,25 @@
   .btn{
     border:none;cursor:pointer;font-weight:600;font-size:.95rem;
     padding:12px 20px;border-radius:14px;color:#fff;
-    background:linear-gradient(135deg,var(--mint),#7fcfb5);
-    box-shadow:0 8px 20px -8px rgba(120,200,175,.9);
+    background:linear-gradient(135deg,#a99cea,#8f7fd8);
+    box-shadow:0 8px 20px -8px rgba(140,120,215,.85);
     transition:transform .12s ease, box-shadow .12s ease;
     display:inline-flex;align-items:center;gap:8px;
   }
   .btn:hover{transform:translateY(-1px)}
   .btn:active{transform:translateY(0)}
+  /* menta reservada para la acción "Nuevo registro" */
+  .btn.hero{background:linear-gradient(135deg,var(--mint),#7fcfb5);box-shadow:0 8px 20px -8px rgba(120,200,175,.9)}
   .btn.ghost{background:#fff;color:var(--ink);box-shadow:var(--shadow-sm)}
   .btn.danger{background:linear-gradient(135deg,#f6a8a8,var(--coral));box-shadow:0 8px 20px -8px rgba(245,120,120,.8)}
 
-  /* ---------- Stats ---------- */
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:26px}
-  .stat{
-    background:var(--card);border-radius:18px;padding:18px 22px;
-    box-shadow:var(--shadow-sm);text-align:center;border:1px solid var(--line);
-  }
-  .stat .num{font-family:'Poppins';font-size:1.7rem;font-weight:700;color:var(--ink)}
-  .stat .lbl{font-size:.82rem;color:var(--ink-soft);margin-top:2px}
+  /* ---------- Stats (barra fina) ---------- */
+  .stats{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-bottom:22px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 20px;box-shadow:var(--shadow-sm)}
+  .stat-item{display:flex;align-items:baseline;gap:7px;font-size:.9rem;color:var(--ink-soft)}
+  .stat-item b{font-family:'Poppins';font-weight:700;font-size:1.1rem;color:var(--ink)}
+  .stat-sep{width:1px;height:16px;background:var(--line)}
+  .stats:empty{display:none}
 
   /* ---------- Cards grid ---------- */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:20px;align-items:stretch}
@@ -187,7 +188,8 @@
   .day-line{font-size:.95rem;color:var(--ink-soft);margin-bottom:12px}
   .day-line b{font-family:'Poppins';font-size:1.25rem;color:var(--ink)}
 
-  .meta-row{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;padding:5px 0;border-bottom:1px dashed var(--line)}
+  .meta-table{background:var(--bg-1);border-radius:11px;padding:2px 12px;margin-top:4px}
+  .meta-row{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;padding:7px 0;border-bottom:1px solid var(--line)}
   .meta-row:last-child{border-bottom:none}
   .meta-row .k{color:var(--ink-soft)}
   .meta-row .v{font-weight:700;color:var(--ink)}
@@ -212,15 +214,22 @@
     border-radius:14px;font-size:.88rem;transition:background .12s;
   }
   .timeline-btn:hover{background:var(--lav-soft);color:var(--lav)}
-  .gen-btn{background:var(--mint-soft);color:#3fae8c}
-  .gen-btn:hover{background:#cdeee2;color:#3fae8c}
+  /* Nueva generación: acción secundaria (ya no menta) */
+  .gen-btn{background:var(--bg-1);color:var(--ink-soft)}
+  .gen-btn:hover{background:var(--lav-soft);color:var(--lav)}
+  /* acción principal de una tarjeta (p. ej. registrar T50): lavanda suave, no menta */
+  .act-lav{background:var(--lav-soft);color:#6f5fb0}
+  .act-lav:hover{filter:brightness(.97);background:var(--lav-soft);color:#6f5fb0}
   .btn-row{display:flex;gap:8px;margin-top:10px}
   .btn-row .timeline-btn{flex:1;margin-top:0;padding:11px 8px;font-size:.83rem}
   .timeline-btn:disabled{cursor:not-allowed}
-  .timeline-btn:disabled:hover{background:var(--mint-soft);color:#3fae8c}
+  .timeline-btn:disabled:hover{background:var(--bg-1);color:var(--ink-soft)}
   .timeline{max-height:0;overflow:hidden;transition:max-height .35s ease}
-  .timeline.open{max-height:640px}
+  .timeline.open{max-height:680px}
   .tl-inner{padding-top:14px}
+  /* encabezado de sección dentro del panel "Más" (cronología / detalles) */
+  .more-h{font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);opacity:.8;margin:0 0 8px}
+  .info-inner .more-h{margin-top:2px}
   /* Panel "Detalles" (info adicional que no satura la tarjeta) */
   .info-panel{max-height:0;overflow:hidden;transition:max-height .35s ease}
   .info-panel.open{max-height:600px}
@@ -414,6 +423,11 @@
   .duo select{flex:1}
   .duo input{width:82px;flex:none;text-align:center}
   .field .hint{font-size:.74rem;color:var(--ink-soft);margin-top:5px}
+  /* etiqueta con un (?) que muestra la explicación en un tooltip (en vez de un párrafo fijo) */
+  .lbl-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .lbl-row label{margin-bottom:0}
+  .qh{flex:none;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;
+    border:1.4px solid var(--lav);color:var(--lav);background:var(--lav-soft);font-size:.68rem;font-weight:800;cursor:help;font-family:'Nunito'}
   .temp-presets{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
   .temp-presets button{
     border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;
@@ -439,11 +453,12 @@
   }
 
   /* ===== Asistente de cruzas (chat con IA) ===== */
-  .chat-fab{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;align-items:center;gap:8px;
-    border:none;cursor:pointer;padding:12px 16px;border-radius:999px;font-family:'Poppins';font-weight:600;font-size:.9rem;color:#fff;
-    background:linear-gradient(135deg,var(--lav),var(--mint));box-shadow:var(--shadow)}
+  .chat-fab{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;align-items:center;justify-content:center;
+    border:none;cursor:pointer;width:52px;height:52px;padding:0;border-radius:999px;color:#fff;
+    background:linear-gradient(135deg,#b0a3ee,#8f7fd8);box-shadow:var(--shadow)}
+  .chat-fab span{display:none}   /* ícono solo (el texto iría en el tooltip), para no tapar las tarjetas */
   .chat-fab:hover{filter:brightness(1.05)}
-  .chat-fab svg{width:20px;height:20px}
+  .chat-fab svg{width:23px;height:23px}
   .chat-panel{position:fixed;right:18px;bottom:18px;z-index:201;width:min(390px,94vw);height:min(560px,78vh);
     display:none;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:20px;
     box-shadow:var(--shadow);overflow:hidden}
@@ -532,11 +547,13 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn ghost" id="notifBtn" onclick="toggleNotif()" data-tip-key="tip.notif">🔔 Activate reminders</button>
-      <button class="btn ghost" onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">🗓 Plan</button>
       <div class="menu">
-        <button class="btn ghost" onclick="toggleMenu()" data-i18n="hdr.data" data-tip-key="tip.data">⇅ Data</button>
+        <button class="btn ghost" onclick="toggleMenu()" data-i18n="hdr.more" data-tip-key="tip.more">More ▾</button>
         <div class="menu-pop" id="dataMenu">
+          <button onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">🗓 Plan</button>
+          <button onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
+          <button id="notifBtn" onclick="toggleNotif()" data-tip-key="tip.notif">Activate reminders</button>
+          <div class="menu-sep"></div>
           <button onclick="exportJSON()" data-i18n="menu.exportBackup" data-tip-key="tip.exportBackup">⬇ Export backup (JSON)</button>
           <button onclick="document.getElementById('importFile').click()" data-i18n="menu.importBackup" data-tip-key="tip.importBackup">⬆ Import backup</button>
           <button onclick="exportSurvivalCSV()" data-i18n="menu.exportSurvival" data-tip-key="tip.exportSurvival">📊 Export survival (CSV)</button>
@@ -561,8 +578,7 @@
           </div>
         </div>
       </div>
-      <button class="btn ghost" onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
-      <button class="btn" onclick="openForm()" data-tip-key="tip.newCross">
+      <button class="btn hero" onclick="openForm()" data-tip-key="tip.newCross">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
         <span class="lbl" data-i18n="hdr.newCross">New record</span>
       </button>
@@ -591,23 +607,21 @@
     <form id="crossForm" onsubmit="saveCross(event)">
       <input type="hidden" id="editId" />
       <div class="field">
-        <label for="expInput" data-i18n="form.experiments">Experiment(s)</label>
+        <div class="lbl-row"><label for="expInput" data-i18n="form.experiments">Experiment(s)</label><span class="qh" data-tip-key="form.expHint">?</span></div>
         <div class="tags-input" id="expBox" onclick="document.getElementById('expInput').focus()">
           <input id="expInput" list="expList" autocomplete="off" placeholder="e.g. Eye phenotype…" data-i18n-ph="form.expPh" onkeydown="expInputKey(event)" />
         </div>
         <datalist id="expList"></datalist>
-        <div class="hint" data-i18n="form.expHint">Group records by experiment. You can add more than one (Enter or comma). Optional.</div>
       </div>
       <div class="field">
-        <label for="genotype" data-i18n="form.genotype">Genotype *</label>
+        <div class="lbl-row"><label for="genotype" data-i18n="form.genotype">Genotype *</label><span class="qh" data-tip-key="form.genoHint">?</span></div>
         <div class="ac-wrap">
           <input id="genotype" autocomplete="off" placeholder="e.g. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
           <div class="ac-pop" id="genoAC"></div>
         </div>
-        <div class="hint" data-i18n="form.genoHint">Autocompletes from your history, the lab database and common components (CyO, UAS-GFP, elav-GAL4…). Start typing.</div>
       </div>
       <div class="field">
-        <label for="objective" data-i18n="form.objective">Objective</label>
+        <div class="lbl-row"><label for="objective" data-i18n="form.objective">Objective</label><span class="qh" data-tip-key="form.objHint">?</span></div>
         <select id="objective" onchange="onObjectiveChange()">
           <option value="" data-i18n="obj.none">— No specific objective</option>
           <option value="cross" data-i18n="obj.cross">Genetic cross</option>
@@ -624,20 +638,18 @@
             </select>
           </div>
         </div>
-        <div class="hint" data-i18n-html="form.objHint">This drives the <b>pending tasks</b>. Optional.</div>
       </div>
       <div class="field">
-        <label for="crossDate" data-i18n="form.crossDate">Set-up date *</label>
+        <div class="lbl-row"><label for="crossDate" data-i18n="form.crossDate">Set-up date *</label><span class="qh" data-tip-key="form.crossDateHint">?</span></div>
         <input id="crossDate" type="date" required />
         <select id="crossPeriod" style="margin-top:8px">
           <option value="morning" data-i18n="period.morning">Morning (7–12h)</option>
           <option value="afternoon" data-i18n="period.afternoon">Afternoon (12–17h)</option>
           <option value="night" data-i18n="period.night">Night (17–22h)</option>
         </select>
-        <div class="hint" data-i18n="form.crossDateHint">The day it was set up (egg-laying) and roughly when — refines the estimates.</div>
       </div>
       <div class="field">
-        <label for="temp" data-i18n="form.temp">Incubation temperature (°C) *</label>
+        <div class="lbl-row"><label for="temp" data-i18n="form.temp">Incubation temperature (°C) *</label><span class="qh" data-tip-key="form.tempHint">?</span></div>
         <input id="temp" type="number" min="12" max="30" step="0.5" placeholder="25" required />
         <div class="temp-presets" id="presets">
           <button type="button" data-t="18">18 °C</button>
@@ -645,7 +657,6 @@
           <button type="button" data-t="25">25 °C</button>
           <button type="button" data-t="29">29 °C</button>
         </div>
-        <div class="hint" data-i18n="form.tempHint">Speeds up or slows down the whole cycle. Useful range: 18–29 °C.</div>
       </div>
       <div class="field">
         <label data-i18n-html="form.adults">Adult flies <span class="opt">(optional)</span></label>
@@ -654,7 +665,6 @@
           <input id="fFemales" type="number" min="0" step="1" placeholder="♀" />
           <input id="fMales" type="number" min="0" step="1" placeholder="♂" />
         </div>
-        <div class="hint" data-i18n="form.adultsHint">Total number, and optionally females/males separately.</div>
       </div>
       <div class="field">
         <label for="fContainer" data-i18n-html="form.container">Container <span class="opt">(optional)</span></label>
@@ -896,15 +906,15 @@ let mode = localStorage.getItem(MODE_KEY) || 'light';   // apariencia: 'light' (
 const I18N = {
   en: {
     'hdr.notifActivate':'🔔 Activate reminders','hdr.notifActive':'🔔 Reminders on',
-    'hdr.plan':'🗓 Plan','hdr.data':'⇅ Data','hdr.newCross':'New record','hdr.settings':'Settings',
+    'hdr.plan':'🗓 Plan','hdr.data':'⇅ Data','hdr.more':'More ▾','hdr.newCross':'New record','hdr.settings':'Settings',
     'brand.sub':'Life cycle of <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
     'menu.exportSurvival':'📊 Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv',
     'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'Light','set.dark':'Dark',
-    'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
+    'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, reminders, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
     'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
-    'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
+    'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
     'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.',
@@ -924,7 +934,7 @@ const I18N = {
     'card.metaSetup':'Set up','card.metaCross':'Start','card.metaEclosed':'Eclosed','card.metaEclEst':'Estimated eclosion',
     'card.edit':'Edit','card.delete':'Delete','card.markParents':'✓ Mark parents removed',
     'card.newGen':'↪ New generation','card.newGenTitle':'Create the next generation (same genotype and objective, clock reset)','card.newGenDisabled':'Available once the record is set up',
-    'card.viewTimeline':'View timeline ▾','card.hideTimeline':'Hide timeline ▴','tl.eclosionAdult':'Eclosion → Adult','tl.inProgress':'in progress','tl.agingDay':'day {d} of aging',
+    'card.viewTimeline':'View timeline ▾','card.hideTimeline':'Hide timeline ▴','card.more':'More ▾','card.less':'Less ▴','card.timelineH':'Timeline','card.detailsH':'Details','tl.eclosionAdult':'Eclosion → Adult','tl.inProgress':'in progress','tl.agingDay':'day {d} of aging',
     // envejecimiento
     'aging.toggle':'Aging ▾','aging.mAlive':'alive','aging.mSurv':'survival','aging.mAge':'cohort age',
     'aging.sexF':'♀ Females','aging.sexM':'♂ Males','aging.sexMixed':'⚥ Mixed','aging.vials':'vials','aging.censored':'censored','aging.edit':'edit',
@@ -937,7 +947,7 @@ const I18N = {
     'form.newTitle':'New record','form.editTitle':'Edit record','form.newGenTitle':'New generation','form.sub':'Enter the genotype, set-up date and incubation temperature.',
     'form.experiments':'Experiment(s)','form.expPh':'e.g. Eye phenotype…','form.expHint':'Group records by experiment. You can add more than one (Enter or comma). Optional.',
     'form.genotype':'Genotype *','form.genoHint':'Autocompletes from your history, the lab database and common components (CyO, UAS-GFP, elav-GAL4…). Start typing.',
-    'form.objective':'Objective','form.dissectStage':'Stage to dissect:','form.objHint':'This drives the <b>pending tasks</b>. Optional.',
+    'form.objective':'Objective','form.dissectStage':'Stage to dissect:','form.objHint':'This drives the pending tasks (parent removal, virgin collection, etc.). Optional.',
     'form.crossDate':'Set-up date *','form.crossDateHint':'The day it was set up (egg-laying) and roughly when — refines the estimates.','period.morning':'Morning (7–12h)','period.afternoon':'Afternoon (12–17h)','period.night':'Night (17–22h)',
     'form.temp':'Incubation temperature (°C) *','form.tempHint':'Speeds up or slows down the whole cycle. Useful range: 18–29 °C.','form.cancel':'Cancel','form.save':'Save record',
     'form.adults':'Adult flies <span class="opt">(optional)</span>','form.adultsHint':'Total number, and optionally females/males separately.','form.adultsTotalPh':'total','form.container':'Container <span class="opt">(optional)</span>','form.nContTitle':'Number of containers','cont.vial':'Vial','cont.bottle':'Bottle','cont.plate':'Plate','form.notes':'Comments <span class="opt">(optional)</span>','form.notesPh':'Notes about this record…',
@@ -979,15 +989,15 @@ const I18N = {
   },
   es: {
     'hdr.notifActivate':'🔔 Activar recordatorios','hdr.notifActive':'🔔 Recordatorios activos',
-    'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
+    'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
     'brand.sub':'Ciclo de vida de <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
     'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv',
     'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'Claro','set.dark':'Oscuro',
-    'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
+    'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar, recordatorios y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
     'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
-    'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
+    'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
     'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10 °C · ~148 grados-día). Tiempos estimados · Datos guardados localmente en tu navegador.',
@@ -1003,7 +1013,7 @@ const I18N = {
     'card.metaSetup':'Se monta','card.metaCross':'Inicio','card.metaEclosed':'Eclosionó','card.metaEclEst':'Eclosión estimada',
     'card.edit':'Editar','card.delete':'Eliminar','card.markParents':'✓ Marcar parentales retirados',
     'card.newGen':'↪ Nueva generación','card.newGenTitle':'Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)','card.newGenDisabled':'Disponible cuando se monte el registro',
-    'card.viewTimeline':'Ver cronología ▾','card.hideTimeline':'Ocultar cronología ▴','tl.eclosionAdult':'Eclosión → Adulto','tl.inProgress':'en curso','tl.agingDay':'día {d} de envejecimiento',
+    'card.viewTimeline':'Ver cronología ▾','card.hideTimeline':'Ocultar cronología ▴','card.more':'Más ▾','card.less':'Menos ▴','card.timelineH':'Cronología','card.detailsH':'Detalles','tl.eclosionAdult':'Eclosión → Adulto','tl.inProgress':'en curso','tl.agingDay':'día {d} de envejecimiento',
     'aging.toggle':'Envejecimiento ▾','aging.mAlive':'vivos','aging.mSurv':'supervivencia','aging.mAge':'edad cohorte',
     'aging.sexF':'♀ Hembras','aging.sexM':'♂ Machos','aging.sexMixed':'⚥ Mixto','aging.vials':'viales','aging.censored':'censurados','aging.edit':'editar',
     'aging.densHigh':'⚠ Densidad alta ({d}/vial) · recomendado ≤25–30/vial','aging.median':'Mediana de supervivencia: <b>{d} d</b>','aging.medianNone':'Mediana: — (aún >50% vivos)','aging.maxObs':'Máx. observado: <b>{d} d</b>',
@@ -1014,7 +1024,7 @@ const I18N = {
     'form.newTitle':'Nuevo registro','form.editTitle':'Editar registro','form.newGenTitle':'Nueva generación','form.sub':'Registrá el genotipo, la fecha de montaje y la temperatura de incubación.',
     'form.experiments':'Experimento(s)','form.expPh':'ej. Fenotipo del ojo…','form.expHint':'Agrupá los registros por experimento. Podés agregar más de uno (Enter o coma). Opcional.',
     'form.genotype':'Genotipo *','form.genoHint':'Autocompleta con tu historial, la base del laboratorio y componentes comunes (CyO, UAS-GFP, elav-GAL4…). Empezá a escribir.',
-    'form.objective':'Objetivo','form.dissectStage':'Estadio a disecar:','form.objHint':'De esto se desprenden las <b>tareas pendientes</b>. Opcional.',
+    'form.objective':'Objetivo','form.dissectStage':'Estadio a disecar:','form.objHint':'De esto se desprenden las tareas pendientes (retirar parentales, recolectar vírgenes, etc.). Opcional.',
     'form.crossDate':'Fecha de montaje *','form.crossDateHint':'El día en que se montó (puesta de huevos) y aproximadamente cuándo — afina las estimaciones.','period.morning':'Mañana (7–12 h)','period.afternoon':'Tarde (12–17 h)','period.night':'Noche (17–22 h)',
     'form.temp':'Temperatura de incubación (°C) *','form.tempHint':'Acelera o ralentiza todo el ciclo. Rango útil: 18–29 °C.','form.cancel':'Cancelar','form.save':'Guardar registro',
     'form.adults':'Moscas adultas <span class="opt">(opcional)</span>','form.adultsHint':'Número total, y opcionalmente hembras y machos por separado.','form.adultsTotalPh':'total','form.container':'Recipiente <span class="opt">(opcional)</span>','form.nContTitle':'Cantidad de recipientes','cont.vial':'Vial','cont.bottle':'Botella','cont.plate':'Placa','form.notes':'Comentarios <span class="opt">(opcional)</span>','form.notesPh':'Notas sobre este registro…',
@@ -1652,7 +1662,6 @@ function objLabel(cross){
 }
 function card(cross){
   const st = computeState(cross);
-  const reminders = buildReminders(cross, st);
   const ti = tempInfo(cross.temp);
   const start = parseCross(cross);
 
@@ -1662,10 +1671,8 @@ function card(cross){
     ? `<div class="day-line">${t('card.postEcl',{d:Math.round(st.adultAge)})}</div>`
     : `<div class="day-line">${t('card.dayOf',{d:Math.round(st.elapsedDays),t:Math.ceil(st.total)})}</div>`;
 
-  // Sólo las tarjetas planificadas muestran un chip (el aviso "Montar…"); en el resto,
-  // los avisos/tareas viven únicamente en el panel de "Tareas pendientes", no en la tarjeta.
-  const remHtml = st.planned ? reminders.map(r=>
-    `<span class="chip ${r.c}">${r.pulse?'<span class="pulse"></span>':''}${r.t}</span>`).join('') : '';
+  // Los avisos/tareas viven en el panel "Tareas pendientes", no en la tarjeta (la línea
+  // "Montar en Xh" + la insignia "Planificado" ya comunican el estado planificado).
 
   // timeline
   const tl = st.bounds.map((b,i)=>{
@@ -1712,18 +1719,19 @@ function card(cross){
       }
       actionHtml = `<div class="calib-done${ci&&!ci.applied?' prov':''}">✓ ${esc(res)}</div>${tlBtn}${tlBlock}`;
     } else {
-      actionHtml = `<button class="timeline-btn gen-btn" onclick="openT50('${cross.id}')">${t('card.calibRecord')}</button>
-    <div class="hint" style="margin-top:8px">${t('calib.pendingHint')}</div>${tlBtn}${tlBlock}`;
+      actionHtml = `<button class="timeline-btn act-lav" onclick="openT50('${cross.id}')" data-tip="${esc(t('calib.pendingHint'))}">${t('card.calibRecord')}</button>${tlBtn}${tlBlock}`;
     }
   } else {
-    actionHtml = `<button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>
-    <div class="btn-row">
-      <button class="timeline-btn" onclick="toggleTL(this)" data-tip="${esc(t('tip.timeline'))}">${t('card.viewTimeline')}</button>
-      <button class="timeline-btn" onclick="toggleInfo(this)" data-tip="${esc(t('tip.info'))}">${t('card.info')}</button>
+    const newGenBtn = `<button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>`;
+    const aging = st.isAdult && (cross.objective==='aging' || (cross.aging && cross.aging.startN!=null)) ? agingPanel(cross, st) : '';
+    // "Más" fusiona cronología + detalles en un solo panel (un botón en vez de dos)
+    actionHtml = `<div class="btn-row">
+      ${newGenBtn}
+      <button class="timeline-btn" onclick="toggleMore(this)" data-tip="${esc(t('tip.more2'))}">${t('card.more')}</button>
     </div>
-    ${tlBlock}
-    <div class="info-panel"><div class="info-inner">${infoHtml}</div></div>
-    ${st.isAdult && (cross.objective==='aging' || (cross.aging && cross.aging.startN!=null)) ? agingPanel(cross, st) : ''}`;
+    <div class="timeline"><div class="tl-inner"><div class="more-h">${t('card.timelineH')}</div>${tl}${tlAdult}</div></div>
+    <div class="info-panel"><div class="info-inner"><div class="more-h">${t('card.detailsH')}</div>${infoHtml}</div></div>
+    ${aging}`;
   }
 
   return `<div class="card ${st.planned?'planned':''}" id="card-${cross.id}" onclick="cardToTasks(event,'${cross.id}')">
@@ -1747,12 +1755,12 @@ function card(cross){
         <span class="stage-badge" style="background:${st.stage.soft};color:${st.stage.txt}">
           <span class="dot" style="background:${st.stage.txt}"></span>${st.planned?t('card.plannedBadge'):stageName(st.stage)}</span>
         ${dayLine}
-        <div class="meta-row"><span class="k">${st.planned?t('card.metaSetup'):t('card.metaCross')}</span><span class="v">${fmtDate(start)}</span></div>
-        <div class="meta-row"><span class="k">${st.isAdult?t('card.metaEclosed'):t('card.metaEclEst')}</span><span class="v">${fmtDate(eclDate)}</span></div>
+        <div class="meta-table">
+          <div class="meta-row"><span class="k">${st.planned?t('card.metaSetup'):t('card.metaCross')}</span><span class="v">${fmtDate(start)}</span></div>
+          <div class="meta-row"><span class="k">${st.isAdult?t('card.metaEclosed'):t('card.metaEclEst')}</span><span class="v">${fmtDate(eclDate)}</span></div>
+        </div>
       </div>
     </div>
-
-    ${remHtml ? `<div class="reminders">${remHtml}</div>` : ''}
 
     ${actionHtml}
   </div>`;
@@ -1776,7 +1784,9 @@ function kmCurve(cross, st){
   const ecl = st.eclosionDate;
   const byDay = {};
   a.events.forEach(e=>{
-    const day = Math.max((new Date(e.date)-ecl)/86400000, 0);
+    const dt = new Date(e.date).getTime();
+    if(!isFinite(dt)) return;   // ignora eventos sin fecha válida (datos importados/antiguos) → evita NaN en la curva
+    const day = Math.max((dt-ecl)/86400000, 0);
     const k = day.toFixed(3);
     (byDay[k] = byDay[k] || {day, d:0, c:0});
     byDay[k].d += e.deaths||0;
@@ -1805,7 +1815,7 @@ function kmCurve(cross, st){
 function survChart(km){
   const pts = km.points;
   const W=300, H=82, pad=8;
-  const maxDay = Math.max(...pts.map(p=>p.day), 1);
+  const maxDay = Math.max(...pts.map(p=>p.day).filter(Number.isFinite), 1);
   const X = d => pad + d/maxDay*(W-2*pad);
   const Y = s => pad + (1-s)*(H-2*pad-10);
   // escalonado (paso) propio de Kaplan-Meier
@@ -1884,9 +1894,10 @@ function renderStats(){
       if(!next || d<next) next=d;
     }
   });
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="num">${active}</div><div class="lbl">${t('stat.active')}</div></div>
-    <div class="stat"><div class="num">${next?fmtDate(next):'—'}</div><div class="lbl">${t('stat.nextEcl')}</div></div>`;
+  document.getElementById('stats').innerHTML = active ? `
+    <div class="stat-item"><b>${active}</b> ${t('stat.active')}</div>
+    <div class="stat-sep"></div>
+    <div class="stat-item">${t('stat.nextEcl')}: <b>${next?fmtDate(next):'—'}</b></div>` : '';
 }
 
 /* --- Panel "Tareas pendientes" (agrega acciones de todas las cruzas) --- */
@@ -2069,6 +2080,17 @@ function toggleInfo(btn){
   if(open) openInfoIds.add(id); else openInfoIds.delete(id);
   if(open) updateGridAlign(); else setTimeout(updateGridAlign, 380);
 }
+/* "Más": abre/cierra cronología + detalles juntos (un solo botón por tarjeta) */
+function toggleMore(btn){
+  const card = btn.closest('.card'); if(!card) return;
+  const tl = card.querySelector('.timeline'), info = card.querySelector('.info-panel');
+  const open = !tl.classList.contains('open');
+  tl.classList.toggle('open', open); if(info) info.classList.toggle('open', open);
+  btn.textContent = open ? t('card.less') : t('card.more');
+  const id = card.id.replace('card-','');
+  if(open) openMoreIds.add(id); else openMoreIds.delete(id);
+  if(open) updateGridAlign(); else setTimeout(updateGridAlign, 380);
+}
 /* Marca las grillas con una cronología o panel de detalles abierto para que NO estiren las vecinas.
    Sin nada abierto, la grilla vuelve a "stretch" y todas las tarjetas igualan altura. */
 function updateGridAlign(){
@@ -2077,6 +2099,7 @@ function updateGridAlign(){
 const openAgingIds = new Set();
 const openTLIds = new Set();
 const openInfoIds = new Set();
+const openMoreIds = new Set();
 function toggleAging(id, btn){
   const open = btn.nextElementSibling.classList.toggle('open');
   btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
@@ -2100,6 +2123,11 @@ function restorePanels(){
     const card = document.getElementById('card-'+id); if(!card) return;
     const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleInfo'));
     if(btn){ card.querySelector('.info-panel').classList.add('open'); btn.textContent=t('card.hideInfo'); }
+  });
+  openMoreIds.forEach(id=>{
+    const card = document.getElementById('card-'+id); if(!card) return;
+    const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleMore'));
+    if(btn){ card.querySelector('.timeline').classList.add('open'); const ip=card.querySelector('.info-panel'); if(ip) ip.classList.add('open'); btn.textContent=t('card.less'); }
   });
   updateGridAlign();
 }
@@ -2867,7 +2895,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 </script>
 
 <!-- ===== Asistente de cruzas (IA) ===== -->
-<button class="chat-fab" id="chatFab" onclick="toggleChat()" data-i18n-title="chat.fabTitle" title="AI cross assistant">
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" data-i18n-title="chat.fabTitle" data-tip-key="chat.fabTitle" title="AI cross assistant">
   <svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9.5L5 21v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="#fff" opacity=".92"/></svg>
   <span data-i18n="chat.fab">Assistant</span>
 </button>
