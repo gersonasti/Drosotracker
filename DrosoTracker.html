@@ -531,6 +531,11 @@
   .calib-done{background:var(--mint-soft);color:#3fae8c;border-radius:14px;padding:11px 14px;margin-top:10px;font-size:.85rem;font-weight:700;text-align:center;line-height:1.35}
   .calib-done.prov{background:var(--bg-1);color:var(--ink-soft)}
   .t50-div{text-align:center;font-size:.73rem;color:var(--ink-soft);margin:6px 0 2px}
+  /* Google Calendar */
+  .gcal-on{color:#3fae8c;font-weight:700}
+  .gcal-off{color:var(--ink-soft);font-weight:700}
+  .gcal-auto{display:flex;align-items:center;gap:9px;font-size:.9rem;color:var(--ink);cursor:pointer}
+  .gcal-auto input{width:17px;height:17px;flex:none}
 </style>
 </head>
 <body>
@@ -553,6 +558,7 @@
           <button onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">🗓 Plan</button>
           <button onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
           <button id="notifBtn" onclick="toggleNotif()" data-tip-key="tip.notif">Activate reminders</button>
+          <button onclick="openGcal()" data-i18n="gcal.menu" data-tip-key="tip.gcal">📅 Google Calendar</button>
           <div class="menu-sep"></div>
           <button onclick="exportJSON()" data-i18n="menu.exportBackup" data-tip-key="tip.exportBackup">⬇ Export backup (JSON)</button>
           <button onclick="document.getElementById('importFile').click()" data-i18n="menu.importBackup" data-tip-key="tip.importBackup">⬆ Import backup</button>
@@ -878,6 +884,23 @@
   </div>
 </div>
 
+<!-- Sincronización con Google Calendar -->
+<div class="overlay" id="gcalOverlay" onclick="if(event.target===this)closeGcal()">
+  <div class="modal">
+    <h2 data-i18n="gcal.title">Google Calendar</h2>
+    <div class="sub" data-i18n="gcal.desc">Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively — even with the app closed.</div>
+    <div id="gcalStatus" style="margin:16px 0"></div>
+    <div id="gcalAutoRow" style="display:none;margin-bottom:6px">
+      <label class="gcal-auto"><input type="checkbox" id="gcalAuto" onchange="gcalToggleAuto(this)"> <span data-i18n="gcal.auto">Keep it in sync automatically</span></label>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="gcalDiscBtn" onclick="gcalDisconnect()" data-i18n="gcal.disconnect" style="display:none">Disconnect</button>
+      <button type="button" class="btn" id="gcalConnectBtn" onclick="gcalSync(true)" data-i18n="gcal.connect">Connect Google Calendar</button>
+    </div>
+    <div class="hint" style="margin-top:14px" data-i18n="gcal.note">Google Calendar handles the reminders. Disconnecting stops syncing but keeps the events already created.</div>
+  </div>
+</div>
+
 <!-- Confirmación reutilizable (borrar tarjetas / tareas) -->
 <div class="overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm()">
   <div class="modal confirm-modal">
@@ -911,6 +934,12 @@ const I18N = {
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
     'menu.exportSurvival':'📊 Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv',
+    'gcal.menu':'📅 Google Calendar','tip.gcal':'Sync your tasks and eclosions to your Google Calendar so it reminds you natively, even with the app closed.',
+    'gcal.title':'Google Calendar','gcal.desc':'Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively — even with the app closed.',
+    'gcal.connect':'Connect Google Calendar','gcal.syncNow':'Sync now','gcal.disconnect':'Disconnect','gcal.auto':'Keep it in sync automatically',
+    'gcal.stOn':'Connected','gcal.stOff':'Not connected','gcal.lastSync':'Last synced: {d}','gcal.note':'Google Calendar handles the reminders. Disconnecting stops syncing but keeps the events already created.',
+    'gcal.notConfigured':'Not set up yet: a Google Client ID is needed (see the setup guide).','gcal.noClient':'Google Calendar sync is not configured yet (missing Client ID).','gcal.authFail':'Could not connect to Google. Please try again.',
+    'gcal.synced':'Synced ✓  +{i} new · {u} updated · {d} removed','gcal.someErr':'({e} could not sync)','gcal.evEcl':'Estimated eclosion — {g}','gcal.evDesc':'Created by DrosoTracker.',
     'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'Light','set.dark':'Dark',
     'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, reminders, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
     'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
@@ -994,6 +1023,12 @@ const I18N = {
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
     'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv',
+    'gcal.menu':'📅 Google Calendar','tip.gcal':'Sincronizá tus tareas y eclosiones con tu Google Calendar para que te avise de forma nativa, aun con la app cerrada.',
+    'gcal.title':'Google Calendar','gcal.desc':'Empujá tus tareas y eclosiones estimadas a tu Google Calendar para que te avise de forma nativa — aun con la app cerrada.',
+    'gcal.connect':'Conectar Google Calendar','gcal.syncNow':'Sincronizar ahora','gcal.disconnect':'Desconectar','gcal.auto':'Mantener sincronizado automáticamente',
+    'gcal.stOn':'Conectado','gcal.stOff':'Sin conectar','gcal.lastSync':'Última sincronización: {d}','gcal.note':'Google Calendar maneja los recordatorios. Desconectar detiene la sincronización pero conserva los eventos ya creados.',
+    'gcal.notConfigured':'Todavía no configurado: falta el Client ID de Google (ver la guía de configuración).','gcal.noClient':'La sincronización con Google Calendar todavía no está configurada (falta el Client ID).','gcal.authFail':'No se pudo conectar con Google. Probá de nuevo.',
+    'gcal.synced':'Sincronizado ✓  +{i} nuevos · {u} actualizados · {d} quitados','gcal.someErr':'({e} no se pudieron sincronizar)','gcal.evEcl':'Eclosión estimada — {g}','gcal.evDesc':'Creado por DrosoTracker.',
     'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'Claro','set.dark':'Oscuro',
     'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar, recordatorios y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
     'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
@@ -1250,6 +1285,152 @@ function saveCountCalib(){
   c.calibDone = true; c.calibT50 = t50;
   save(crosses);
   closeCount(); render();
+}
+
+/* ============================================================
+   Sincronización con Google Calendar (opcional, del lado del navegador).
+   Usa Google Identity Services (token model): sin refresh token, el permiso
+   dura ~1 h y se renueva mientras la app esté abierta. Empuja un evento por
+   tarea/eclosión con un id estable por registro+tarea, así re-sincronizar
+   ACTUALIZA en vez de duplicar, y borra los eventos de tareas que ya no existen.
+   Pegá tu Client ID de Google Cloud abajo para activarlo.
+   ============================================================ */
+const GCAL_CLIENT_ID = '';   // ← pegá acá: 1234-abcd.apps.googleusercontent.com
+const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+const GCAL_MAP_KEY = 'drosotrack.gcalmap.v1';   // { uid: {id, sig} } — eventos ya creados
+const GCAL_CFG_KEY = 'drosotrack.gcal.v1';       // { connected, auto, lastSync }
+let _gcalToken = null, _gcalTokenExp = 0, _gcalClient = null, _gcalGis = null, _gcalTokenCb = null, _gcalTimer = null;
+
+function gcalCfg(){ try{ return JSON.parse(localStorage.getItem(GCAL_CFG_KEY)) || {}; }catch(e){ return {}; } }
+function gcalSetCfg(o){ localStorage.setItem(GCAL_CFG_KEY, JSON.stringify({ ...gcalCfg(), ...o })); }
+function gcalGetMap(){ try{ return JSON.parse(localStorage.getItem(GCAL_MAP_KEY)) || {}; }catch(e){ return {}; } }
+function gcalSetMap(m){ localStorage.setItem(GCAL_MAP_KEY, JSON.stringify(m)); }
+function gcalConfigured(){ return !!GCAL_CLIENT_ID; }
+
+function gcalLoadGis(){
+  if(window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+  if(_gcalGis) return _gcalGis;
+  _gcalGis = new Promise((res,rej)=>{
+    const s=document.createElement('script'); s.src='https://accounts.google.com/gsi/client'; s.async=true; s.defer=true;
+    s.onload=res; s.onerror=()=>rej(new Error('GIS load failed')); document.head.appendChild(s);
+  });
+  return _gcalGis;
+}
+async function gcalEnsureClient(){
+  await gcalLoadGis();
+  if(!_gcalClient){
+    _gcalClient = google.accounts.oauth2.initTokenClient({
+      client_id: GCAL_CLIENT_ID, scope: GCAL_SCOPE,
+      callback: (r)=>{ if(r && r.access_token){ _gcalToken=r.access_token; _gcalTokenExp=Date.now()+((r.expires_in||3600)*1000); } const cb=_gcalTokenCb; _gcalTokenCb=null; if(cb) cb(r); },
+    });
+  }
+}
+function gcalGetToken(interactive){
+  return new Promise((resolve,reject)=>{
+    if(_gcalToken && Date.now() < _gcalTokenExp-60000) return resolve(_gcalToken);
+    gcalEnsureClient().then(()=>{
+      _gcalTokenCb = (r)=>{ if(r && r.access_token) resolve(r.access_token); else reject(new Error((r&&r.error)||'token_error')); };
+      _gcalClient.requestAccessToken({ prompt: interactive ? 'consent' : '' });
+    }).catch(reject);
+  });
+}
+async function gcalApi(method, path, body){
+  let token = await gcalGetToken(false);
+  const call = (tk)=> fetch('https://www.googleapis.com/calendar/v3'+path, {
+    method, headers:{ 'Authorization':'Bearer '+tk, 'Content-Type':'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let res = await call(token);
+  if(res.status===401){ _gcalToken=null; token=await gcalGetToken(true); res=await call(token); }
+  return res;
+}
+/* --- construir los eventos deseados a partir de los registros --- */
+function gcalPad(n){ return String(n).padStart(2,'0'); }
+function gcalDateStr(d){ return `${d.getFullYear()}-${gcalPad(d.getMonth()+1)}-${gcalPad(d.getDate())}`; }
+function gcalTZ(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(e){ return 'UTC'; } }
+function gcalDesired(now){
+  now = now || new Date();
+  const list=[];
+  crosses.forEach(c=>{
+    if(c.calib) return;
+    const st=computeState(c, now);
+    if(!st.planned && !st.isAdult && st.eclosionDate){
+      list.push({ uid:c.id+'::eclosion', when:new Date(st.eclosionDate), allDay:true, summary:t('gcal.evEcl',{g:c.genotype}) });
+    }
+    buildReminders(c, st, now).forEach(r=>{
+      if(!r.task || !r.key || !isFinite(r.urgency) || r.urgency>=1e5) return;
+      const when=new Date(now.getTime()+Math.max(r.urgency,0)*3600000);
+      // día completo (ancla a la fecha, no a la hora) → la firma es estable y no re-sincroniza en cada corrida
+      list.push({ uid:c.id+'::'+r.key, when, allDay:true, summary:r.t+' — '+c.genotype });
+    });
+  });
+  return list;
+}
+function gcalSig(ev){ return (ev.allDay?'A':'T')+'|'+ev.summary+'|'+(ev.allDay?gcalDateStr(ev.when):ev.when.toISOString()); }
+function gcalBody(ev){
+  const base={ summary:ev.summary, description:t('gcal.evDesc'), source:{title:'DrosoTracker', url:location.origin} };
+  if(ev.allDay){
+    const end=new Date(ev.when.getTime()+86400000);
+    return { ...base, start:{date:gcalDateStr(ev.when)}, end:{date:gcalDateStr(end)}, reminders:{useDefault:false, overrides:[{method:'popup', minutes:9*60}]} };
+  }
+  const end=new Date(ev.when.getTime()+30*60000);
+  return { ...base, start:{dateTime:ev.when.toISOString(), timeZone:gcalTZ()}, end:{dateTime:end.toISOString(), timeZone:gcalTZ()}, reminders:{useDefault:false, overrides:[{method:'popup', minutes:0}]} };
+}
+/* --- sincronizar: insertar/actualizar/borrar contra Google Calendar --- */
+async function gcalSync(interactive){
+  if(!gcalConfigured()){ if(interactive) alert(t('gcal.noClient')); return; }
+  try{ await gcalGetToken(interactive); }
+  catch(e){ if(interactive) alert(t('gcal.authFail')); gcalUpdateUI(); return; }
+  const desired=gcalDesired(), map=gcalGetMap(), keep=new Set(desired.map(e=>e.uid));
+  let ins=0,upd=0,del=0,err=0;
+  for(const ev of desired){
+    const sig=gcalSig(ev), cur=map[ev.uid];
+    if(cur && cur.sig===sig) continue;
+    try{
+      if(cur && cur.id){
+        let r=await gcalApi('PATCH','/calendars/primary/events/'+encodeURIComponent(cur.id), gcalBody(ev));
+        if(r.status===404 || r.status===410){ r=await gcalApi('POST','/calendars/primary/events', gcalBody(ev)); const j=await r.json(); if(r.ok){ map[ev.uid]={id:j.id,sig}; ins++; } else err++; }
+        else if(r.ok){ map[ev.uid]={id:cur.id,sig}; upd++; } else err++;
+      } else {
+        const r=await gcalApi('POST','/calendars/primary/events', gcalBody(ev)); const j=await r.json();
+        if(r.ok){ map[ev.uid]={id:j.id,sig}; ins++; } else err++;
+      }
+    }catch(e){ err++; }
+  }
+  for(const uid of Object.keys(map)){
+    if(keep.has(uid)) continue;
+    try{ const r=await gcalApi('DELETE','/calendars/primary/events/'+encodeURIComponent(map[uid].id)); if(r.ok||r.status===404||r.status===410){ delete map[uid]; del++; } else err++; }catch(e){ err++; }
+  }
+  gcalSetMap(map); gcalSetCfg({ connected:true, lastSync:Date.now() }); gcalUpdateUI();
+  if(interactive) alert(t('gcal.synced',{i:ins,u:upd,d:del}) + (err?(' '+t('gcal.someErr',{e:err})):''));
+}
+function gcalMaybeAutoSync(){
+  const c=gcalCfg();
+  if(!c.connected || !c.auto || !gcalConfigured()) return;
+  clearTimeout(_gcalTimer); _gcalTimer=setTimeout(()=>gcalSync(false), 4000);
+}
+function gcalDisconnect(){
+  try{ if(_gcalToken && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(_gcalToken, ()=>{}); }catch(e){}
+  _gcalToken=null; _gcalTokenExp=0; gcalSetCfg({ connected:false, auto:false }); gcalUpdateUI();
+}
+/* --- UI del modal --- */
+function openGcal(){ gcalUpdateUI(); document.getElementById('gcalOverlay').classList.add('open'); }
+function closeGcal(){ document.getElementById('gcalOverlay').classList.remove('open'); }
+function gcalToggleAuto(cb){ gcalSetCfg({ auto: cb.checked }); if(cb.checked) gcalSync(false); }
+function gcalUpdateUI(){
+  const cfg=gcalCfg(), on=!!cfg.connected;
+  const st=document.getElementById('gcalStatus'); if(!st) return;
+  if(!gcalConfigured()){ st.innerHTML=`<span class="gcal-off">${t('gcal.notConfigured')}</span>`; }
+  else {
+    const last = cfg.lastSync ? fmtDT(new Date(cfg.lastSync)) : '—';
+    st.innerHTML = on
+      ? `<span class="gcal-on">● ${t('gcal.stOn')}</span><div class="hint">${t('gcal.lastSync',{d:last})}</div>`
+      : `<span class="gcal-off">○ ${t('gcal.stOff')}</span>`;
+  }
+  const auto=document.getElementById('gcalAuto'); if(auto) auto.checked=!!cfg.auto;
+  document.getElementById('gcalConnectBtn').textContent = on ? t('gcal.syncNow') : t('gcal.connect');
+  document.getElementById('gcalDiscBtn').style.display = on ? '' : 'none';
+  document.getElementById('gcalAutoRow').style.display = on ? '' : 'none';
 }
 
 /* --- Modelo de desarrollo dependiente de temperatura ---
@@ -2054,6 +2235,7 @@ function render(){
   }).join('');
   restorePanels();
   checkNotifications();
+  gcalMaybeAutoSync();   // si está conectado + auto, empuja los cambios a Google Calendar (debounced)
 }
 let _expOrder = [];
 const collapsedExps = new Set();
