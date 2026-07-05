@@ -343,6 +343,8 @@
     font-family:'Nunito';font-weight:600;font-size:.88rem;color:var(--ink);transition:background .12s;
   }
   .menu-pop button:hover{background:var(--lav-soft)}
+  .menu-pop button.menu-danger{color:var(--coral)}
+  .menu-pop button.menu-danger:hover{background:var(--peach-soft)}
   .menu-sep{height:1px;background:var(--line);margin:5px 4px}
   .menu-fmt{font-size:.72rem;color:var(--ink-soft);padding:2px 12px 4px}
   .menu-fmt b{color:var(--ink)}
@@ -567,6 +569,8 @@
           <button onclick="document.getElementById('labFile').click()" data-i18n="menu.importLab" data-tip-key="tip.importLab">🧬 Import lab genotype database</button>
           <div class="menu-fmt" data-i18n="menu.fmt">.csv · .tab · .tsv</div>
           <div id="labStatus"></div>
+          <div class="menu-sep"></div>
+          <button class="menu-danger" onclick="clearAllRecords()" data-i18n="menu.clearAll" data-tip-key="tip.clearAll">Clear all records</button>
         </div>
       </div>
       <div class="menu">
@@ -933,7 +937,7 @@ const I18N = {
     'brand.sub':'Life cycle of <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
     'menu.exportSurvival':'📊 Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database',
-    'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv',
+    'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Clear all records','tip.clearAll':'Delete every record at once (keeps your lab database and calibrations).',
     'gcal.menu':'📅 Google Calendar','tip.gcal':'Sync your tasks and eclosions to your Google Calendar so it reminds you natively, even with the app closed.',
     'gcal.title':'Google Calendar','gcal.desc':'Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively — even with the app closed.',
     'gcal.connect':'Connect Google Calendar','gcal.syncNow':'Sync now','gcal.disconnect':'Disconnect','gcal.auto':'Keep it in sync automatically',
@@ -1012,7 +1016,7 @@ const I18N = {
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
     'al.notifUnsupported':'Your browser doesn\'t support notifications.','notif.alreadyOn':'Reminders are already on ✓','al.notifBlocked':'Notifications are blocked. Enable them for this site in your browser settings.',
-    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.',
+    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete all {n} records? This can\'t be undone.','al.noRecords':'There are no records to clear.',
     'notif.eclTitle':'Eclosion 🪰','notif.eclBody':'Adults of "{label}" have eclosed.','notif.virginTitle':'Collect virgins ⏳','notif.virginBody':'Virgin collection window open for "{label}".',
     'notif.eclSoonTitle':'Eclosion imminent','notif.eclSoonBody':'"{label}" ecloses in ~{h}.','notif.moltTitle':'Molt soon','notif.moltBody':'"{label}" molts to {s} in ~{h}.',
   },
@@ -1022,7 +1026,7 @@ const I18N = {
     'brand.sub':'Ciclo de vida de <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
     'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab',
-    'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv',
+    'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Vaciar registros','tip.clearAll':'Borra todos los registros de una (conserva la base del lab y las calibraciones).',
     'gcal.menu':'📅 Google Calendar','tip.gcal':'Sincronizá tus tareas y eclosiones con tu Google Calendar para que te avise de forma nativa, aun con la app cerrada.',
     'gcal.title':'Google Calendar','gcal.desc':'Empujá tus tareas y eclosiones estimadas a tu Google Calendar para que te avise de forma nativa — aun con la app cerrada.',
     'gcal.connect':'Conectar Google Calendar','gcal.syncNow':'Sincronizar ahora','gcal.disconnect':'Desconectar','gcal.auto':'Mantener sincronizado automáticamente',
@@ -1090,7 +1094,7 @@ const I18N = {
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
     'al.notifUnsupported':'Tu navegador no soporta notificaciones.','notif.alreadyOn':'Los recordatorios ya están activos ✓','al.notifBlocked':'Las notificaciones están bloqueadas. Habilitalas para este sitio desde la configuración del navegador.',
-    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.',
+    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los {n} registros? Esta acción no se puede deshacer.','al.noRecords':'No hay registros para vaciar.',
     'notif.eclTitle':'Eclosión 🪰','notif.eclBody':'Eclosionaron los adultos de "{label}".','notif.virginTitle':'Recolectar vírgenes ⏳','notif.virginBody':'Ventana de recolección de vírgenes abierta para "{label}".',
     'notif.eclSoonTitle':'Eclosión inminente','notif.eclSoonBody':'"{label}" eclosiona en ~{h}.','notif.moltTitle':'Muda próxima','notif.moltBody':'"{label}" muda a {s} en ~{h}.',
   },
@@ -2948,6 +2952,17 @@ function delCross(id){
     if(changed) setNotified(seen);
     save(crosses); render();
   });
+}
+/* Vaciar todos los registros (acción destructiva → confirma). Conserva la base del lab
+   y las calibraciones por genotipo; limpia lo que queda huérfano (notificados/tareas hechas). */
+function clearAllRecords(){
+  if(!crosses.length){ alert(t('al.noRecords')); return; }
+  askConfirm(t('cf.clearAll',{n:crosses.length}), ()=>{
+    crosses = [];
+    save(crosses);
+    try{ localStorage.removeItem(NOTIF_KEY); localStorage.removeItem(TASKDONE_KEY); }catch(e){}
+    render();
+  }, 'confirm.clearAll');
 }
 
 function markParents(id){
