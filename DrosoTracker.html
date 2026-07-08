@@ -907,9 +907,9 @@ const I18N = {
     'gcal.menu':'📅 Google Calendar','tip.gcal':'Sync your tasks and eclosions to your Google Calendar so it reminds you natively, even with the app closed.',
     'gcal.title':'Google Calendar','gcal.desc':'Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively — even with the app closed.',
     'gcal.connect':'Connect Google Calendar','gcal.syncNow':'Sync now','gcal.disconnect':'Disconnect','gcal.auto':'Keep it in sync automatically',
-    'gcal.stOn':'Connected','gcal.stOff':'Not connected','gcal.lastSync':'Last synced: {d}','gcal.note':'Google Calendar handles the reminders. Disconnecting stops syncing but keeps the events already created.',
+    'gcal.stOn':'Connected','gcal.stOff':'Not connected','gcal.lastSync':'Last synced: {d}','gcal.note':'Two-way: marking a task done in the app removes its event; deleting the event in Google Calendar marks the task done here (on the next sync). Disconnecting stops syncing but keeps the events already created.',
     'gcal.notConfigured':'Not set up yet: a Google Client ID is needed (see the setup guide).','gcal.noClient':'Google Calendar sync is not configured yet (missing Client ID).','gcal.authFail':'Could not connect to Google. Please try again.',
-    'gcal.synced':'Synced ✓  +{i} new · {u} updated · {d} removed','gcal.someErr':'({e} could not sync)','gcal.evEcl':'Estimated eclosion — {g}','gcal.evDesc':'Created by DrosoTracker.',
+    'gcal.synced':'Synced ✓  +{i} new · {u} updated · {d} removed','gcal.reflected':'{n} marked done (deleted in Calendar)','gcal.someErr':'({e} could not sync)','gcal.evEcl':'Estimated eclosion — {g}','gcal.evDesc':'Created by DrosoTracker.',
     'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'Light','set.dark':'Dark',
     'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, reminders, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
     'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
@@ -993,9 +993,9 @@ const I18N = {
     'gcal.menu':'📅 Google Calendar','tip.gcal':'Sincronizá tus tareas y eclosiones con tu Google Calendar para que te avise de forma nativa, aun con la app cerrada.',
     'gcal.title':'Google Calendar','gcal.desc':'Empujá tus tareas y eclosiones estimadas a tu Google Calendar para que te avise de forma nativa — aun con la app cerrada.',
     'gcal.connect':'Conectar Google Calendar','gcal.syncNow':'Sincronizar ahora','gcal.disconnect':'Desconectar','gcal.auto':'Mantener sincronizado automáticamente',
-    'gcal.stOn':'Conectado','gcal.stOff':'Sin conectar','gcal.lastSync':'Última sincronización: {d}','gcal.note':'Google Calendar maneja los recordatorios. Desconectar detiene la sincronización pero conserva los eventos ya creados.',
+    'gcal.stOn':'Conectado','gcal.stOff':'Sin conectar','gcal.lastSync':'Última sincronización: {d}','gcal.note':'Doble vía: marcar una tarea como hecha en la app borra su evento; borrar el evento en Google Calendar marca la tarea como hecha acá (en la próxima sincronización). Desconectar detiene la sincronización pero conserva los eventos ya creados.',
     'gcal.notConfigured':'Todavía no configurado: falta el Client ID de Google (ver la guía de configuración).','gcal.noClient':'La sincronización con Google Calendar todavía no está configurada (falta el Client ID).','gcal.authFail':'No se pudo conectar con Google. Probá de nuevo.',
-    'gcal.synced':'Sincronizado ✓  +{i} nuevos · {u} actualizados · {d} quitados','gcal.someErr':'({e} no se pudieron sincronizar)','gcal.evEcl':'Eclosión estimada — {g}','gcal.evDesc':'Creado por DrosoTracker.',
+    'gcal.synced':'Sincronizado ✓  +{i} nuevos · {u} actualizados · {d} quitados','gcal.reflected':'{n} marcadas hechas (borradas en Calendar)','gcal.someErr':'({e} no se pudieron sincronizar)','gcal.evEcl':'Eclosión estimada — {g}','gcal.evDesc':'Creado por DrosoTracker.',
     'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'Claro','set.dark':'Oscuro',
     'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar, recordatorios y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
     'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
@@ -1314,6 +1314,7 @@ function gcalDateStr(d){ return `${d.getFullYear()}-${gcalPad(d.getMonth()+1)}-$
 function gcalTZ(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(e){ return 'UTC'; } }
 function gcalDesired(now){
   now = now || new Date();
+  const done = loadTaskDone();
   const list=[];
   crosses.forEach(c=>{
     if(c.calib) return;
@@ -1323,6 +1324,7 @@ function gcalDesired(now){
     }
     buildReminders(c, st, now).forEach(r=>{
       if(!r.task || !r.key || !isFinite(r.urgency) || r.urgency>=1e5) return;
+      if(done[c.id+':'+r.key]) return;   // Dirección 1: marcada hecha/descartada en la app → no va (o se borra) del calendario
       const when=new Date(now.getTime()+Math.max(r.urgency,0)*3600000);
       // día completo (ancla a la fecha, no a la hora) → la firma es estable y no re-sincroniza en cada corrida
       list.push({ uid:c.id+'::'+r.key, when, allDay:true, summary:r.t+' — '+c.genotype });
@@ -1340,12 +1342,43 @@ function gcalBody(ev){
   const end=new Date(ev.when.getTime()+30*60000);
   return { ...base, start:{dateTime:ev.when.toISOString(), timeZone:gcalTZ()}, end:{dateTime:end.toISOString(), timeZone:gcalTZ()}, reminders:{useDefault:false, overrides:[{method:'popup', minutes:0}]} };
 }
-/* --- sincronizar: insertar/actualizar/borrar contra Google Calendar --- */
-async function gcalSync(interactive){
+/* Dirección 2: el usuario borró en Google el evento de una tarea → marcarla hecha en la app */
+function gcalMarkDoneFromEvent(uid){
+  const sep = uid.indexOf('::'); if(sep<0) return false;
+  const crossId = uid.slice(0,sep), key = uid.slice(sep+2);
+  if(key==='eclosion') return false;   // la eclosión no es una tarea "hecha"
+  const appId = crossId+':'+key;
+  const done = loadTaskDone();
+  if(done[appId]) return false;
+  const c = crosses.find(x=>x.id===crossId);
+  let text='', cls='';
+  if(c){ const r=buildReminders(c, computeState(c)).find(x=>x.key===key); if(r){ text=r.t; cls=r.c; } }
+  done[appId] = { doneAt: Date.now(), text, c:cls, genotype:(c&&c.genotype)||'', crossId };
+  saveTaskDone(done);
+  if(key==='parentales' && c){ c.parentsRemoved = true; save(crosses); }   // acción única → refleja en el registro
+  return true;
+}
+/* --- sincronizar: (pull) reflejar borrados de Google + (push) insertar/actualizar/borrar --- */
+async function gcalSync(interactive, pull){
+  if(pull===undefined) pull = true;
   if(!gcalConfigured()){ if(interactive) alert(t('gcal.noClient')); return; }
   try{ await gcalGetToken(interactive); }
   catch(e){ if(interactive) alert(t('gcal.authFail')); gcalUpdateUI(); return; }
-  const desired=gcalDesired(), map=gcalGetMap(), keep=new Set(desired.map(e=>e.uid));
+  const map=gcalGetMap();
+  let reflected=0;
+  if(pull){
+    for(const uid of Object.keys(map)){
+      if(uid.endsWith('::eclosion')) continue;
+      try{
+        const r=await gcalApi('GET','/calendars/primary/events/'+encodeURIComponent(map[uid].id));
+        let gone = (r.status===404 || r.status===410);
+        if(!gone && r.ok){ const j=await r.json(); if(j.status==='cancelled') gone=true; }
+        if(gone){ if(gcalMarkDoneFromEvent(uid)) reflected++; delete map[uid]; }
+      }catch(e){}
+    }
+    if(reflected){ gcalSetMap(map); render(); }
+  }
+  const desired=gcalDesired(), keep=new Set(desired.map(e=>e.uid));
   let ins=0,upd=0,del=0,err=0;
   for(const ev of desired){
     const sig=gcalSig(ev), cur=map[ev.uid];
@@ -1366,12 +1399,14 @@ async function gcalSync(interactive){
     try{ const r=await gcalApi('DELETE','/calendars/primary/events/'+encodeURIComponent(map[uid].id)); if(r.ok||r.status===404||r.status===410){ delete map[uid]; del++; } else err++; }catch(e){ err++; }
   }
   gcalSetMap(map); gcalSetCfg({ connected:true, lastSync:Date.now() }); gcalUpdateUI();
-  if(interactive) alert(t('gcal.synced',{i:ins,u:upd,d:del}) + (err?(' '+t('gcal.someErr',{e:err})):''));
+  if(interactive) alert(t('gcal.synced',{i:ins,u:upd,d:del}) + (reflected?(' · '+t('gcal.reflected',{n:reflected})):'') + (err?(' '+t('gcal.someErr',{e:err})):''));
 }
+let _gcalFirstSync = true;
 function gcalMaybeAutoSync(){
   const c=gcalCfg();
   if(!c.connected || !c.auto || !gcalConfigured()) return;
-  clearTimeout(_gcalTimer); _gcalTimer=setTimeout(()=>gcalSync(false), 4000);
+  const pull = _gcalFirstSync; _gcalFirstSync = false;   // la 1ª sync tras cargar refleja borrados de Google; las de cada cambio, solo empujan
+  clearTimeout(_gcalTimer); _gcalTimer=setTimeout(()=>gcalSync(false, pull), 4000);
 }
 function gcalDisconnect(){
   try{ if(_gcalToken && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(_gcalToken, ()=>{}); }catch(e){}
@@ -2061,9 +2096,9 @@ function markTaskDone(id){
   saveTaskDone(done);
   // "Retirar parentales" es una acción única/irreversible → marcar el registro y refrescar las tarjetas
   if(id.endsWith(':parentales')){ const c = crosses.find(x=>x.id===m.crossId); if(c){ c.parentsRemoved = true; save(crosses); } render(); return; }
-  renderTasks();
+  renderTasks(); gcalMaybeAutoSync();
 }
-function unmarkTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }
+function unmarkTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); gcalMaybeAutoSync(); }
 function deleteTask(id){ askConfirm(t('cf.dismissTask'), ()=>{ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }, 'task.remove'); }
 /* ✕ en una tarea pendiente: la descarta (se oculta, no cuenta como "hecha"); reaparece a las 24 h si sigue vigente */
 function dismissTask(id){
@@ -2071,7 +2106,7 @@ function dismissTask(id){
   askConfirm(t('cf.dismissTask'), ()=>{
     const done = loadTaskDone();
     done[id] = { doneAt: Date.now(), dismissed:true, text:m?m.text:'', c:m?m.c:'', genotype:m?m.genotype:'', crossId:m?m.crossId:id.split(':')[0] };
-    saveTaskDone(done); renderTasks();
+    saveTaskDone(done); renderTasks(); gcalMaybeAutoSync();
   }, 'task.remove');
 }
 
