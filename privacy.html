@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DrosoTracker — Privacy Policy</title>
+<style>
+  :root{ --bg:#f7f5fc; --card:#fff; --ink:#2c2a3a; --soft:#6f6b85; --line:#eae6f5; --lav:#8f7fd8; --mint:#3fae8c; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:40px 22px 80px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:34px 30px;box-shadow:0 12px 32px -20px rgba(80,60,140,.35)}
+  h1{font-size:1.7rem;margin:0 0 4px}
+  .sub{color:var(--soft);font-size:.95rem;margin-bottom:24px}
+  h2{font-size:1.12rem;margin:28px 0 8px;color:var(--lav)}
+  p,li{font-size:.96rem;color:var(--ink)}
+  ul{padding-left:20px}
+  a{color:var(--lav)}
+  code{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 5px;font-size:.88em}
+  .note{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:.9rem;color:var(--soft)}
+  .foot{margin-top:30px;color:var(--soft);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>DrosoTracker — Privacy Policy</h1>
+    <div class="sub">Last updated: 8 July 2026</div>
+
+    <p><strong>DrosoTracker</strong> is a free web application that helps <em>Drosophila melanogaster</em> researchers track the life cycle of their fly cultures (developmental stages, estimated eclosion dates, tasks and reminders). This policy explains what data the app handles and how.</p>
+
+    <h2>Data stored on your device</h2>
+    <p>DrosoTracker runs entirely in your web browser. The information you enter — your records (genotype, dates, temperature, notes), settings (language, appearance), per-genotype calibrations, and any lab genotype list you import — is stored <strong>locally in your browser</strong> (via <code>localStorage</code>). It is <strong>not sent to us</strong> and we operate <strong>no server database</strong> that collects or stores your records. Clearing your browser data, or using the app's "Clear all records" option, deletes it.</p>
+
+    <h2>Google Calendar (optional)</h2>
+    <p>If — and only if — you choose to connect Google Calendar, the app uses Google's OAuth sign-in and requests the <code>https://www.googleapis.com/auth/calendar.events</code> permission for the sole purpose of:</p>
+    <ul>
+      <li>creating, updating and deleting <strong>events that DrosoTracker itself generates</strong> (your tasks and estimated eclosion dates) on <strong>your own</strong> Google Calendar, so Google can send you native reminders.</li>
+    </ul>
+    <p>DrosoTracker does <strong>not</strong> read, analyze, or use any of your other calendar events or personal calendar data. The access token obtained from Google is kept only in your browser for the current session; <strong>no token is stored on any server</strong>, and no calendar data is transmitted to us. You can disconnect at any time from within the app, and revoke access entirely at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>.</p>
+
+    <div class="note"><strong>Limited Use.</strong> DrosoTracker's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements.</div>
+
+    <h2>Hosting and logs</h2>
+    <p>The app is hosted on Cloudflare Pages. Like any website, the hosting provider may process standard technical request data (such as IP address and browser type) to serve the page and for security. DrosoTracker itself sets <strong>no advertising or tracking cookies</strong> and uses <strong>no third-party analytics</strong>.</p>
+
+    <h2>What we do not do</h2>
+    <ul>
+      <li>We do not sell or share your data.</li>
+      <li>We do not use your data for advertising.</li>
+      <li>We do not require an account to use the app.</li>
+    </ul>
+
+    <h2>Your choices</h2>
+    <ul>
+      <li>Delete your records anytime (clear browser data or use "Clear all records").</li>
+      <li>Disconnect Google Calendar in the app, or revoke access in your Google Account.</li>
+    </ul>
+
+    <h2>Children</h2>
+    <p>DrosoTracker is intended for researchers and is not directed to children under 13.</p>
+
+    <h2>Changes</h2>
+    <p>We may update this policy; changes will be posted on this page with a new date.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: <a href="mailto:drosotracker@gmail.com">drosotracker@gmail.com</a>.</p>
+
+    <div class="foot">DrosoTracker — life cycle of <em>Drosophila melanogaster</em>.</div>
+  </div>
+</div>
+</body>
+</html>
