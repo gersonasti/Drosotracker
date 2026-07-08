@@ -860,12 +860,12 @@
     <h2 data-i18n="gcal.title">Google Calendar</h2>
     <div class="sub" data-i18n="gcal.desc">Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively — even with the app closed.</div>
     <div id="gcalStatus" style="margin:16px 0"></div>
-    <div id="gcalAutoRow" style="display:none;margin-bottom:6px">
+    <div id="gcalAutoRow" style="margin-bottom:6px">
       <label class="gcal-auto"><input type="checkbox" id="gcalAuto" onchange="gcalToggleAuto(this)"> <span data-i18n="gcal.auto">Keep it in sync automatically</span></label>
     </div>
     <div class="modal-actions">
       <button type="button" class="btn ghost" id="gcalDiscBtn" onclick="gcalDisconnect()" data-i18n="gcal.disconnect" style="display:none">Disconnect</button>
-      <button type="button" class="btn" id="gcalConnectBtn" onclick="gcalSync(true)" data-i18n="gcal.connect">Connect Google Calendar</button>
+      <button type="button" class="btn" id="gcalConnectBtn" onclick="gcalConnectOrSync()" data-i18n="gcal.connect">Connect Google Calendar</button>
     </div>
     <div class="hint" style="margin-top:14px" data-i18n="gcal.note">Google Calendar handles the reminders. Disconnecting stops syncing but keeps the events already created.</div>
   </div>
@@ -1415,7 +1415,8 @@ function gcalDisconnect(){
 /* --- UI del modal --- */
 function openGcal(){ gcalUpdateUI(); document.getElementById('gcalOverlay').classList.add('open'); }
 function closeGcal(){ document.getElementById('gcalOverlay').classList.remove('open'); }
-function gcalToggleAuto(cb){ gcalSetCfg({ auto: cb.checked }); if(cb.checked) gcalSync(false); }
+function gcalToggleAuto(cb){ gcalSetCfg({ auto: cb.checked }); if(cb.checked && gcalCfg().connected) gcalSync(false); }
+function gcalConnectOrSync(){ const cb=document.getElementById('gcalAuto'); if(cb) gcalSetCfg({ auto: cb.checked }); gcalSync(true); }
 function gcalUpdateUI(){
   const cfg=gcalCfg(), on=!!cfg.connected;
   const st=document.getElementById('gcalStatus'); if(!st) return;
@@ -1426,10 +1427,10 @@ function gcalUpdateUI(){
       ? `<span class="gcal-on">● ${t('gcal.stOn')}</span><div class="hint">${t('gcal.lastSync',{d:last})}</div>`
       : `<span class="gcal-off">○ ${t('gcal.stOff')}</span>`;
   }
-  const auto=document.getElementById('gcalAuto'); if(auto) auto.checked=!!cfg.auto;
+  const auto=document.getElementById('gcalAuto'); if(auto) auto.checked = cfg.auto !== false;   // tildado por defecto (recomendado)
   document.getElementById('gcalConnectBtn').textContent = on ? t('gcal.syncNow') : t('gcal.connect');
   document.getElementById('gcalDiscBtn').style.display = on ? '' : 'none';
-  document.getElementById('gcalAutoRow').style.display = on ? '' : 'none';
+  document.getElementById('gcalAutoRow').style.display = '';   // siempre visible (también antes de conectar)
 }
 
 /* --- Modelo de desarrollo dependiente de temperatura ---
