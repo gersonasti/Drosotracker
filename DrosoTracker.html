@@ -525,7 +525,6 @@
         <div class="menu-pop" id="dataMenu">
           <button onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">🗓 Plan</button>
           <button onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
-          <button id="notifBtn" onclick="toggleNotif()" data-tip-key="tip.notif">Activate reminders</button>
           <button onclick="openGcal()" data-i18n="gcal.menu" data-tip-key="tip.gcal">📅 Google Calendar</button>
           <div class="menu-sep"></div>
           <button onclick="exportJSON()" data-i18n="menu.exportBackup" data-tip-key="tip.exportBackup">⬇ Export backup (JSON)</button>
@@ -570,8 +569,7 @@
   <div id="content"></div>
 
   <div class="footer-note">
-    <span data-i18n="foot.model">Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.</span><br>
-    <span data-i18n="foot.notif">Reminders fire while this tab is open.</span>
+    <span data-i18n="foot.model">Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.</span>
   </div>
 </div>
 
@@ -898,7 +896,6 @@ const MODE_KEY = 'drosotrack.mode.v1';
 let mode = localStorage.getItem(MODE_KEY) || 'light';   // apariencia: 'light' (por defecto) | 'dark'
 const I18N = {
   en: {
-    'hdr.notifActivate':'🔔 Activate reminders','hdr.notifActive':'🔔 Reminders on',
     'hdr.plan':'🗓 Plan','hdr.data':'⇅ Data','hdr.more':'More ▾','hdr.newCross':'New record','hdr.settings':'Settings',
     'brand.sub':'Life cycle of <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
@@ -911,13 +908,12 @@ const I18N = {
     'gcal.notConfigured':'Not set up yet: a Google Client ID is needed (see the setup guide).','gcal.noClient':'Google Calendar sync is not configured yet (missing Client ID).','gcal.authFail':'Could not connect to Google. Please try again.',
     'gcal.synced':'Synced ✓  +{i} new · {u} updated · {d} removed','gcal.reflected':'{n} marked done (deleted in Calendar)','gcal.someErr':'({e} could not sync)','gcal.evEcl':'Estimated eclosion — {g}','gcal.evDesc':'Created by DrosoTracker.',
     'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'Light','set.dark':'Dark',
-    'tip.notif':'Turn on browser notifications for eclosions, molts and tasks (while this tab is open).','tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, reminders, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
+    'tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
     'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
     'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
     'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.',
-    'foot.notif':'Reminders fire while this tab is open.',
     'empty.title':'No records yet','empty.text':'Add your first record with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New record','group.none':'No experiment',
     // objetivos
     'obj.none':'— No specific objective','obj.cross':'Genetic cross','obj.amplify':'Line amplification','obj.stock':'Stock maintenance','obj.aging':'Aging cohort','obj.dissect':'Larval dissection',
@@ -978,13 +974,9 @@ const I18N = {
     'al.cohortN':'Enter a valid initial N of adults.','cf.importReplace':'Importing will replace the {n} current records with {m}. Continue?','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
-    'al.notifUnsupported':'Your browser doesn\'t support notifications.','notif.alreadyOn':'Reminders are already on ✓','al.notifBlocked':'Notifications are blocked. Enable them for this site in your browser settings.',
     'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
-    'notif.eclTitle':'Eclosion 🪰','notif.eclBody':'Adults of "{label}" have eclosed.','notif.virginTitle':'Collect virgins ⏳','notif.virginBody':'Virgin collection window open for "{label}".',
-    'notif.eclSoonTitle':'Eclosion imminent','notif.eclSoonBody':'"{label}" ecloses in ~{h}.','notif.moltTitle':'Molt soon','notif.moltBody':'"{label}" molts to {s} in ~{h}.',
   },
   es: {
-    'hdr.notifActivate':'🔔 Activar recordatorios','hdr.notifActive':'🔔 Recordatorios activos',
     'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
     'brand.sub':'Ciclo de vida de <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
@@ -997,13 +989,12 @@ const I18N = {
     'gcal.notConfigured':'Todavía no configurado: falta el Client ID de Google (ver la guía de configuración).','gcal.noClient':'La sincronización con Google Calendar todavía no está configurada (falta el Client ID).','gcal.authFail':'No se pudo conectar con Google. Probá de nuevo.',
     'gcal.synced':'Sincronizado ✓  +{i} nuevos · {u} actualizados · {d} quitados','gcal.reflected':'{n} marcadas hechas (borradas en Calendar)','gcal.someErr':'({e} no se pudieron sincronizar)','gcal.evEcl':'Eclosión estimada — {g}','gcal.evDesc':'Creado por DrosoTracker.',
     'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'Claro','set.dark':'Oscuro',
-    'tip.notif':'Activá las notificaciones del navegador para eclosiones, mudas y tareas (mientras esta pestaña esté abierta).','tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar, recordatorios y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
+    'tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
     'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
     'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
     'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10 °C · ~148 grados-día). Tiempos estimados · Datos guardados localmente en tu navegador.',
-    'foot.notif':'Los recordatorios se notifican mientras esta pestaña esté abierta.',
     'empty.title':'Todavía no hay registros','empty.text':'Agregá tu primer registro con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nuevo registro','group.none':'Sin experimento',
     'obj.none':'— Sin objetivo específico','obj.cross':'Cruza genética','obj.amplify':'Amplificación de línea','obj.stock':'Mantenimiento de stock','obj.aging':'Cohorte de envejecimiento','obj.dissect':'Disección larval',
     'stage.egg':'Embrión','stage.l1':'Larva L1','stage.l2':'Larva L2','stage.l3':'Larva L3','stage.pupa':'Pupa','stage.adult':'Adulto',
@@ -1054,10 +1045,7 @@ const I18N = {
     'al.cohortN':'Ingresá un N inicial válido de adultos.','cf.importReplace':'Importar reemplazará los {n} registros actuales por {m}. ¿Continuar?','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
-    'al.notifUnsupported':'Tu navegador no soporta notificaciones.','notif.alreadyOn':'Los recordatorios ya están activos ✓','al.notifBlocked':'Las notificaciones están bloqueadas. Habilitalas para este sitio desde la configuración del navegador.',
     'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
-    'notif.eclTitle':'Eclosión 🪰','notif.eclBody':'Eclosionaron los adultos de "{label}".','notif.virginTitle':'Recolectar vírgenes ⏳','notif.virginBody':'Ventana de recolección de vírgenes abierta para "{label}".',
-    'notif.eclSoonTitle':'Eclosión inminente','notif.eclSoonBody':'"{label}" eclosiona en ~{h}.','notif.moltTitle':'Muda próxima','notif.moltBody':'"{label}" muda a {s} en ~{h}.',
   },
 };
 function t(key, vars){
@@ -1105,7 +1093,6 @@ function setLang(l){
   lang = l; localStorage.setItem(LANG_KEY, l);
   document.documentElement.lang = l;
   applyStaticI18n();
-  updateNotifBtn();
   render();
   updateSettingsUI();
 }
@@ -2234,7 +2221,6 @@ function render(){
     </section>`;
   }).join('');
   restorePanels();
-  checkNotifications();
   gcalMaybeAutoSync();   // si está conectado + auto, empuja los cambios a Google Calendar (debounced)
 }
 let _expOrder = [];
@@ -2581,49 +2567,6 @@ function openPlanEdit(id){
   computePlan({preventDefault(){}});
 }
 
-/* --- Notificaciones del navegador --- */
-const NOTIF_KEY = 'drosotrack.notified.v1';
-function getNotified(){ try{ return JSON.parse(localStorage.getItem(NOTIF_KEY))||{}; }catch(e){ return {}; } }
-function setNotified(o){ localStorage.setItem(NOTIF_KEY, JSON.stringify(o)); }
-function updateNotifBtn(){
-  const b = document.getElementById('notifBtn'); if(!b) return;
-  if(!('Notification' in window)){ b.style.display='none'; return; }
-  const p = Notification.permission;
-  b.textContent = p==='granted' ? t('hdr.notifActive') : t('hdr.notifActivate');
-  b.style.opacity = p==='denied' ? .6 : 1;
-}
-function toggleNotif(){
-  if(!('Notification' in window)){ alert(t('al.notifUnsupported')); return; }
-  if(Notification.permission==='granted'){ new Notification('DrosoTracker', {body:t('notif.alreadyOn')}); return; }
-  if(Notification.permission==='denied'){ alert(t('al.notifBlocked')); return; }
-  Notification.requestPermission().then(updateNotifBtn);
-}
-function fireNotif(key, title, body){
-  const seen = getNotified(); if(seen[key]) return;
-  new Notification(title, {body, tag:key});
-  seen[key]=Date.now(); setNotified(seen);
-}
-function checkNotifications(){
-  if(!('Notification' in window) || Notification.permission!=='granted') return;
-  crosses.forEach(c=>{
-    const st = computeState(c); const label = c.genotype;
-    if(st.isAdult){
-      fireNotif(`${c.id}:eclosion`, t('notif.eclTitle'), t('notif.eclBody',{label}));
-      const windowH = 8*(st.total/REF_TOTAL);
-      if(st.adultAge*24 < windowH) fireNotif(`${c.id}:virgin`, t('notif.virginTitle'), t('notif.virginBody',{label}));
-    } else {
-      const next = st.bounds.find(b=>b.start>st.elapsedDays);
-      const hN = (st.nextBoundaryDays-st.elapsedDays)*24;
-      if(st.stage.key==='pupa'){
-        const hE=(st.total-st.elapsedDays)*24;
-        if(hE<=24) fireNotif(`${c.id}:ecl-soon`, t('notif.eclSoonTitle'), t('notif.eclSoonBody',{label, h:fmtH(hE)}));
-      } else if(next && hN<=8){
-        fireNotif(`${c.id}:molt-${next.key}`, t('notif.moltTitle'), t('notif.moltBody',{label, s:stageShort(next), h:fmtH(hN)}));
-      }
-    }
-  });
-}
-
 /* --- Autocompletado del campo Nombre (datalist nativo) a partir del historial --- */
 function populateDatalists(){
   const exps = [...new Set(crosses.flatMap(c=>c.experiments||[]).filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
@@ -2942,10 +2885,6 @@ function delCross(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   askConfirm(t('cf.deleteCross',{name:c.genotype}), ()=>{
     crosses = crosses.filter(x=>x.id!==id);
-    // limpiar los avisos ya notificados de esta cruza (no dejar basura en localStorage)
-    const seen = getNotified(); let changed = false;
-    Object.keys(seen).forEach(k=>{ if(k.startsWith(id+':')){ delete seen[k]; changed = true; } });
-    if(changed) setNotified(seen);
     save(crosses); render();
   });
 }
@@ -2956,7 +2895,7 @@ function clearAllRecords(){
   askConfirm(t('cf.clearAll',{n:crosses.length}), ()=>{
     crosses = [];
     save(crosses);
-    try{ localStorage.removeItem(NOTIF_KEY); localStorage.removeItem(TASKDONE_KEY); }catch(e){}
+    try{ localStorage.removeItem('drosotrack.notified.v1'); localStorage.removeItem(TASKDONE_KEY); }catch(e){}
     render();
   }, 'confirm.clearAll');
 }
@@ -2996,7 +2935,6 @@ document.documentElement.setAttribute('data-theme', mode);
 applyThemeColor();
 applyStaticI18n();
 updateSettingsUI();
-updateNotifBtn();
 updateLabStatus();
 rebuildAutocompleteCache();
 render();
