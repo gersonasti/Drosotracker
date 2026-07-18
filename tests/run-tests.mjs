@@ -50,8 +50,9 @@ const code = [
   grabConst('CALIB_SIGMA_T0_CROSSDAY'), grabConst('CALIB_SIGMA_T0_UNKNOWN'),
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('ensureAging'), grabFn('kmCurve'), grabFn('computeT50FromCounts'),
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
+  grabFn('icsEsc'), grabFn('icsFold'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, icsEsc, icsFold };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -272,6 +273,23 @@ group('Calibración v2 — modos de t₀ (incertidumbre del inicio de puesta)', 
   M.addCalibObs('G', '2025-01-01T00:00', t50, 25, 'count', 'cid', 4, 'bounded');
   const recBounded = M.loadCalib()['G'][0];
   ok(recBounded.t0Mode === undefined && recBounded.windowH === 4, 'modo acotado: no guarda t0Mode y sí la ventana (4 h)');
+});
+
+/* ============================ 5) EXPORT .ics (RFC 5545) ============================ */
+group('Export .ics — escapado y plegado de líneas', () => {
+  // TEXT escaping: barra invertida, punto y coma, coma y salto de línea (NO la barra normal)
+  ok(M.icsEsc('w[1118] ; UAS-GFP / CyO') === 'w[1118] \\; UAS-GFP / CyO', 'escapa ; y deja / intacta');
+  ok(M.icsEsc('a,b') === 'a\\,b', 'escapa la coma');
+  ok(M.icsEsc('a\\b') === 'a\\\\b', 'escapa la barra invertida');
+  ok(M.icsEsc('a\nb') === 'a\\nb', 'escapa el salto de línea');
+  // folding: líneas ≤74 quedan igual; largas se pliegan con CRLF + espacio, sin perder contenido
+  const short = 'SUMMARY:hola';
+  ok(M.icsFold(short) === short, 'línea corta no se pliega');
+  const long = 'SUMMARY:' + 'x'.repeat(200);
+  const folded = M.icsFold(long);
+  ok(folded.includes('\r\n '), 'línea larga se pliega con CRLF + espacio');
+  ok(folded.split('\r\n').every(l => l.length <= 75), 'ningún segmento plegado supera 75 octetos');
+  ok(folded.replace(/\r\n /g, '') === long, 'desplegar reconstruye la línea original (sin pérdida)');
 });
 
 /* ============================ resumen ============================ */
