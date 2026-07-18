@@ -58,17 +58,26 @@ function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.log('  ✗
 function group(name, fn) { console.log('\n▶ ' + name); fn(); }
 
 /* ============================ 1) MODELO DE DESARROLLO ============================ */
-group('Modelo de desarrollo (suma térmica)', () => {
-  ok(near(M.totalDays(25), 10), '25 °C → 10 días (148/14.8)');
-  ok(near(M.totalDays(18), 148 / 7.8), '18 °C → 148/7.8 ≈ 18.97 d');
-  ok(near(M.totalDays(29), 148 / 18.8), '29 °C → 148/18.8 ≈ 7.87 d');
-  ok(near(M.totalDays(25, 1.1), 11), 'factor 1.1 a 25 °C → 11 días');
+group('Modelo de desarrollo (suma térmica, Powsner 1935 · 16–28 °C)', () => {
+  // Constantes calibradas: T0 = 11.82 °C, DD = 116 grados-día (no hardcodear: se leen del módulo).
+  ok(near(M.T0, 11.82) && near(M.DEGREE_DAYS, 116), 'constantes = T0 11.82 / DD 116 (Powsner)');
+  ok(near(M.totalDays(25), M.DEGREE_DAYS / (25 - M.T0)), 'totalDays sigue D(T)=DD/(T−T0)');
+  ok(near(M.totalDays(25), 8.80, 1e-2), '25 °C ≈ 8.80 d (antes 10)');   // §5.1
+  ok(near(M.totalDays(18), 18.77, 1e-2), '18 °C ≈ 18.8 d');
+  ok(near(M.totalDays(29), 6.75, 1e-2), '29 °C ≈ 6.75 d');
+  ok(near(M.totalDays(16), 27.75, 1e-2), '16 °C ≈ 27.8 d (T0 alto ⇒ cerca del umbral tarda más)');  // §5.6
+  ok(near(M.totalDays(20), 14.18, 1e-2), '20 °C ≈ 14.2 d');
+  ok(near(M.totalDays(25, 1.1), 1.1 * M.totalDays(25)), 'el factor escala el total linealmente');
   ok(M.totalDays(29) < M.totalDays(25) && M.totalDays(25) < M.totalDays(18), 'monótona: más calor = más rápido');
 
   const b = M.stageBounds(25);
   ok(near(b[b.length - 1].end, M.totalDays(25)), 'los estadios suman el total de desarrollo');
   ok(b.every((s, i) => i === 0 || s.start >= b[i - 1].start), 'límites de estadio crecientes');
-  ok(near(M.stageBounds(25, 1.1)[4].end, 11), 'los límites escalan con el factor de calibración');
+  ok(near(M.stageBounds(25, 1.1)[4].end, 1.1 * M.totalDays(25)), 'los límites escalan con el factor');
+  // Reparto de estadios recalibrado: el error viejo estaba casi todo en la pupa (§5.6).
+  ok(near(b[4].start, 4.80, 0.05), 'pupación a 25 °C ≈ día 4.8 (fin de L3, casi sin cambio)');
+  ok(near(b[4].end - b[4].start, 4.00, 0.05), 'pupa a 25 °C dura ~4.0 d (antes 5.0 · sobreestimada ~25 %)');
+  ok(near(b[0].end, 0.86, 0.03), 'embrión a 25 °C ≈ 0.86 d');
 });
 
 /* ============================ 2) KAPLAN–MEIER ============================ */
@@ -159,7 +168,8 @@ group('T50 por conteo (interpolación al 50 %)', () => {
 group('Calibración por genotipo', () => {
   const T0d = Date.parse('2025-01-01T00:00');
   // observación con factor F a 25 °C (base = 10 d): t50 − t0 = F·10 días
-  const obs = (F, method) => ({ t0: '2025-01-01T00:00', t50: new Date(T0d + F * 10 * 86400000).toISOString(), temp: 25, method });
+  const base25 = M.totalDays(25);   // base recalibrada a 25 °C (≈8.80 d); factor observado = F
+  const obs = (F, method) => ({ t0: '2025-01-01T00:00', t50: new Date(T0d + F * base25 * 86400000).toISOString(), temp: 25, method });
 
   ok(M.obsWeight({ method: 'count' }) === 1, 'peso: por conteo = 1');
   ok(M.obsWeight({ method: 'eye' }) === 0.6, 'peso: a ojo = 0.6');

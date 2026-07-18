@@ -499,6 +499,11 @@
   .calib-done{background:var(--mint-soft);color:#3fae8c;border-radius:14px;padding:11px 14px;margin-top:10px;font-size:.85rem;font-weight:700;text-align:center;line-height:1.35}
   .calib-done.prov{background:var(--bg-1);color:var(--ink-soft)}
   .t50-div{text-align:center;font-size:.73rem;color:var(--ink-soft);margin:6px 0 2px}
+  /* Aviso de recalibración del modelo (una sola vez, descartable) */
+  .model-notice{display:flex;gap:12px;align-items:flex-start;background:var(--bg-1);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:16px;font-size:.85rem;line-height:1.45;color:var(--ink-soft)}
+  .model-notice b{color:var(--ink)}
+  .model-notice .mn-x{flex:none;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:.9rem;padding:2px 7px;border-radius:8px;font-weight:700}
+  .model-notice .mn-x:hover{background:var(--peach-soft);color:var(--coral)}
   /* Google Calendar */
   .gcal-on{color:#3fae8c;font-weight:700}
   .gcal-off{color:var(--ink-soft);font-weight:700}
@@ -562,6 +567,8 @@
     </div>
   </header>
 
+  <div id="modelNotice"></div>
+
   <div class="stats" id="stats"></div>
 
   <div id="tasks"></div>
@@ -569,7 +576,7 @@
   <div id="content"></div>
 
   <div class="footer-note">
-    <span data-i18n="foot.model">Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.</span>
+    <span data-i18n="foot.model">Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for 16–28 °C). Estimated times · Data stored locally in your browser.</span>
   </div>
 </div>
 
@@ -908,12 +915,13 @@ const I18N = {
     'gcal.notConfigured':'Not set up yet: a Google Client ID is needed (see the setup guide).','gcal.noClient':'Google Calendar sync is not configured yet (missing Client ID).','gcal.authFail':'Could not connect to Google. Please try again.',
     'gcal.synced':'Synced ✓  +{i} new · {u} updated · {d} removed','gcal.reflected':'{n} marked done (deleted in Calendar)','gcal.someErr':'({e} could not sync)','gcal.evEcl':'Estimated eclosion — {g}','gcal.evDesc':'Created by DrosoTracker.',
     'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'Light','set.dark':'Dark',
+    'notice.model':'<b>Model update:</b> the development model was recalibrated from published data (Powsner 1935, 16–28 °C). Predicted times shifted a little — mainly, adult emergence is now ~1 day earlier at 20–28 °C, while pupation barely changes. Your saved records already show the updated dates.','notice.dismiss':'Got it',
     'tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
     'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
     'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
-    'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 10 °C · ~148 degree-days). Estimated times · Data stored locally in your browser.',
+    'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for 16–28 °C). Estimated times · Data stored locally in your browser.',
     'empty.title':'No records yet','empty.text':'Add your first record with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New record','group.none':'No experiment',
     // objetivos
     'obj.none':'— No specific objective','obj.cross':'Genetic cross','obj.amplify':'Line amplification','obj.stock':'Stock maintenance','obj.aging':'Aging cohort','obj.dissect':'Larval dissection',
@@ -989,12 +997,13 @@ const I18N = {
     'gcal.notConfigured':'Todavía no configurado: falta el Client ID de Google (ver la guía de configuración).','gcal.noClient':'La sincronización con Google Calendar todavía no está configurada (falta el Client ID).','gcal.authFail':'No se pudo conectar con Google. Probá de nuevo.',
     'gcal.synced':'Sincronizado ✓  +{i} nuevos · {u} actualizados · {d} quitados','gcal.reflected':'{n} marcadas hechas (borradas en Calendar)','gcal.someErr':'({e} no se pudieron sincronizar)','gcal.evEcl':'Eclosión estimada — {g}','gcal.evDesc':'Creado por DrosoTracker.',
     'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'Claro','set.dark':'Oscuro',
+    'notice.model':'<b>Modelo actualizado:</b> el modelo de desarrollo se recalibró con datos publicados (Powsner 1935, 16–28 °C). Los tiempos estimados cambiaron un poco — sobre todo, la eclosión de adultos se adelanta ~1 día a 20–28 °C, mientras que la pupación casi no cambia. Tus registros guardados ya muestran las fechas actualizadas.','notice.dismiss':'Entendido',
     'tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
     'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
     'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
-    'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 10 °C · ~148 grados-día). Tiempos estimados · Datos guardados localmente en tu navegador.',
+    'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 11.8 °C · ~116 grados-día, calibrado para 16–28 °C). Tiempos estimados · Datos guardados localmente en tu navegador.',
     'empty.title':'Todavía no hay registros','empty.text':'Agregá tu primer registro con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nuevo registro','group.none':'Sin experimento',
     'obj.none':'— Sin objetivo específico','obj.cross':'Cruza genética','obj.amplify':'Amplificación de línea','obj.stock':'Mantenimiento de stock','obj.aging':'Cohorte de envejecimiento','obj.dissect':'Disección larval',
     'stage.egg':'Embrión','stage.l1':'Larva L1','stage.l2':'Larva L2','stage.l3':'Larva L3','stage.pupa':'Pupa','stage.adult':'Adulto',
@@ -1094,6 +1103,7 @@ function setLang(l){
   document.documentElement.lang = l;
   applyStaticI18n();
   render();
+  renderModelNotice();
   updateSettingsUI();
 }
 /* Cerrar los menús desplegables (Datos, ⚙️) al tocar fuera; al abrir uno se cierra el otro */
@@ -1422,10 +1432,15 @@ function gcalUpdateUI(){
 
 /* --- Modelo de desarrollo dependiente de temperatura ---
    Suma térmica (degree-days): D(T) = DD / (T - T0)
-   Anclado a datos clásicos: 25°C≈10 d, 29°C≈8 d, 18°C≈19 d (huevo→eclosión)
-   => T0 ≈ 10.2 °C,  DD ≈ 148 grados-día                                    */
-const T0 = 10.2;
-const DEGREE_DAYS = 148;
+   Constantes derivadas por regresión de la TASA de desarrollo vs temperatura
+   (tasa = (1/DD)·T − T0/DD) sobre los datos huevo→adulto de Powsner (1935)
+   Physiol. Zool. 8:474-520, promedio de sexos, rango 16–28 °C (n=12, R²=0.997).
+   Válidas en 16–28 °C; fuera de ese rango la relación deja de ser lineal.
+   T0 es un parámetro de AJUSTE, no un cero fisiológico (ver docs/calibracion.md).
+   Nota: los valores previos (10.2 / 148) equivalían a un mal ajuste sobre el
+   rango completo 15–32 °C; el nuevo modelo adelanta la eclosión ~1.2 d a 20–28 °C. */
+const T0 = 11.82;
+const DEGREE_DAYS = 116.0;
 
 /* --- Vida adulta estimada (días), dependiente de temperatura ---
    Ancla: ~70 d a 25°C; regla Q10≈2 (por cada 10°C menos, ~el doble de vida).
@@ -1437,13 +1452,19 @@ function lifespanDays(temp){
   return ADULT_LIFE_REF * Math.pow(2, (25 - t) / 10);
 }
 
-/* Estadios y su duración (en días) a la referencia de 25°C (total = 10 d) */
+/* Estadios y su duración RELATIVA (fracciones ×10 del total; suman ~10 d, sólo
+   fijan las proporciones — stageBounds las reescala a la duración real por T).
+   Reparto de Powsner (1935) medido a 25 °C: embrión 9.8 %, larval 44.8 %,
+   pupa 45.4 %. Asume proporciones interestadio constantes con la temperatura
+   (aproximación válida en el rango medio, peor en los extremos; ver caveat 8).
+   El período larval se subdivide L1:L2:L3 = 1:1:2 (revisión de Current Biology,
+   fuente distinta de Powsner que lo mide como bloque único; ver docs/calibracion.md). */
 const STAGES = [
-  { key:'egg',  name:'Embrión',  short:'Embrión',  dur:1, color:'var(--blue)',  soft:'var(--blue-soft)',  txt:'#5b8fc7' },
-  { key:'l1',   name:'Larva L1', short:'L1',       dur:1, color:'var(--mint)',  soft:'var(--mint-soft)',  txt:'#3fae8c' },
-  { key:'l2',   name:'Larva L2', short:'L2',       dur:1, color:'#7fd1ba',      soft:'var(--mint-soft)',  txt:'#3fae8c' },
-  { key:'l3',   name:'Larva L3', short:'L3',       dur:2, color:'var(--yellow)',soft:'var(--yellow-soft)',txt:'#c79a2e' },
-  { key:'pupa', name:'Pupa',     short:'Pupa',     dur:5, color:'var(--peach)', soft:'var(--peach-soft)', txt:'#d98162' },
+  { key:'egg',  name:'Embrión',  short:'Embrión',  dur:0.98, color:'var(--blue)',  soft:'var(--blue-soft)',  txt:'#5b8fc7' },
+  { key:'l1',   name:'Larva L1', short:'L1',       dur:1.12, color:'var(--mint)',  soft:'var(--mint-soft)',  txt:'#3fae8c' },
+  { key:'l2',   name:'Larva L2', short:'L2',       dur:1.12, color:'#7fd1ba',      soft:'var(--mint-soft)',  txt:'#3fae8c' },
+  { key:'l3',   name:'Larva L3', short:'L3',       dur:2.24, color:'var(--yellow)',soft:'var(--yellow-soft)',txt:'#c79a2e' },
+  { key:'pupa', name:'Pupa',     short:'Pupa',     dur:4.54, color:'var(--peach)', soft:'var(--peach-soft)', txt:'#d98162' },
 ];
 const ADULT = { key:'adult', name:'Adulto', short:'Adulto', color:'var(--pink)', soft:'var(--pink-soft)', txt:'#d96fa0' };
 const REF_TOTAL = STAGES.reduce((s,x)=>s+x.dur,0); // 10 días
@@ -2923,6 +2944,19 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); clos
 /* cerrar el menú de datos al click fuera */
 document.addEventListener('click',e=>{ if(!e.target.closest('.menu')) closeMenu(); });
 
+/* Aviso único de recalibración del modelo: sólo si el usuario ya tenía registros
+   guardados (a esos les cambian las fechas). Descartable; no vuelve a aparecer. */
+const MODEL_NOTICE_KEY = 'drosotrack.modelnotice.v1';
+function renderModelNotice(){
+  const box = document.getElementById('modelNotice');
+  if(!box) return;
+  const seen = localStorage.getItem(MODEL_NOTICE_KEY);
+  if(seen || !crosses.length){ box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="model-notice"><div>${t('notice.model')}</div>`
+    + `<button class="mn-x" onclick="dismissModelNotice()" title="${esc(t('notice.dismiss'))}">${esc(t('notice.dismiss'))}</button></div>`;
+}
+function dismissModelNotice(){ localStorage.setItem(MODEL_NOTICE_KEY, '1'); renderModelNotice(); }
+
 /* refrescar periódicamente para que los recordatorios estén al día,
    sin redibujar (y borrar) lo que se está escribiendo en un campo */
 function autoRender(){
@@ -2938,6 +2972,7 @@ updateSettingsUI();
 updateLabStatus();
 rebuildAutocompleteCache();
 render();
+renderModelNotice();
 setInterval(autoRender, 60000);
 
 /* ---- Tooltips propios: hover (desktop) o mantener apretado (touch) ----
