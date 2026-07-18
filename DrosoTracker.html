@@ -519,6 +519,12 @@
   .cmp-lr span{font-weight:500;color:var(--ink-soft);font-size:.82rem}
   .cmp-lr.sig{background:var(--mint-soft);color:#3fae8c}
   .cmp-lr.sig span{color:#3fae8c}
+  /* Planificación estadística */
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+  .stat-out{display:flex;gap:8px;margin:16px 0 4px}
+  .stat-out .so{flex:1;background:var(--bg-1);border-radius:12px;padding:11px 6px;text-align:center}
+  .stat-out .so b{display:block;font-size:1.35rem;color:var(--ink);line-height:1.1}
+  .stat-out .so span{font-size:.72rem;color:var(--ink-soft)}
   /* Google Calendar */
   .gcal-on{color:#3fae8c;font-weight:700}
   .gcal-off{color:var(--ink-soft);font-weight:700}
@@ -546,6 +552,7 @@
           <button onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">🗓 Plan</button>
           <button onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
           <button onclick="openCompare()" data-i18n="cmp.menu" data-tip-key="tip.cmp">Compare cohorts (KM)</button>
+          <button onclick="openStatPlan()" data-i18n="stat.menu" data-tip-key="tip.stat">Sample size / power</button>
           <button onclick="openGcal()" data-i18n="gcal.menu" data-tip-key="tip.gcal">📅 Google Calendar</button>
           <div class="menu-sep"></div>
           <button onclick="exportJSON()" data-i18n="menu.exportBackup" data-tip-key="tip.exportBackup">⬇ Export backup (JSON)</button>
@@ -862,6 +869,26 @@
   </div>
 </div>
 
+<!-- Planificación estadística: tamaño muestral / potencia / duración de un experimento de supervivencia -->
+<div class="overlay" id="statOverlay" onclick="if(event.target===this)closeStatPlan()">
+  <div class="modal">
+    <div class="calib-head"><h2 data-i18n="stat.title">Sample size &amp; power</h2></div>
+    <div class="sub" data-i18n="stat.sub">Plan a lifespan experiment: how many flies you need to detect a difference in survival with a log-rank test.</div>
+    <div class="stat-grid">
+      <div class="field"><label for="statMA" data-i18n="stat.mA">Median lifespan A (days)</label><input id="statMA" type="number" min="1" step="1" value="50" oninput="renderStatPlan()"></div>
+      <div class="field"><label for="statMB" data-i18n="stat.mB">Median lifespan B (days)</label><input id="statMB" type="number" min="1" step="1" value="30" oninput="renderStatPlan()"></div>
+      <div class="field"><label for="statAlpha" data-i18n="stat.alpha">Significance α</label><select id="statAlpha" onchange="renderStatPlan()"><option value="0.05">0.05</option><option value="0.01">0.01</option></select></div>
+      <div class="field"><label for="statPower" data-i18n="stat.power">Power</label><select id="statPower" onchange="renderStatPlan()"><option value="0.8">80%</option><option value="0.9">90%</option></select></div>
+      <div class="field"><label for="statMort" data-i18n="stat.mort">Run until mortality (%)</label><input id="statMort" type="number" min="50" max="99" step="5" value="90" oninput="renderStatPlan()"></div>
+      <div class="field"><label for="statTemp" data-i18n="stat.temp">Temperature (°C)</label><input id="statTemp" type="number" min="12" max="30" step="0.5" value="25" oninput="renderStatPlan()"></div>
+    </div>
+    <div id="statResult"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" onclick="closeStatPlan()" data-i18n="cmp.close">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Registrar el T50 (eclosión de la mitad) sin pedir cálculos -->
 <div class="overlay" id="t50Overlay" onclick="if(event.target===this)closeT50()">
   <div class="modal confirm-modal">
@@ -1003,6 +1030,12 @@ const I18N = {
     'cmp.title':'Compare cohorts','cmp.sub':'Overlay survival curves (Kaplan–Meier) and run a log-rank test between the selected cohorts.','cmp.close':'Close',
     'cmp.none':'No aging cohorts yet. Set up a record with a defined cohort (N) to compare survival.','cmp.pick':'Select at least one cohort above.','cmp.pick2':'Select 2 or more cohorts to run the log-rank test.','cmp.noEvents':'Not enough death events among the selected cohorts to run the test.',
     'cmp.med':'median {d} d','cmp.medNone':'median: >50% alive','cmp.logrank':'Log-rank:  χ² = {chi},  df = {df},  p = {p}','cmp.sig':'Survival differs significantly between cohorts (p < 0.05).','cmp.nosig':'No significant difference in survival (p ≥ 0.05).',
+    'stat.menu':'Sample size / power','tip.stat':'Plan a lifespan experiment: sample size, power and estimated duration for a log-rank comparison.',
+    'stat.title':'Sample size & power','stat.sub':'Plan a lifespan experiment: how many flies you need to detect a difference in survival with a log-rank test.',
+    'stat.mA':'Median lifespan A (days)','stat.mB':'Median lifespan B (days)','stat.alpha':'Significance α','stat.power':'Power','stat.mort':'Run until mortality (%)','stat.temp':'Temperature (°C)',
+    'stat.perGroup':'flies / group','stat.total':'flies total','stat.events':'deaths needed',
+    'stat.hr':'Hazard ratio ≈ {hr}','stat.durLine':'Est. duration ≈ {d} d (~{w} wk, incl. development)','stat.perSex':'Per sex — analyse sexes separately, so double this to run both.',
+    'stat.needDiff':'Enter two different median lifespans to size the experiment.','stat.okStd':'Feasible with the standard design (≤100 per condition — the field norm is 10 flies × 10 vials).','stat.bigN':'Large experiment: ~{n} flies per condition, above the usual 100. Consider detecting a larger effect, fewer conditions, or accepting less power.',
     'calib.title':'Calibrate a genotype','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
     'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and updates the genotype\'s correction. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half; the count method is more precise. Each observation is weighted by how precisely it was recorded and blended with the published model, shrinking toward it while data is thin — so one rough observation barely moves the prediction. The correction is shown with its uncertainty (±), reads as fully <b>Calibrated</b> at <b>≥3 independent batches</b>, and is flagged <b>Inconsistent</b> if batches disagree more than their error allows (usually a data-entry slip or a batch effect).',
     'calib.t0':'Egg-lay start (t₀) *','calib.t0Cross':'Cross set-up day *','calib.t0Rough':'Approximate t₀ *',
@@ -1095,6 +1128,12 @@ const I18N = {
     'cmp.title':'Comparar cohortes','cmp.sub':'Superponé las curvas de supervivencia (Kaplan–Meier) y corré un test de log-rank entre las cohortes elegidas.','cmp.close':'Cerrar',
     'cmp.none':'Todavía no hay cohortes de envejecimiento. Definí un registro con una cohorte (N) para comparar supervivencia.','cmp.pick':'Elegí al menos una cohorte arriba.','cmp.pick2':'Elegí 2 o más cohortes para correr el test de log-rank.','cmp.noEvents':'No hay suficientes muertes entre las cohortes elegidas para correr el test.',
     'cmp.med':'mediana {d} d','cmp.medNone':'mediana: >50% vivas','cmp.logrank':'Log-rank:  χ² = {chi},  df = {df},  p = {p}','cmp.sig':'La supervivencia difiere significativamente entre cohortes (p < 0.05).','cmp.nosig':'Sin diferencia significativa en la supervivencia (p ≥ 0.05).',
+    'stat.menu':'Tamaño muestral / potencia','tip.stat':'Planificá un experimento de longevidad: tamaño muestral, potencia y duración estimada para una comparación por log-rank.',
+    'stat.title':'Tamaño muestral y potencia','stat.sub':'Planificá un experimento de longevidad: cuántas moscas necesitás para detectar una diferencia de supervivencia con un test de log-rank.',
+    'stat.mA':'Mediana de vida A (días)','stat.mB':'Mediana de vida B (días)','stat.alpha':'Significancia α','stat.power':'Potencia','stat.mort':'Correr hasta mortalidad (%)','stat.temp':'Temperatura (°C)',
+    'stat.perGroup':'moscas / grupo','stat.total':'moscas en total','stat.events':'muertes necesarias',
+    'stat.hr':'Razón de hazards ≈ {hr}','stat.durLine':'Duración est. ≈ {d} d (~{w} sem, incl. desarrollo)','stat.perSex':'Por sexo — los sexos se analizan por separado, así que duplicá esto para correr ambos.',
+    'stat.needDiff':'Ingresá dos medianas de vida distintas para dimensionar el experimento.','stat.okStd':'Factible con el diseño estándar (≤100 por condición — la norma del campo es 10 moscas × 10 viales).','stat.bigN':'Experimento grande: ~{n} moscas por condición, por encima de las 100 habituales. Considerá detectar un efecto más grande, menos condiciones, o aceptar menos potencia.',
     'calib.title':'Calibrar un genotipo','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
     'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y actualiza la corrección del genotipo. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta; el conteo es más preciso. Cada observación se pesa según su precisión y se combina con el modelo publicado, encogiendo hacia él mientras hay pocos datos — así una observación tosca casi no mueve la predicción. La corrección se muestra con su incertidumbre (±), pasa a <b>Calibrado</b> con <b>≥3 tandas independientes</b>, y se marca <b>Inconsistente</b> si las tandas discrepan más de lo que su error permite (en general un error de carga o un efecto de tanda).',
     'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Cross':'Día de armado de la cruza *','calib.t0Rough':'t₀ aproximado *',
@@ -2279,6 +2318,34 @@ function logRankTest(groups){
   return { chi2, df:m, p:chiSqUpper(chi2, m), O, E };
 }
 
+/* ===== Planificación estadística de un experimento de supervivencia ===== */
+/* Cuantil de la normal estándar (inverso de la CDF), algoritmo de Acklam. */
+function normInv(p){
+  if(p<=0) return -Infinity; if(p>=1) return Infinity;
+  const a=[-3.969683028665376e1,2.209460984245205e2,-2.759285104469687e2,1.383577518672690e2,-3.066479806614716e1,2.506628277459239e0];
+  const b=[-5.447609879822406e1,1.615858368580409e2,-1.556989798598866e2,6.680131188771972e1,-1.328068155288572e1];
+  const c=[-7.784894002430293e-3,-3.223964580411365e-1,-2.400758277161838e0,-2.549732539343734e0,4.374664141464968e0,2.938163982698783e0];
+  const d=[7.784695709041462e-3,3.224671290700398e-1,2.445134137142996e0,3.754408661907416e0];
+  const plow=0.02425, phigh=1-plow; let q,r;
+  if(p<plow){ q=Math.sqrt(-2*Math.log(p)); return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+  if(p<=phigh){ q=p-0.5; r=q*q; return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1); }
+  q=Math.sqrt(-2*Math.log(1-p)); return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+}
+/* Tamaño muestral para el test de log-rank (fórmula de Schoenfeld, asignación 1:1),
+   con el tamaño de efecto expresado como dos medianas de supervivencia (modelo
+   exponencial: HR = m1/m2). pEvent = fracción esperada que muere antes del fin. */
+function logRankPlan(m1, m2, alpha, power, pEvent){
+  if(!(m1>0)||!(m2>0)||m1===m2) return null;
+  const hr = m1/m2;
+  const za = normInv(1-alpha/2), zb = normInv(power);
+  const events = Math.pow(za+zb,2) * 4 / Math.pow(Math.log(hr),2);   // eventos (muertes) totales necesarios
+  const pe = (pEvent>0 && pEvent<=1) ? pEvent : 1;
+  const nPerGroup = Math.ceil(events/2/pe);
+  return { hr, events: Math.ceil(events), nPerGroup, nTotal: nPerGroup*2, pEvent: pe };
+}
+/* Días hasta una fracción q de mortalidad, en el modelo exponencial con esa mediana. */
+function timeToMortality(median, q){ return (median>0 && q>0 && q<1) ? median*Math.log2(1/(1-q)) : null; }
+
 /* ---- UI de comparación de cohortes (modal): checklist + overlay KM + log-rank ---- */
 const CMP_COLORS = ['#d96fa0','#5b8fc7','#3fae8c','#c79a2e','#9b6fd9','#d98162'];
 function agingCohorts(){ return crosses.filter(c=> !c.calib && c.aging && c.aging.startN!=null); }
@@ -2341,6 +2408,29 @@ function compareChart(cohorts){
     <text x="${padL}" y="${H-5}" font-size="8" fill="#8b86a3">0</text>
     <text x="${W-padR}" y="${H-5}" font-size="8" fill="#8b86a3" text-anchor="end">${Math.round(maxDay)} d</text>
   </svg></div>`;
+}
+
+/* ---- UI de planificación estadística (modal): tamaño muestral / potencia / duración ---- */
+function openStatPlan(){ closeMenu(); renderStatPlan(); document.getElementById('statOverlay').classList.add('open'); }
+function closeStatPlan(){ document.getElementById('statOverlay').classList.remove('open'); }
+function renderStatPlan(){
+  const num = id => parseFloat(document.getElementById(id).value);
+  const mA=num('statMA'), mB=num('statMB'), alpha=num('statAlpha'), power=num('statPower'), temp=num('statTemp');
+  const q = Math.min(Math.max(num('statMort')/100, 0.5), 0.99);
+  const box = document.getElementById('statResult');
+  const plan = logRankPlan(mA, mB, alpha, power, q);
+  if(!plan){ box.innerHTML = `<div class="hint" style="margin-top:6px">${t('stat.needDiff')}</div>`; return; }
+  const dur = timeToMortality(Math.max(mA,mB), q) + totalDays(temp);   // hasta q% de mortalidad + desarrollo huevo→adulto
+  const feasible = plan.nPerGroup <= 100;                              // estándar de campo ≈ 100/condición (10×10)
+  box.innerHTML = `
+    <div class="stat-out">
+      <div class="so"><b>${plan.nPerGroup}</b><span>${t('stat.perGroup')}</span></div>
+      <div class="so"><b>${plan.nTotal}</b><span>${t('stat.total')}</span></div>
+      <div class="so"><b>${plan.events}</b><span>${t('stat.events')}</span></div>
+    </div>
+    <div class="hint" style="margin:2px 0 4px">${t('stat.hr',{hr:plan.hr.toFixed(2)})} · ${t('stat.durLine',{d:Math.round(dur), w:Math.round(dur/7)})}</div>
+    <div class="hint" style="margin:0 0 10px">${t('stat.perSex')}</div>
+    <div class="cmp-lr${feasible?' sig':''}">${feasible?t('stat.okStd'):t('stat.bigN',{n:plan.nPerGroup})}</div>`;
 }
 
 function cohortForm(cross){

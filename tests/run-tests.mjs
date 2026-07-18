@@ -52,8 +52,9 @@ const code = [
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
   grabFn('icsEsc'), grabFn('icsFold'),
   grabFn('lgamma'), grabFn('gammincQ'), grabFn('chiSqUpper'), grabFn('quadFormSolve'), grabFn('logRankTest'),
+  grabFn('normInv'), grabFn('logRankPlan'), grabFn('timeToMortality'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, icsEsc, icsFold, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, icsEsc, icsFold, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -328,6 +329,33 @@ group('Log-rank (Mantel–Haenszel) entre cohortes', () => {
   // 3 grupos → df = 2
   ok(M.logRankTest([g1, g2, { n0: 2, times: [{ day: 5, d: 2, c: 0 }] }]).df === 2, '3 grupos → df = 2');
   ok(M.logRankTest([g1]) === null, 'un solo grupo → null (nada que comparar)');
+});
+
+/* ============================ 7) PLANIFICACIÓN ESTADÍSTICA ============================ */
+group('Cuantil normal (normInv) y tamaño muestral log-rank (Schoenfeld)', () => {
+  ok(near(M.normInv(0.975), 1.95996, 1e-4), 'normInv(0.975) ≈ 1.95996');
+  ok(near(M.normInv(0.80), 0.84162, 1e-4), 'normInv(0.80) ≈ 0.84162');
+  ok(near(M.normInv(0.5), 0, 1e-6), 'normInv(0.5) = 0');
+  ok(near(M.normInv(0.025), -1.95996, 1e-4), 'normInv(0.025) ≈ -1.95996 (simétrico)');
+
+  // HR=2, α=0.05 (bilateral), potencia 0.80 → ~66 eventos totales (referencia estándar de Schoenfeld)
+  const p = M.logRankPlan(40, 20, 0.05, 0.80, 1);
+  ok(near(p.hr, 2, 1e-9), 'HR = m1/m2 = 40/20 = 2');
+  ok(p.events === 66, 'HR=2, potencia 0.80 → 66 eventos (Schoenfeld)');
+  ok(p.nPerGroup === 33 && p.nTotal === 66, 'con mortalidad ~100% → 33 por grupo, 66 en total');
+
+  // mortalidad incompleta (60% muere) sube el N necesario
+  const p60 = M.logRankPlan(40, 20, 0.05, 0.80, 0.6);
+  ok(p60.nPerGroup > p.nPerGroup, 'menor mortalidad esperada ⇒ más moscas necesarias');
+
+  // más potencia ⇒ más eventos; efecto más chico (HR más cerca de 1) ⇒ muchos más
+  ok(M.logRankPlan(40, 20, 0.05, 0.90, 1).events > p.events, '90% de potencia pide más eventos que 80%');
+  ok(M.logRankPlan(40, 30, 0.05, 0.80, 1).events > p.events, 'efecto más chico (HR 1.33) pide más eventos');
+  ok(M.logRankPlan(20, 20, 0.05, 0.80, 1) === null, 'medianas iguales (sin efecto) → null');
+
+  // duración: días hasta 90% de mortalidad ≈ mediana · log2(10) ≈ 3.32 · mediana
+  ok(near(M.timeToMortality(30, 0.9), 30*Math.log2(10), 1e-6), 'tiempo al 90% de mortalidad = mediana · log2(10)');
+  ok(M.timeToMortality(30, 0.5) < M.timeToMortality(30, 0.9), 'más mortalidad objetivo ⇒ más tiempo');
 });
 
 /* ============================ resumen ============================ */
