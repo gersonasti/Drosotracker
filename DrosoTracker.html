@@ -802,9 +802,21 @@
         <div class="calib-status" id="calibGenoStatus"></div>
       </div>
       <div class="field">
-        <label for="calibT0" data-i18n="calib.t0">Egg-lay start (t₀) *</label>
+        <label for="calibT0Mode" data-i18n="calib.t0Mode">How well do you know the egg-lay start (t₀)?</label>
+        <select id="calibT0Mode" onchange="updateCalibT0Mode()">
+          <option value="bounded" data-i18n="calib.t0ModeBounded">Bounded egg-lay window (best)</option>
+          <option value="crossday" data-i18n="calib.t0ModeCross">Cross set-up day only</option>
+          <option value="unknown" data-i18n="calib.t0ModeUnknown">Rough / unknown</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="calibT0" id="calibT0Label" data-i18n="calib.t0">Egg-lay start (t₀) *</label>
         <input id="calibT0" type="datetime-local" required />
-        <div class="hint" data-i18n="calib.t0Hint">Keep the egg-lay window short (3–6 h): remove the parents afterwards so all eggs are ~the same age. That short window is what gives a good calibration.</div>
+        <div class="hint" id="calibT0Hint" data-i18n="calib.t0HintBounded">Keep the egg-lay window short (3–6 h): remove the parents afterwards so all eggs are ~the same age. That short window is what gives a good calibration.</div>
+      </div>
+      <div class="field" id="calibWindowField">
+        <label for="calibWindowH" data-i18n="calib.windowH">Egg-lay window (hours)</label>
+        <input id="calibWindowH" type="number" min="0.5" max="48" step="0.5" value="6" />
       </div>
       <div class="field">
         <label for="calibTemp" data-i18n="calib.temp">Incubation temperature (°C) *</label>
@@ -958,7 +970,12 @@ const I18N = {
     'calib.btn':'Calibrate','tip.calib':'Calibrate the development model for a specific genotype using a real observation.','obj.calibrate':'Calibration',
     'calib.title':'Calibrate a genotype','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
     'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and updates the genotype\'s correction. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half; the count method is more precise. Each observation is weighted by how precisely it was recorded and blended with the published model, shrinking toward it while data is thin — so one rough observation barely moves the prediction. The correction is shown with its uncertainty (±), reads as fully <b>Calibrated</b> at <b>≥3 independent batches</b>, and is flagged <b>Inconsistent</b> if batches disagree more than their error allows (usually a data-entry slip or a batch effect).',
-    'calib.t0':'Egg-lay start (t₀) *','calib.t0Hint':'Keep the egg-lay window short (3–6 h): remove the parents afterwards so every egg is about the same age. That short window is what gives a good calibration.','calib.temp':'Incubation temperature (°C) *','calib.start':'Start calibration','calib.existing':'Calibrated genotypes','calib.none':'No calibrations yet.',
+    'calib.t0':'Egg-lay start (t₀) *','calib.t0Cross':'Cross set-up day *','calib.t0Rough':'Approximate t₀ *',
+    'calib.t0Mode':'How well do you know the egg-lay start (t₀)?','calib.t0ModeBounded':'Bounded egg-lay window (best)','calib.t0ModeCross':'Cross set-up day only','calib.t0ModeUnknown':'Rough / unknown','calib.windowH':'Egg-lay window (hours)',
+    'calib.t0HintBounded':'Keep the egg-lay window short (3–6 h): remove the parents afterwards so every egg is about the same age. That short window is what gives a good calibration.',
+    'calib.t0HintCross':'You know the day you put the parents together but not the exact egg-lay — this observation will carry more uncertainty and pull the estimate less.',
+    'calib.t0HintUnknown':'t₀ is only approximate — this observation will weigh very little. Prefer a bounded egg-lay window when you can.',
+    'calib.temp':'Incubation temperature (°C) *','calib.start':'Start calibration','calib.existing':'Calibrated genotypes','calib.none':'No calibrations yet.',
     'card.calibRecord':'Log eclosion (T₅₀)','calib.q':'Has about half of the flies eclosed?','calib.qHalf':'~ Half (record now)','calib.qPast':'Past half already','calib.qNotYet':'Not yet','calib.slower':'slower','calib.faster':'faster','calib.confLow':'low','calib.confMed':'medium','calib.confHigh':'high',
     'calib.adjusted':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype runs ~{pct}% {dir} than the base model.','calib.adjusted0':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype matches the base model.','card.calibResult':'Calibrated · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrated · matches base ({n} obs)','calib.pendingHint':'When ~half of the flies have eclosed, tap "Log eclosion (T₅₀)".',
     'calib.orMore':'or, for higher quality:','calib.byCount':'Log by count (more accurate)',
@@ -1040,7 +1057,12 @@ const I18N = {
     'calib.btn':'Calibrar','tip.calib':'Calibrá el modelo de desarrollo de un genotipo con una observación real.','obj.calibrate':'Calibración',
     'calib.title':'Calibrar un genotipo','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
     'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y actualiza la corrección del genotipo. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta; el conteo es más preciso. Cada observación se pesa según su precisión y se combina con el modelo publicado, encogiendo hacia él mientras hay pocos datos — así una observación tosca casi no mueve la predicción. La corrección se muestra con su incertidumbre (±), pasa a <b>Calibrado</b> con <b>≥3 tandas independientes</b>, y se marca <b>Inconsistente</b> si las tandas discrepan más de lo que su error permite (en general un error de carga o un efecto de tanda).',
-    'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Hint':'Ventana de puesta corta (3–6 h): retirá los parentales después, para que todos los huevos tengan ~la misma edad. Esa ventana corta es lo que da una buena calibración.','calib.temp':'Temperatura de incubación (°C) *','calib.start':'Iniciar calibración','calib.existing':'Genotipos calibrados','calib.none':'Todavía no hay calibraciones.',
+    'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Cross':'Día de armado de la cruza *','calib.t0Rough':'t₀ aproximado *',
+    'calib.t0Mode':'¿Qué tan bien sabés el inicio de la puesta (t₀)?','calib.t0ModeBounded':'Puesta acotada (lo mejor)','calib.t0ModeCross':'Solo el día de armado de la cruza','calib.t0ModeUnknown':'Aproximado / desconocido','calib.windowH':'Ventana de puesta (horas)',
+    'calib.t0HintBounded':'Ventana de puesta corta (3–6 h): retirá los parentales después, para que todos los huevos tengan ~la misma edad. Esa ventana corta es lo que da una buena calibración.',
+    'calib.t0HintCross':'Sabés el día que juntaste los parentales pero no la puesta exacta — esta observación va a arrastrar más incertidumbre y pesar menos.',
+    'calib.t0HintUnknown':'El t₀ es solo aproximado — esta observación va a pesar muy poco. Cuando puedas, preferí una puesta acotada.',
+    'calib.temp':'Temperatura de incubación (°C) *','calib.start':'Iniciar calibración','calib.existing':'Genotipos calibrados','calib.none':'Todavía no hay calibraciones.',
     'card.calibRecord':'Registrar eclosión (T₅₀)','calib.q':'¿Ya eclosionó ~la mitad de las moscas?','calib.qHalf':'~ La mitad (registrar ahora)','calib.qPast':'Ya pasó la mitad','calib.qNotYet':'Todavía no','calib.slower':'más lento','calib.faster':'más rápido','calib.confLow':'baja','calib.confMed':'media','calib.confHigh':'alta',
     'calib.adjusted':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo va ~{pct}% {dir} que el modelo base.','calib.adjusted0':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo coincide con el modelo base.','card.calibResult':'Calibrado · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrado · igual al base ({n} obs)','calib.pendingHint':'Cuando haya eclosionado ~la mitad, tocá "Registrar eclosión (T₅₀)".',
     'calib.orMore':'o, para más calidad:','calib.byCount':'Registrar por conteo (más preciso)',
@@ -1157,10 +1179,26 @@ function openCalib(){
   document.getElementById('calibHelp').classList.remove('open');
   document.getElementById('calibT0').value = toLocalInput(new Date());
   document.getElementById('calibTemp').value = 25;
+  document.getElementById('calibT0Mode').value = 'bounded';
+  document.getElementById('calibWindowH').value = 6;
+  updateCalibT0Mode();
   const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
   document.getElementById('calibGenoList').innerHTML = genos.map(v=>`<option value="${esc(v)}"></option>`).join('');
   renderCalibStatus(); renderCalibList();
   document.getElementById('calibOverlay').classList.add('open');
+}
+/* El modo de t₀ ajusta la incertidumbre: sólo el modo acotado pide la ventana,
+   y la etiqueta/ayuda del campo de fecha cambian según el modo elegido. */
+function updateCalibT0Mode(){
+  const mode = document.getElementById('calibT0Mode').value;
+  const win = document.getElementById('calibWindowField');
+  const label = document.getElementById('calibT0Label');
+  const hint = document.getElementById('calibT0Hint');
+  win.style.display = mode==='bounded' ? '' : 'none';
+  const labelKey = mode==='crossday' ? 'calib.t0Cross' : (mode==='unknown' ? 'calib.t0Rough' : 'calib.t0');
+  const hintKey  = mode==='crossday' ? 'calib.t0HintCross' : (mode==='unknown' ? 'calib.t0HintUnknown' : 'calib.t0HintBounded');
+  label.setAttribute('data-i18n', labelKey); label.textContent = t(labelKey);
+  hint.setAttribute('data-i18n', hintKey);   hint.textContent = t(hintKey);
 }
 function closeCalib(){ document.getElementById('calibOverlay').classList.remove('open'); }
 function toggleCalibHelp(){ document.getElementById('calibHelp').classList.toggle('open'); }
@@ -1193,10 +1231,13 @@ function startCalib(e){
   e.preventDefault();
   const genotype = document.getElementById('calibGeno').value.trim();
   if(!genotype){ alert(t('al.geno')); return; }
+  const t0Mode = document.getElementById('calibT0Mode').value;
+  const windowH = parseFloat(document.getElementById('calibWindowH').value);
   crosses.push({
     id:'c'+Date.now()+Math.random().toString(36).slice(2,5),
     calib:true, calibDone:false, parentsRemoved:true, experiments:[],
     genotype, crossDate: document.getElementById('calibT0').value, temp: parseFloat(document.getElementById('calibTemp').value),
+    t0Mode, windowH: (t0Mode==='bounded' && windowH>0) ? windowH : undefined,
   });
   save(crosses); closeCalib(); render();
 }
@@ -1207,7 +1248,7 @@ function recordT50(kind){
   const c = crosses.find(x=>x.id===_t50Id);
   if(c){
     const t50 = toLocalInput(new Date());
-    addCalibObs(c.genotype, c.crossDate, t50, c.temp, kind==='past' ? 'past' : 'eye', c.id);
+    addCalibObs(c.genotype, c.crossDate, t50, c.temp, kind==='past' ? 'past' : 'eye', c.id, c.windowH, c.t0Mode);
     c.calibDone = true; c.calibT50 = t50;
     save(crosses);
   }
@@ -1264,7 +1305,7 @@ function saveCountCalib(){
   if(!t50ms) return;
   const t50 = toLocalInput(new Date(t50ms));
   c.countTotal = tot;
-  addCalibObs(c.genotype, c.crossDate, t50, c.temp, 'count', c.id);
+  addCalibObs(c.genotype, c.crossDate, t50, c.temp, 'count', c.id, c.windowH, c.t0Mode);
   c.calibDone = true; c.calibT50 = t50;
   save(crosses);
   closeCount(); render();
@@ -1537,6 +1578,10 @@ const CALIB_KEY = 'drosotrack.calib.v1';
 const CALIB_MIN = 3;   // tandas independientes para el estado "Calibrado" (menos = "Calibrando")
 // Incertidumbre del T50 (en DÍAS) según cómo se registró la eclosión.
 const CALIB_SIGMA_T50 = { count: 0.15, eye: 0.5, past: 1.0 };
+// Incertidumbre del inicio de puesta t₀ (en DÍAS) cuando no es una ventana acotada:
+// "día de cruza" = la puesta se reparte en ~1 día; "desconocido" = t₀ sólo aproximado.
+const CALIB_SIGMA_T0_CROSSDAY = 0.75;
+const CALIB_SIGMA_T0_UNKNOWN = 2.0;
 // σ biológico ENTRE tandas (unidades de factor): variabilidad de tanda a tanda
 // (comida, densidad, microclima). Impide que una sola tanda arrastre la estimación.
 const CALIB_SIGMA_BATCH = 0.08;
@@ -1551,14 +1596,22 @@ function obsFactor(o){
   const baseDays = totalDays(o.temp);   // modelo base (factor 1) a esa temperatura
   return (observedDays>0 && baseDays>0) ? observedDays/baseDays : null;
 }
-/* σ del factor de una observación: (método del T50 ⊕ ventana de puesta) en días,
+/* σ del t₀ (en días) según cómo se conoce el inicio de la puesta:
+   ventana acotada (o registros viejos) → punto medio de una ventana uniforme;
+   día de cruza / desconocido → valores fijos mayores. */
+function obsSigmaT0Days(o){
+  if(o.t0Mode==='crossday') return CALIB_SIGMA_T0_CROSSDAY;
+  if(o.t0Mode==='unknown')  return CALIB_SIGMA_T0_UNKNOWN;
+  const windowH = o.windowH>0 ? o.windowH : 6;          // 'bounded' (default); 6 h si no se registró
+  return (windowH/24) / Math.sqrt(12);                  // σ del punto medio de una ventana uniforme
+}
+/* σ del factor de una observación: (método del T50 ⊕ incertidumbre de t₀) en días,
    propagado a unidades de factor dividiendo por el tiempo base a esa T. */
 function obsSigmaFactor(o){
   const baseDays = totalDays(o.temp); if(!(baseDays>0)) return null;
   const method = o.method || (o.late ? 'past' : 'eye');
   const sT50 = CALIB_SIGMA_T50[method] != null ? CALIB_SIGMA_T50[method] : CALIB_SIGMA_T50.eye;
-  const windowH = o.windowH>0 ? o.windowH : 6;          // ventana de puesta (h); 6 h si no se registró
-  const sT0 = (windowH/24) / Math.sqrt(12);             // σ del punto medio de una ventana uniforme
+  const sT0 = obsSigmaT0Days(o);
   return Math.sqrt(sT0*sT0 + sT50*sT50) / baseDays;
 }
 /* clave de tanda: cada cruza es una unidad experimental. Las observaciones viejas
@@ -1609,12 +1662,13 @@ function calibInfo(geno){
 /* factor a aplicar al modelo: la media posterior (con 0 obs ⇒ 1 = modelo base).
    El encogimiento la mantiene cerca de 1 mientras los datos no justifiquen más. */
 function calibFactorValue(geno){ const c = calibInfo(geno); return c ? c.factor : 1; }
-function addCalibObs(geno, t0, t50, temp, method, batch, windowH){
+function addCalibObs(geno, t0, t50, temp, method, batch, windowH, t0Mode){
   const all = loadCalib();
   const key = normGeno(geno);
   const rec = { t0, t50, temp, method: method || 'eye' };
   if(batch) rec.batch = batch;
-  if(windowH>0) rec.windowH = windowH;
+  if(t0Mode && t0Mode!=='bounded') rec.t0Mode = t0Mode;      // 'bounded' es el default (ventana)
+  else if(windowH>0) rec.windowH = windowH;                  // la ventana sólo aplica al modo acotado
   (all[key] = all[key] || []).push(rec);
   saveCalib(all);
 }

@@ -47,10 +47,11 @@ const code = [
   grabConst('T0'), grabConst('DEGREE_DAYS'), grabConst('STAGES'), grabConst('REF_TOTAL'),
   grabConst('CALIB_KEY'), grabConst('CALIB_MIN'),
   grabConst('CALIB_SIGMA_T50'), grabConst('CALIB_SIGMA_BATCH'), grabConst('CALIB_PRIOR_SD'),
+  grabConst('CALIB_SIGMA_T0_CROSSDAY'), grabConst('CALIB_SIGMA_T0_UNKNOWN'),
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('ensureAging'), grabFn('kmCurve'), grabFn('computeT50FromCounts'),
-  grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'),
+  grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, saveCalib, calibInfo, calibFactorValue, obsSigmaFactor, obsBatch, normGeno, obsFactor };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -242,6 +243,35 @@ group('Calibración v2 — heterogeneidad (estado "Inconsistente")', () => {
   // observaciones de una MISMA tanda (mismo batch) no cuentan como réplicas independientes
   M.saveCalib({ S: [obs(1.2, 'count', 'same'), obs(1.2, 'count', 'same'), obs(1.2, 'count', 'same')] });
   ok(M.calibInfo('S').nBatch === 1 && M.calibInfo('S').singleBatch === true, '3 obs de una sola tanda ⇒ nBatch 1 (no son independientes)');
+});
+
+group('Calibración v2 — modos de t₀ (incertidumbre del inicio de puesta)', () => {
+  const sqrt12 = Math.sqrt(12);
+  ok(near(M.obsSigmaT0Days({}), (6 / 24) / sqrt12, 1e-9), 't₀ acotado por defecto = (6 h/24)/√12');
+  ok(M.obsSigmaT0Days({ windowH: 3 }) < M.obsSigmaT0Days({ windowH: 12 }), 'ventana más corta ⇒ σ_t₀ menor');
+  ok(M.obsSigmaT0Days({ t0Mode: 'crossday' }) === M.CALIB_SIGMA_T0_CROSSDAY, 'modo "día de cruza" usa su σ fijo');
+  ok(M.obsSigmaT0Days({ t0Mode: 'unknown' }) === M.CALIB_SIGMA_T0_UNKNOWN, 'modo "desconocido" usa su σ fijo');
+  ok(M.obsSigmaT0Days({}) < M.obsSigmaT0Days({ t0Mode: 'crossday' }) && M.obsSigmaT0Days({ t0Mode: 'crossday' }) < M.obsSigmaT0Days({ t0Mode: 'unknown' }),
+     'σ_t₀: acotado < día de cruza < desconocido');
+
+  // un t₀ más incierto ⇒ σ del factor mayor ⇒ el posterior encoge más (pesa menos)
+  const T0d = Date.parse('2025-01-01T00:00'), base25 = M.totalDays(25);
+  const t50 = new Date(T0d + 1.3 * base25 * 86400000).toISOString();
+  M.saveCalib({ B: [{ t0: '2025-01-01T00:00', t50, temp: 25, method: 'eye', batch: 'b1' }] });          // acotado
+  const fBounded = M.calibInfo('B').factor;
+  M.saveCalib({ X: [{ t0: '2025-01-01T00:00', t50, temp: 25, method: 'eye', t0Mode: 'crossday', batch: 'b1' }] });
+  const fCross = M.calibInfo('X').factor;
+  ok(fBounded > fCross && fCross > 1, 'con t₀ de "día de cruza" el posterior encoge más que con puesta acotada');
+
+  // flujo de guardado (lo que hace recordT50/saveCountCalib): addCalibObs persiste el modo
+  M.saveCalib({});
+  M.addCalibObs('G', '2025-01-01T00:00', t50, 25, 'eye', 'cid', undefined, 'crossday');
+  const recCross = M.loadCalib()['G'][0];
+  ok(recCross.t0Mode === 'crossday' && recCross.batch === 'cid', 'addCalibObs guarda t0Mode y batch');
+  M.saveCalib({});
+  M.addCalibObs('G', '2025-01-01T00:00', t50, 25, 'count', 'cid', 4, 'bounded');
+  const recBounded = M.loadCalib()['G'][0];
+  ok(recBounded.t0Mode === undefined && recBounded.windowH === 4, 'modo acotado: no guarda t0Mode y sí la ventana (4 h)');
 });
 
 /* ============================ resumen ============================ */
