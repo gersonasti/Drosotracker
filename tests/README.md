@@ -23,6 +23,9 @@ Imprime cada grupo de tests y un resumen. Devuelve código de salida `!= 0` si a
   independiente (incluye empates y casos borde).
 - **T50 por conteo** (`computeT50FromCounts`): interpolación al 50 %, y casos que devuelven
   `null` (un solo conteo, sin cruce de la mitad, sin total).
+- **Calibración por genotipo** (`calibInfo`, `calibFactorValue`, `obsFactor`, `obsWeight`,
+  `normGeno`): pesos por método, `obsFactor = observado/base`, la **regla de ≥3 réplicas**
+  (con &lt;3 no se aplica), confianza por N, y el promedio ponderado por calidad.
 
 ## Verificación contra R
 

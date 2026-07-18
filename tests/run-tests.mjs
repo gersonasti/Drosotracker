@@ -39,11 +39,17 @@ function grabConst(name) {
   return SRC.slice(m.index, SRC.indexOf(';', m.index) + 1);
 }
 
+// stub mínimo de localStorage para las funciones de calibración (loadCalib/saveCalib)
+const stub = `const localStorage = { s:{}, getItem(k){ return k in this.s ? this.s[k] : null; }, setItem(k,v){ this.s[k]=String(v); }, removeItem(k){ delete this.s[k]; } };
+let _calibCache = null;`;
 const code = [
+  stub,
   grabConst('T0'), grabConst('DEGREE_DAYS'), grabConst('STAGES'), grabConst('REF_TOTAL'),
+  grabConst('CALIB_KEY'), grabConst('CALIB_MIN'),
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('ensureAging'), grabFn('kmCurve'), grabFn('computeT50FromCounts'),
+  grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsWeight'), grabFn('calibInfo'), grabFn('calibFactorValue'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, saveCalib, calibInfo, calibFactorValue, obsWeight, normGeno, obsFactor };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -147,6 +153,41 @@ group('T50 por conteo (interpolación al 50 %)', () => {
   ok(t50([{ t: D(9), n: 20 }], 100) === null, 'un solo conteo ⇒ null (no se puede interpolar)');
   ok(t50([{ t: D(9), n: 10 }, { t: D(10), n: 20 }], 100) === null, 'si no cruza la mitad ⇒ null');
   ok(t50([{ t: D(9), n: 20 }, { t: D(10), n: 80 }], 0) === null, 'sin total ⇒ null');
+});
+
+/* ============================ 4) CALIBRACIÓN POR GENOTIPO ============================ */
+group('Calibración por genotipo', () => {
+  const T0d = Date.parse('2025-01-01T00:00');
+  // observación con factor F a 25 °C (base = 10 d): t50 − t0 = F·10 días
+  const obs = (F, method) => ({ t0: '2025-01-01T00:00', t50: new Date(T0d + F * 10 * 86400000).toISOString(), temp: 25, method });
+
+  ok(M.obsWeight({ method: 'count' }) === 1, 'peso: por conteo = 1');
+  ok(M.obsWeight({ method: 'eye' }) === 0.6, 'peso: a ojo = 0.6');
+  ok(M.obsWeight({ method: 'past' }) === 0.35, 'peso: "ya pasó" = 0.35');
+  ok(M.obsWeight({ late: true }) === 0.35, 'peso: late (dato viejo) = 0.35');
+  ok(M.obsWeight({}) === 0.6, 'peso por defecto = 0.6');
+
+  ok(near(M.obsFactor(obs(1.1, 'eye')), 1.1, 1e-6), 'obsFactor = observado / base (1.1)');
+  ok(M.normGeno('  w[1118]   ;  CyO ') === 'w[1118] ; CyO', 'normGeno recorta y colapsa espacios');
+
+  // regla de ≥3 réplicas (CALIB_MIN)
+  M.saveCalib({ G: [obs(1.1, 'eye'), obs(1.1, 'eye')] });
+  ok(M.calibInfo('G').applied === false && M.calibFactorValue('G') === 1, '2 obs: NO se aplica (factor 1 = modelo base)');
+
+  M.saveCalib({ G: [obs(1.1, 'eye'), obs(1.1, 'eye'), obs(1.1, 'eye')] });
+  const c3 = M.calibInfo('G');
+  ok(c3.applied === true && near(c3.factor, 1.1, 1e-6) && c3.pct === 10, '3 obs: se aplica (factor 1.1 ≈ 10% más lento)');
+  ok(c3.conf === 'med', '3–4 obs → confianza media');
+  ok(near(M.calibFactorValue('G'), 1.1, 1e-6), 'calibFactorValue aplica el factor con ≥3 obs');
+
+  M.saveCalib({ G: Array.from({ length: 5 }, () => obs(1.1, 'eye')) });
+  ok(M.calibInfo('G').conf === 'high', '≥5 obs → confianza alta');
+
+  // promedio PONDERADO por método: (1·1.2 + 1·1.2 + 0.6·1.0)/(1+1+0.6) = 3.0/2.6
+  M.saveCalib({ G: [obs(1.2, 'count'), obs(1.2, 'count'), obs(1.0, 'eye')] });
+  ok(near(M.calibInfo('G').factor, 3.0 / 2.6, 1e-6), 'factor = promedio ponderado por calidad del método');
+
+  ok(M.calibInfo('desconocido') === null && M.calibFactorValue('desconocido') === 1, 'genotipo sin datos → modelo base');
 });
 
 /* ============================ resumen ============================ */
