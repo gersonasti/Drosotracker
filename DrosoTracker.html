@@ -525,6 +525,12 @@
   .stat-out .so{flex:1;background:var(--bg-1);border-radius:12px;padding:11px 6px;text-align:center}
   .stat-out .so b{display:block;font-size:1.35rem;color:var(--ink);line-height:1.1}
   .stat-out .so span{font-size:.72rem;color:var(--ink-soft)}
+  /* Plantillas de cruza */
+  .tpl-card{background:var(--bg-1);border-radius:14px;padding:13px 15px;margin-bottom:10px}
+  .tpl-h{font-weight:700;color:var(--ink);font-size:.92rem;margin-bottom:3px}
+  .tpl-d{font-size:.82rem;color:var(--ink-soft);line-height:1.45;margin-bottom:8px}
+  .tpl-g{display:inline-block;background:var(--lav-soft);color:var(--ink);border-radius:8px;padding:3px 8px;font-size:.8rem;margin-bottom:9px;word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .tpl-card .mini-btn{width:100%}
   /* Google Calendar */
   .gcal-on{color:#3fae8c;font-weight:700}
   .gcal-off{color:var(--ink-soft);font-weight:700}
@@ -550,6 +556,7 @@
         <button class="btn ghost" onclick="toggleMenu()" data-i18n="hdr.more" data-tip-key="tip.more">More ▾</button>
         <div class="menu-pop" id="dataMenu">
           <button onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">🗓 Plan</button>
+          <button onclick="openTemplates()" data-i18n="tpl.menu" data-tip-key="tip.tpl">Cross templates</button>
           <button onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
           <button onclick="openCompare()" data-i18n="cmp.menu" data-tip-key="tip.cmp">Compare cohorts (KM)</button>
           <button onclick="openStatPlan()" data-i18n="stat.menu" data-tip-key="tip.stat">Sample size / power</button>
@@ -600,6 +607,7 @@
   <div id="content"></div>
 
   <div class="footer-note">
+    <span data-i18n="foot.tagline" style="display:block;margin-bottom:5px">Tracks the fly life cycle, tasks and lifespan — not a behaviour-tracking tool.</span>
     <span data-i18n="foot.model">Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for 16–28 °C). Estimated times · Data stored locally in your browser.</span>
   </div>
 </div>
@@ -889,6 +897,19 @@
   </div>
 </div>
 
+<!-- Plantillas de esquemas de cruza frecuentes: pre-llenan un registro nuevo (editable) -->
+<div class="overlay" id="tplOverlay" onclick="if(event.target===this)closeTemplates()">
+  <div class="modal">
+    <div class="calib-head"><h2 data-i18n="tpl.title">Cross templates</h2></div>
+    <div class="sub" data-i18n="tpl.sub">Common Drosophila cross schemes. Pick one to pre-fill a new record — everything stays editable.</div>
+    <div id="tplList"></div>
+    <div class="hint" data-i18n="tpl.note" style="margin-top:10px">Starting points only. Adjust the genotype, markers and chromosomes to your exact stocks.</div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" onclick="closeTemplates()" data-i18n="cmp.close">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Registrar el T50 (eclosión de la mitad) sin pedir cálculos -->
 <div class="overlay" id="t50Overlay" onclick="if(event.target===this)closeT50()">
   <div class="modal confirm-modal">
@@ -991,6 +1012,7 @@ const I18N = {
     'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
+    'foot.tagline':'Tracks the fly life cycle, tasks and lifespan — not a behaviour-tracking tool.',
     'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for 16–28 °C). Estimated times · Data stored locally in your browser.',
     'empty.title':'No records yet','empty.text':'Add your first record with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New record','group.none':'No experiment',
     // objetivos
@@ -1036,6 +1058,12 @@ const I18N = {
     'stat.perGroup':'flies / group','stat.total':'flies total','stat.events':'deaths needed',
     'stat.hr':'Hazard ratio ≈ {hr}','stat.durLine':'Est. duration ≈ {d} d (~{w} wk, incl. development)','stat.perSex':'Per sex — analyse sexes separately, so double this to run both.',
     'stat.needDiff':'Enter two different median lifespans to size the experiment.','stat.okStd':'Feasible with the standard design (≤100 per condition — the field norm is 10 flies × 10 vials).','stat.bigN':'Large experiment: ~{n} flies per condition, above the usual 100. Consider detecting a larger effect, fewer conditions, or accepting less power.',
+    'tpl.menu':'Cross templates','tip.tpl':'Pre-fill a new record from a common cross scheme (GAL4/UAS, balancing).',
+    'tpl.title':'Cross templates','tpl.sub':'Common Drosophila cross schemes. Pick one to pre-fill a new record — everything stays editable.','tpl.use':'Use this template','tpl.note':'Starting points only. Adjust the genotype, markers and chromosomes to your exact stocks.',
+    'tpl.gal4uas.name':'GAL4 / UAS (targeted expression)','tpl.gal4uas.desc':'Express a UAS-transgene in the pattern of a GAL4 driver. P0: GAL4 driver × UAS-transgene; the F1 carrying both expresses the transgene.','tpl.gal4uas.notes':'GAL4/UAS binary expression. P0: GAL4 driver x UAS-transgene (either direction). Collect the F1 carrying both. Run a GAL4-only and a UAS-only sibling as controls. Driver and transgene are often on different chromosomes (";" separates them).',
+    'tpl.bal2.name':'Balance over CyO (chr 2)','tpl.bal2.desc':'Keep a 2nd-chromosome allele over the CyO balancer (Curly-wing marker). P0: allele/+ x balancer stock; select balanced F1.','tpl.bal2.notes':'Balance a 2nd-chr allele over CyO. Select Curly (CyO-bearing) F1 that carry the allele, then sib-cross to establish an allele/CyO stock. Lethal alleles stay balanced automatically.',
+    'tpl.bal3.name':'Balance over TM3 / TM6B (chr 3)','tpl.bal3.desc':'Keep a 3rd-chromosome allele over a TM3 (Sb) or TM6B (Hu, Tb) balancer. P0: allele/+ x balancer stock; select balanced F1.','tpl.bal3.notes':'Balance a 3rd-chr allele over TM3 (Stubble) or TM6B (Humeral, Tubby). Select the balancer-marked F1 carrying the allele, then sib-cross to establish the stock.',
+    'tpl.wt.name':'Wild-type control','tpl.wt.desc':'A reference wild-type line to run alongside experimental genotypes.','tpl.wt.notes':'Wild-type reference control (e.g. w[1118] or Canton-S). Rear under the same conditions as the experimental cohorts.',
     'calib.title':'Calibrate a genotype','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
     'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and updates the genotype\'s correction. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half; the count method is more precise. Each observation is weighted by how precisely it was recorded and blended with the published model, shrinking toward it while data is thin — so one rough observation barely moves the prediction. The correction is shown with its uncertainty (±), reads as fully <b>Calibrated</b> at <b>≥3 independent batches</b>, and is flagged <b>Inconsistent</b> if batches disagree more than their error allows (usually a data-entry slip or a batch effect).',
     'calib.t0':'Egg-lay start (t₀) *','calib.t0Cross':'Cross set-up day *','calib.t0Rough':'Approximate t₀ *',
@@ -1095,6 +1123,7 @@ const I18N = {
     'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
+    'foot.tagline':'Sigue el ciclo de vida, las tareas y la longevidad de la mosca — no es una herramienta de tracking de comportamiento.',
     'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 11.8 °C · ~116 grados-día, calibrado para 16–28 °C). Tiempos estimados · Datos guardados localmente en tu navegador.',
     'empty.title':'Todavía no hay registros','empty.text':'Agregá tu primer registro con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nuevo registro','group.none':'Sin experimento',
     'obj.none':'— Sin objetivo específico','obj.cross':'Cruza genética','obj.amplify':'Amplificación de línea','obj.stock':'Mantenimiento de stock','obj.aging':'Cohorte de envejecimiento','obj.dissect':'Disección larval',
@@ -1134,6 +1163,12 @@ const I18N = {
     'stat.perGroup':'moscas / grupo','stat.total':'moscas en total','stat.events':'muertes necesarias',
     'stat.hr':'Razón de hazards ≈ {hr}','stat.durLine':'Duración est. ≈ {d} d (~{w} sem, incl. desarrollo)','stat.perSex':'Por sexo — los sexos se analizan por separado, así que duplicá esto para correr ambos.',
     'stat.needDiff':'Ingresá dos medianas de vida distintas para dimensionar el experimento.','stat.okStd':'Factible con el diseño estándar (≤100 por condición — la norma del campo es 10 moscas × 10 viales).','stat.bigN':'Experimento grande: ~{n} moscas por condición, por encima de las 100 habituales. Considerá detectar un efecto más grande, menos condiciones, o aceptar menos potencia.',
+    'tpl.menu':'Plantillas de cruza','tip.tpl':'Pre-llená un registro nuevo a partir de un esquema de cruza frecuente (GAL4/UAS, balanceo).',
+    'tpl.title':'Plantillas de cruza','tpl.sub':'Esquemas de cruza frecuentes en Drosophila. Elegí uno para pre-llenar un registro nuevo — todo queda editable.','tpl.use':'Usar esta plantilla','tpl.note':'Solo son puntos de partida. Ajustá el genotipo, los marcadores y los cromosomas a tus stocks exactos.',
+    'tpl.gal4uas.name':'GAL4 / UAS (expresión dirigida)','tpl.gal4uas.desc':'Expresá un transgén UAS en el patrón de un driver GAL4. P0: driver GAL4 × UAS-transgén; la F1 que lleva ambos expresa el transgén.','tpl.gal4uas.notes':'Expresión binaria GAL4/UAS. P0: driver GAL4 x UAS-transgén (en cualquier sentido). Recolectá la F1 que lleva ambos. Corré un hermano solo-GAL4 y otro solo-UAS como controles. El driver y el transgén suelen estar en cromosomas distintos (";" los separa).',
+    'tpl.bal2.name':'Balancear sobre CyO (crom. 2)','tpl.bal2.desc':'Mantené un alelo del cromosoma 2 sobre el balanceador CyO (marcador de alas rizadas, Curly). P0: alelo/+ x stock balanceador; seleccioná la F1 balanceada.','tpl.bal2.notes':'Balanceá un alelo del crom. 2 sobre CyO. Seleccioná la F1 Curly (que lleva CyO) que también lleve el alelo, después cruzá hermanos para establecer un stock alelo/CyO. Los alelos letales quedan balanceados solos.',
+    'tpl.bal3.name':'Balancear sobre TM3 / TM6B (crom. 3)','tpl.bal3.desc':'Mantené un alelo del cromosoma 3 sobre un balanceador TM3 (Sb) o TM6B (Hu, Tb). P0: alelo/+ x stock balanceador; seleccioná la F1 balanceada.','tpl.bal3.notes':'Balanceá un alelo del crom. 3 sobre TM3 (Stubble) o TM6B (Humeral, Tubby). Seleccioná la F1 con el marcador del balanceador que lleve el alelo, después cruzá hermanos para establecer el stock.',
+    'tpl.wt.name':'Control wild-type','tpl.wt.desc':'Una línea wild-type de referencia para correr junto a los genotipos experimentales.','tpl.wt.notes':'Control wild-type de referencia (p. ej. w[1118] o Canton-S). Crialo en las mismas condiciones que las cohortes experimentales.',
     'calib.title':'Calibrar un genotipo','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
     'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y actualiza la corrección del genotipo. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta; el conteo es más preciso. Cada observación se pesa según su precisión y se combina con el modelo publicado, encogiendo hacia él mientras hay pocos datos — así una observación tosca casi no mueve la predicción. La corrección se muestra con su incertidumbre (±), pasa a <b>Calibrado</b> con <b>≥3 tandas independientes</b>, y se marca <b>Inconsistente</b> si las tandas discrepan más de lo que su error permite (en general un error de carga o un efecto de tanda).',
     'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Cross':'Día de armado de la cruza *','calib.t0Rough':'t₀ aproximado *',
@@ -3303,6 +3338,34 @@ function openForm(id){
   ov.classList.add('open');
 }
 function closeForm(){ document.getElementById('overlay').classList.remove('open'); newGenSourceId = null; }
+
+/* ---- Plantillas de esquemas de cruza (GAL4/UAS, balanceo): pre-llenan el form ---- */
+const CROSS_TEMPLATES = [
+  { id:'gal4uas', geno:'GAL4-driver ; UAS-transgene', obj:'cross' },
+  { id:'bal2',    geno:'mutation / CyO',              obj:'stock' },
+  { id:'bal3',    geno:'mutation / TM6B',             obj:'stock' },
+  { id:'wt',      geno:'w[1118]',                     obj:'' },
+];
+function openTemplates(){ closeMenu(); renderTemplates(); document.getElementById('tplOverlay').classList.add('open'); }
+function closeTemplates(){ document.getElementById('tplOverlay').classList.remove('open'); }
+function renderTemplates(){
+  document.getElementById('tplList').innerHTML = CROSS_TEMPLATES.map(tp=>
+    `<div class="tpl-card"><div class="tpl-h">${esc(t('tpl.'+tp.id+'.name'))}</div>`
+    + `<div class="tpl-d">${esc(t('tpl.'+tp.id+'.desc'))}</div>`
+    + `<code class="tpl-g">${esc(tp.geno)}</code>`
+    + `<button class="mini-btn" onclick="useTemplate('${tp.id}')">${esc(t('tpl.use'))}</button></div>`
+  ).join('');
+}
+function useTemplate(id){
+  const tp = CROSS_TEMPLATES.find(x=>x.id===id); if(!tp) return;
+  closeTemplates();
+  openForm();                                   // form nuevo (resetea y pone defaults)
+  document.getElementById('genotype').value = tp.geno;
+  document.getElementById('objective').value = tp.obj;
+  document.getElementById('fNotes').value = t('tpl.'+tp.id+'.notes');
+  onObjectiveChange();
+  document.getElementById('genotype').focus();
+}
 /* muestra el selector de estadio sólo si el objetivo es disección larval */
 function onObjectiveChange(){
   const obj = document.getElementById('objective').value;
