@@ -957,13 +957,19 @@ const I18N = {
     'card.info':'Details ▾','card.hideInfo':'Details ▴','info.adults':'Adult flies','info.container':'Container','info.notes':'Comments','info.empty':'No extra details yet — edit the record to add them.','tip.info':'Extra details: adult count, container and comments.',
     'calib.btn':'Calibrate','tip.calib':'Calibrate the development model for a specific genotype using a real observation.','obj.calibrate':'Calibration',
     'calib.title':'Calibrate a genotype','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
-    'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and adjusts. More calibrations (N) → higher confidence. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half. The count method is more accurate. The correction is only applied to predictions after <b>≥3 replicates</b> (independent vials); with 1–2 it stays provisional.',
+    'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and updates the genotype\'s correction. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half; the count method is more precise. Each observation is weighted by how precisely it was recorded and blended with the published model, shrinking toward it while data is thin — so one rough observation barely moves the prediction. The correction is shown with its uncertainty (±), reads as fully <b>Calibrated</b> at <b>≥3 independent batches</b>, and is flagged <b>Inconsistent</b> if batches disagree more than their error allows (usually a data-entry slip or a batch effect).',
     'calib.t0':'Egg-lay start (t₀) *','calib.t0Hint':'Keep the egg-lay window short (3–6 h): remove the parents afterwards so every egg is about the same age. That short window is what gives a good calibration.','calib.temp':'Incubation temperature (°C) *','calib.start':'Start calibration','calib.existing':'Calibrated genotypes','calib.none':'No calibrations yet.',
     'card.calibRecord':'Log eclosion (T₅₀)','calib.q':'Has about half of the flies eclosed?','calib.qHalf':'~ Half (record now)','calib.qPast':'Past half already','calib.qNotYet':'Not yet','calib.slower':'slower','calib.faster':'faster','calib.confLow':'low','calib.confMed':'medium','calib.confHigh':'high',
     'calib.adjusted':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype runs ~{pct}% {dir} than the base model.','calib.adjusted0':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype matches the base model.','card.calibResult':'Calibrated · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrated · matches base ({n} obs)','calib.pendingHint':'When ~half of the flies have eclosed, tap "Log eclosion (T₅₀)".',
     'calib.orMore':'or, for higher quality:','calib.byCount':'Log by count (more accurate)',
     'count.title':'Log by count','count.sub':'Count the eclosed flies at 2 or more time points; the app finds T₅₀ by interpolating when half was reached. More accurate than by eye.','count.total':'Expected total (N)','count.add':'Eclosed so far (cumulative)','count.addBtn':'Log now','count.empty':'No counts logged yet.','count.needMore':'Log the total (N) and at least two counts that bracket half.','count.t50':'T₅₀ ≈ {date} (interpolated)','count.save':'Save calibration',
     'calib.provisional':'Provisional calibration: {n} of {min} minimum replicates — not applied to the model yet (trend ~{pct}% {dir}).','calib.provisionalShort':'provisional {n}/{min}','card.calibProvisional':'Logged · provisional ({n}/{min}, not applied yet)',
+    'calib.state.calibrating':'Calibrating','calib.state.calibrated':'Calibrated','calib.state.inconsistent':'Inconsistent',
+    'calib.trend':'~{pct}% {dir}','calib.matchesBase':'matches the base model',
+    'calib.batchOne':'{n} batch','calib.batchMany':'{n} batches',
+    'calib.sMain':'{st} · {trend} (±{ci}%, {nb})',
+    'calib.sInconsistent':'Inconsistent · {n} batches disagree beyond their uncertainty — check for a data-entry error or a batch effect.',
+    'calib.warnSingle':'Only one batch so far — genotype and batch effects are still mixed. Add another independent cross to separate them.',
     // planificación
     'plan.title':'Planning','plan.titleEdit':'Edit planned record','plan.sub':'Upcoming events and reverse scheduling.',
     'plan.upcoming':'📆 Upcoming events','plan.backward':'⏪ Plan backward','plan.backwardSub':'When to set it up to reach a stage by a target date?',
@@ -1033,13 +1039,19 @@ const I18N = {
     'card.info':'Detalles ▾','card.hideInfo':'Detalles ▴','info.adults':'Moscas adultas','info.container':'Recipiente','info.notes':'Comentarios','info.empty':'Sin datos adicionales — editá el registro para agregarlos.','tip.info':'Datos adicionales: cantidad de adultos, recipiente y comentarios.',
     'calib.btn':'Calibrar','tip.calib':'Calibrá el modelo de desarrollo de un genotipo con una observación real.','obj.calibrate':'Calibración',
     'calib.title':'Calibrar un genotipo','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
-    'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y ajusta. Más calibraciones (N) → mayor confianza. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta. El conteo es más preciso. La corrección recién se aplica a las predicciones con <b>≥3 réplicas</b> (viales independientes); con 1–2 queda provisional.',
+    'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y actualiza la corrección del genotipo. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta; el conteo es más preciso. Cada observación se pesa según su precisión y se combina con el modelo publicado, encogiendo hacia él mientras hay pocos datos — así una observación tosca casi no mueve la predicción. La corrección se muestra con su incertidumbre (±), pasa a <b>Calibrado</b> con <b>≥3 tandas independientes</b>, y se marca <b>Inconsistente</b> si las tandas discrepan más de lo que su error permite (en general un error de carga o un efecto de tanda).',
     'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Hint':'Ventana de puesta corta (3–6 h): retirá los parentales después, para que todos los huevos tengan ~la misma edad. Esa ventana corta es lo que da una buena calibración.','calib.temp':'Temperatura de incubación (°C) *','calib.start':'Iniciar calibración','calib.existing':'Genotipos calibrados','calib.none':'Todavía no hay calibraciones.',
     'card.calibRecord':'Registrar eclosión (T₅₀)','calib.q':'¿Ya eclosionó ~la mitad de las moscas?','calib.qHalf':'~ La mitad (registrar ahora)','calib.qPast':'Ya pasó la mitad','calib.qNotYet':'Todavía no','calib.slower':'más lento','calib.faster':'más rápido','calib.confLow':'baja','calib.confMed':'media','calib.confHigh':'alta',
     'calib.adjusted':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo va ~{pct}% {dir} que el modelo base.','calib.adjusted0':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo coincide con el modelo base.','card.calibResult':'Calibrado · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrado · igual al base ({n} obs)','calib.pendingHint':'Cuando haya eclosionado ~la mitad, tocá "Registrar eclosión (T₅₀)".',
     'calib.orMore':'o, para más calidad:','calib.byCount':'Registrar por conteo (más preciso)',
     'count.title':'Registrar por conteo','count.sub':'Contá las moscas eclosionadas en 2 o más momentos; la app calcula el T₅₀ interpolando cuándo se llegó a la mitad. Más preciso que a ojo.','count.total':'Total esperado (N)','count.add':'Eclosionadas hasta ahora (acumulado)','count.addBtn':'Registrar','count.empty':'Todavía no hay conteos.','count.needMore':'Cargá el total (N) y al menos dos conteos que crucen la mitad.','count.t50':'T₅₀ ≈ {date} (interpolado)','count.save':'Guardar calibración',
     'calib.provisional':'Calibración provisional: {n} de {min} réplicas mínimas — todavía no se aplica al modelo (tendencia ~{pct}% {dir}).','calib.provisionalShort':'provisional {n}/{min}','card.calibProvisional':'Registrado · provisional ({n}/{min}, sin aplicar aún)',
+    'calib.state.calibrating':'Calibrando','calib.state.calibrated':'Calibrado','calib.state.inconsistent':'Inconsistente',
+    'calib.trend':'~{pct}% {dir}','calib.matchesBase':'igual al modelo base',
+    'calib.batchOne':'{n} tanda','calib.batchMany':'{n} tandas',
+    'calib.sMain':'{st} · {trend} (±{ci}%, {nb})',
+    'calib.sInconsistent':'Inconsistente · {n} tandas discrepan más de lo esperable — revisá si hay un error de carga o un efecto de tanda.',
+    'calib.warnSingle':'Una sola tanda por ahora — el genotipo y el efecto de tanda todavía están mezclados. Agregá otra cruza independiente para separarlos.',
     'plan.title':'Planificación','plan.titleEdit':'Editar registro planificado','plan.sub':'Agenda de próximos eventos y cálculo inverso de fechas.',
     'plan.upcoming':'📆 Próximos eventos','plan.backward':'⏪ Planificar hacia atrás','plan.backwardSub':'¿Cuándo montarlo para llegar a un estadio en una fecha objetivo?',
     'plan.expPh':'ej. Fenotipo del ojo (separá con comas)','plan.reachStage':'Quiero llegar a','plan.stEgg':'Embrión (puesta)','plan.stAdult':'Adultos / vírgenes (eclosión)',
@@ -1123,13 +1135,22 @@ function closeConfirm(){ document.getElementById('confirmOverlay').classList.rem
 function doConfirm(){ const cb = _confirmCb; closeConfirm(); if(cb) cb(); }
 
 /* ---- Calibración por genotipo: modal, estado y flujo de T50 ---- */
-function confLabel(conf){ return t(conf==='high'?'calib.confHigh':conf==='med'?'calib.confMed':'calib.confLow'); }
+function calibStateWord(state){ return t('calib.state.'+state); }
+function calibTrendText(ci){
+  if(ci.pct===0) return t('calib.matchesBase');
+  return t('calib.trend', { pct: Math.abs(ci.pct), dir: ci.pct>0 ? t('calib.slower') : t('calib.faster') });
+}
+function calibBatchesText(n){ return t(n===1 ? 'calib.batchOne' : 'calib.batchMany', { n }); }
+/* Línea principal de estado (Calibrando/Calibrado/Inconsistente + tendencia ± IC). */
 function calibStatusText(geno){
   const ci = calibInfo(geno); if(!ci) return '';
-  const dir = ci.pct>0 ? t('calib.slower') : (ci.pct<0 ? t('calib.faster') : '');
-  if(!ci.applied) return t('calib.provisional', { n: ci.n, min: CALIB_MIN, pct: Math.abs(ci.pct), dir });
-  if(ci.pct===0) return t('calib.adjusted0',{n:ci.n, conf:confLabel(ci.conf)});
-  return t('calib.adjusted',{n:ci.n, conf:confLabel(ci.conf), pct:Math.abs(ci.pct), dir});
+  if(ci.state==='inconsistent') return t('calib.sInconsistent', { n: ci.nBatch });
+  return t('calib.sMain', { st: calibStateWord(ci.state), trend: calibTrendText(ci), ci: ci.ciPct, nb: calibBatchesText(ci.nBatch) });
+}
+/* Aviso de tanda única (genotipo × lote confundidos); vacío si ya hay ≥2 tandas. */
+function calibWarnText(geno){
+  const ci = calibInfo(geno); if(!ci) return '';
+  return (ci.singleBatch && ci.state!=='inconsistent') ? t('calib.warnSingle') : '';
 }
 function openCalib(){
   const f = document.getElementById('calibForm'); f.reset();
@@ -1144,8 +1165,11 @@ function openCalib(){
 function closeCalib(){ document.getElementById('calibOverlay').classList.remove('open'); }
 function toggleCalibHelp(){ document.getElementById('calibHelp').classList.toggle('open'); }
 function renderCalibStatus(){
-  const g = document.getElementById('calibGeno').value;
-  document.getElementById('calibGenoStatus').textContent = g.trim() ? calibStatusText(g) : '';
+  const g = document.getElementById('calibGeno').value.trim();
+  const box = document.getElementById('calibGenoStatus');
+  if(!g){ box.innerHTML = ''; return; }
+  const main = calibStatusText(g), warn = calibWarnText(g);
+  box.innerHTML = main ? esc(main) + (warn ? `<br><span style="color:var(--coral)">${esc(warn)}</span>` : '') : '';
 }
 let _calibKeys = [];
 function renderCalibList(){
@@ -1155,11 +1179,9 @@ function renderCalibList(){
   if(!_calibKeys.length){ box.innerHTML = `<div class="hint">${t('calib.none')}</div>`; return; }
   box.innerHTML = _calibKeys.map((k,i)=>{
     const ci = calibInfo(k);
-    const dirTxt = ci.pct>0 ? t('calib.slower') : (ci.pct<0 ? t('calib.faster') : '');
-    const trend = ci.pct===0 ? '= base' : `~${Math.abs(ci.pct)}% ${dirTxt}`;
-    const detail = ci.applied
-      ? `${trend} · ${ci.n} obs · ${confLabel(ci.conf)}`
-      : `${t('calib.provisionalShort',{n:ci.n,min:CALIB_MIN})} · ${trend}`;
+    const detail = ci.state==='inconsistent'
+      ? `${calibStateWord('inconsistent')} · ${ci.nBatch}×`
+      : `${calibStateWord(ci.state)} · ${calibTrendText(ci)} · ±${ci.ciPct}% · ${ci.nBatch}×`;
     return `<div class="calib-row"><span class="cg" title="${esc(k)}">${esc(k)}</span><span class="cd">${esc(detail)}</span><button class="cx" title="${esc(t('task.remove'))}" onclick="clearCalibGeno(${i})">✕</button></div>`;
   }).join('');
 }
@@ -1185,7 +1207,7 @@ function recordT50(kind){
   const c = crosses.find(x=>x.id===_t50Id);
   if(c){
     const t50 = toLocalInput(new Date());
-    addCalibObs(c.genotype, c.crossDate, t50, c.temp, kind==='past' ? 'past' : 'eye');
+    addCalibObs(c.genotype, c.crossDate, t50, c.temp, kind==='past' ? 'past' : 'eye', c.id);
     c.calibDone = true; c.calibT50 = t50;
     save(crosses);
   }
@@ -1242,7 +1264,7 @@ function saveCountCalib(){
   if(!t50ms) return;
   const t50 = toLocalInput(new Date(t50ms));
   c.countTotal = tot;
-  addCalibObs(c.genotype, c.crossDate, t50, c.temp, 'count');
+  addCalibObs(c.genotype, c.crossDate, t50, c.temp, 'count', c.id);
   c.calibDone = true; c.calibT50 = t50;
   save(crosses);
   closeCount(); render();
@@ -1488,15 +1510,38 @@ function stageBounds(temp, factor=1){
 }
 
 /* ============================================================
-   Calibración por genotipo: ajusta el modelo de desarrollo con
-   observaciones reales. Cada observación aporta:
+   Calibración por genotipo (v2): estimador de encogimiento (shrinkage)
+   hacia el modelo base de literatura. Cada observación aporta:
      t0  = inicio de la puesta (ventana corta 3–6 h)
      t50 = momento en que eclosionó ~la mitad de las moscas
-   factor observado = tiempo real (t50−t0) / tiempo del modelo base a esa T.
-   El factor del genotipo = promedio de sus observaciones (>1 = más lento).
+   factor observado f_i = tiempo real (t50−t0) / tiempo del modelo base a esa T.
+
+   En vez de un promedio con pesos fijos por método, el v2:
+   - asigna a cada observación una INCERTIDUMBRE real σ (en días) según el método
+     de eclosión (conteo < a ojo < "ya pasó") y la ventana de puesta, y la
+     propaga a unidades de factor;
+   - trata la TANDA (cruza) como unidad experimental: combina las mediciones de
+     una misma tanda por 1/σ² y agrega un piso de varianza ENTRE tandas (σ_batch),
+     para que una sola tanda no domine la estimación;
+   - infla la incertidumbre si las tandas discrepan más de lo que su σ predice
+     (heterogeneidad, DerSimonian–Laird / I²) y marca el estado "Inconsistente";
+   - ENCOGE hacia el prior de literatura factor~Normal(1, τ²): con 0 obs el
+     resultado es el modelo base (factor 1); con datos precisos converge a ellos.
+   El factor aplicado es la media posterior (siempre segura de aplicar porque se
+   auto-regula); el estado sólo comunica la confianza.
+   Refs: meta-análisis de efectos aleatorios (DerSimonian & Laird 1986) + prior
+   normal; justificación biológica en docs/calibracion.md (§9.3: las constantes
+   térmicas no son transferibles entre genotipos — Wright/Powsner).
    ============================================================ */
 const CALIB_KEY = 'drosotrack.calib.v1';
-const CALIB_MIN = 3;   // réplicas mínimas para aplicar la corrección al modelo (menos = provisional)
+const CALIB_MIN = 3;   // tandas independientes para el estado "Calibrado" (menos = "Calibrando")
+// Incertidumbre del T50 (en DÍAS) según cómo se registró la eclosión.
+const CALIB_SIGMA_T50 = { count: 0.15, eye: 0.5, past: 1.0 };
+// σ biológico ENTRE tandas (unidades de factor): variabilidad de tanda a tanda
+// (comida, densidad, microclima). Impide que una sola tanda arrastre la estimación.
+const CALIB_SIGMA_BATCH = 0.08;
+// Prior de literatura: factor ~ Normal(1, τ²). τ = dispersión típica entre genotipos.
+const CALIB_PRIOR_SD = 0.15;
 let _calibCache = null;
 function loadCalib(){ if(_calibCache) return _calibCache; try{ _calibCache = JSON.parse(localStorage.getItem(CALIB_KEY)) || {}; }catch(e){ _calibCache = {}; } return _calibCache; }
 function saveCalib(o){ _calibCache = o; localStorage.setItem(CALIB_KEY, JSON.stringify(o)); }
@@ -1506,26 +1551,71 @@ function obsFactor(o){
   const baseDays = totalDays(o.temp);   // modelo base (factor 1) a esa temperatura
   return (observedDays>0 && baseDays>0) ? observedDays/baseDays : null;
 }
-/* resumen de calibración de un genotipo: {n, factor, pct, conf} o null si no hay */
-/* peso por método: el conteo (T50 interpolado) es más preciso que "a ojo" o "ya pasó" */
-function obsWeight(o){ const m = o.method || (o.late ? 'past' : 'eye'); return m==='count' ? 1 : m==='past' ? 0.35 : 0.6; }
-function calibInfo(geno){
-  const all = (loadCalib()[normGeno(geno)] || []).filter(o=>{ const f=obsFactor(o); return f!=null && isFinite(f) && f>0; });
-  if(!all.length) return null;
-  let wf=0, w=0;
-  all.forEach(o=>{ const ww=obsWeight(o); wf += ww*obsFactor(o); w += ww; });
-  const factor = wf/w;                                    // promedio ponderado por calidad del método
-  const n = all.length;
-  const applied = n >= CALIB_MIN;                         // recién se corrige el modelo con ≥3 réplicas
-  const conf = n>=5 ? 'high' : (n>=3 ? 'med' : 'low');
-  return { n, factor, pct: Math.round((factor-1)*100), conf, applied };
+/* σ del factor de una observación: (método del T50 ⊕ ventana de puesta) en días,
+   propagado a unidades de factor dividiendo por el tiempo base a esa T. */
+function obsSigmaFactor(o){
+  const baseDays = totalDays(o.temp); if(!(baseDays>0)) return null;
+  const method = o.method || (o.late ? 'past' : 'eye');
+  const sT50 = CALIB_SIGMA_T50[method] != null ? CALIB_SIGMA_T50[method] : CALIB_SIGMA_T50.eye;
+  const windowH = o.windowH>0 ? o.windowH : 6;          // ventana de puesta (h); 6 h si no se registró
+  const sT0 = (windowH/24) / Math.sqrt(12);             // σ del punto medio de una ventana uniforme
+  return Math.sqrt(sT0*sT0 + sT50*sT50) / baseDays;
 }
-/* factor a aplicar al modelo: solo si hay réplicas suficientes; si no, 1 (modelo base) */
-function calibFactorValue(geno){ const c = calibInfo(geno); return (c && c.applied) ? c.factor : 1; }
-function addCalibObs(geno, t0, t50, temp, method){
+/* clave de tanda: cada cruza es una unidad experimental. Las observaciones viejas
+   sin batch usan su t0 como proxy (dos con el mismo t0 = la misma tanda). */
+function obsBatch(o){ return o.batch || o.t0 || 'b'; }
+/* resumen de calibración de un genotipo, o null si no hay observaciones válidas.
+   Devuelve {n, nBatch, factor, pct, sdPost, ciPct, state, singleBatch, conf}. */
+function calibInfo(geno){
+  const raw = (loadCalib()[normGeno(geno)] || [])
+    .map(o=>({ o, f: obsFactor(o), s: obsSigmaFactor(o) }))
+    .filter(x => x.f!=null && isFinite(x.f) && x.f>0 && x.s>0 && isFinite(x.s));
+  if(!raw.length) return null;
+
+  // 1) agrupar por tanda; dentro de la tanda combinar mediciones por 1/σ²
+  const groups = {};
+  raw.forEach(x=>{ const k=obsBatch(x.o); (groups[k]=groups[k]||[]).push(x); });
+  const batches = Object.values(groups).map(list=>{
+    let sw=0, swf=0; list.forEach(x=>{ const w=1/(x.s*x.s); sw+=w; swf+=w*x.f; });
+    return { f: swf/sw, varTot: 1/sw + CALIB_SIGMA_BATCH*CALIB_SIGMA_BATCH };   // + σ² entre tandas
+  });
+  const nObs = raw.length, nBatch = batches.length, df = nBatch-1;
+
+  // 2) media data-only ponderada por 1/varTot y heterogeneidad (Cochran Q)
+  let W=0, WF=0, sumW2=0;
+  batches.forEach(b=>{ const w=1/b.varTot; W+=w; WF+=w*b.f; sumW2+=w*w; });
+  const fData = WF/W;
+  let Q=0; batches.forEach(b=>{ const w=1/b.varTot; Q += w*(b.f-fData)*(b.f-fData); });
+  const tau2 = df>=1 ? Math.max(0, (Q - df) / (W - sumW2/W)) : 0;   // varianza entre tandas (DerSimonian–Laird)
+  const i2 = (df>=1 && Q>0) ? Math.max(0, (Q - df) / Q) : 0;
+  const inconsistent = nBatch>=2 && i2 > 0.5;                       // las tandas discrepan más de lo esperable
+
+  // 3) re-agrupar con τ² y encoger hacia el prior N(1, τ_prior²)
+  let W2=0, WF2=0; batches.forEach(b=>{ const w=1/(b.varTot+tau2); W2+=w; WF2+=w*b.f; });
+  const wPrior = 1/(CALIB_PRIOR_SD*CALIB_PRIOR_SD);
+  const wSum = wPrior + W2;
+  const factor = (wPrior*1 + WF2) / wSum;                           // media posterior (0 obs ⇒ 1)
+  const sdPost = Math.sqrt(1/wSum);
+
+  // 4) estado y confianza, por nº de tandas independientes
+  const state = inconsistent ? 'inconsistent' : (nBatch>=CALIB_MIN ? 'calibrated' : 'calibrating');
+  const conf = nBatch>=5 ? 'high' : (nBatch>=3 ? 'med' : 'low');
+  return {
+    n: nObs, nBatch, factor, pct: Math.round((factor-1)*100),
+    sdPost, ciPct: Math.round(1.96*sdPost*100),                     // semiancho del IC 95 %, en puntos %
+    state, singleBatch: nBatch<2, conf,
+  };
+}
+/* factor a aplicar al modelo: la media posterior (con 0 obs ⇒ 1 = modelo base).
+   El encogimiento la mantiene cerca de 1 mientras los datos no justifiquen más. */
+function calibFactorValue(geno){ const c = calibInfo(geno); return c ? c.factor : 1; }
+function addCalibObs(geno, t0, t50, temp, method, batch, windowH){
   const all = loadCalib();
   const key = normGeno(geno);
-  (all[key] = all[key] || []).push({ t0, t50, temp, method: method || 'eye' });
+  const rec = { t0, t50, temp, method: method || 'eye' };
+  if(batch) rec.batch = batch;
+  if(windowH>0) rec.windowH = windowH;
+  (all[key] = all[key] || []).push(rec);
   saveCalib(all);
 }
 /* T50 por conteo: interpola el momento en que la eclosión acumulada cruza N/2 */
@@ -1901,12 +1991,9 @@ function card(cross){
     const tlBtn = `<div class="btn-row"><button class="timeline-btn" onclick="toggleTL(this)" data-tip="${esc(t('tip.timeline'))}">${t('card.viewTimeline')}</button></div>`;
     if(cross.calibDone){
       const ci = calibInfo(cross.genotype);
-      let res = '';
-      if(ci){
-        if(!ci.applied) res = t('card.calibProvisional', {n:ci.n, min:CALIB_MIN});
-        else res = ci.pct===0 ? t('card.calibResult0',{n:ci.n}) : t('card.calibResult',{pct:Math.abs(ci.pct), dir: ci.pct>0?t('calib.slower'):t('calib.faster'), n:ci.n});
-      }
-      actionHtml = `<div class="calib-done${ci&&!ci.applied?' prov':''}">✓ ${esc(res)}</div>${tlBtn}${tlBlock}`;
+      const res = ci ? calibStatusText(cross.genotype) : '';
+      const muted = ci && ci.state!=='calibrated' ? ' prov' : '';   // "Calibrando"/"Inconsistente" → estilo apagado
+      actionHtml = `<div class="calib-done${muted}">✓ ${esc(res)}</div>${tlBtn}${tlBlock}`;
     } else {
       actionHtml = `<button class="timeline-btn act-lav" onclick="openT50('${cross.id}')" data-tip="${esc(t('calib.pendingHint'))}">${t('card.calibRecord')}</button>${tlBtn}${tlBlock}`;
     }

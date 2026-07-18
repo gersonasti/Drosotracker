@@ -46,10 +46,11 @@ const code = [
   stub,
   grabConst('T0'), grabConst('DEGREE_DAYS'), grabConst('STAGES'), grabConst('REF_TOTAL'),
   grabConst('CALIB_KEY'), grabConst('CALIB_MIN'),
+  grabConst('CALIB_SIGMA_T50'), grabConst('CALIB_SIGMA_BATCH'), grabConst('CALIB_PRIOR_SD'),
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('ensureAging'), grabFn('kmCurve'), grabFn('computeT50FromCounts'),
-  grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsWeight'), grabFn('calibInfo'), grabFn('calibFactorValue'),
+  grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, saveCalib, calibInfo, calibFactorValue, obsWeight, normGeno, obsFactor };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, saveCalib, calibInfo, calibFactorValue, obsSigmaFactor, obsBatch, normGeno, obsFactor };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -164,40 +165,83 @@ group('T50 por conteo (interpolación al 50 %)', () => {
   ok(t50([{ t: D(9), n: 20 }, { t: D(10), n: 80 }], 0) === null, 'sin total ⇒ null');
 });
 
-/* ============================ 4) CALIBRACIÓN POR GENOTIPO ============================ */
-group('Calibración por genotipo', () => {
+/* ============================ 4) CALIBRACIÓN POR GENOTIPO (v2: shrinkage) ============================ */
+group('Calibración v2 — σ por observación (método + ventana)', () => {
   const T0d = Date.parse('2025-01-01T00:00');
-  // observación con factor F a 25 °C (base = 10 d): t50 − t0 = F·10 días
-  const base25 = M.totalDays(25);   // base recalibrada a 25 °C (≈8.80 d); factor observado = F
-  const obs = (F, method) => ({ t0: '2025-01-01T00:00', t50: new Date(T0d + F * base25 * 86400000).toISOString(), temp: 25, method });
+  const base25 = M.totalDays(25);   // base a 25 °C (≈8.80 d); con esta construcción, factor observado = F
+  // cada obs en su propia TANDA (batch) salvo que se pase una compartida
+  const obs = (F, method, batch) => ({ t0: '2025-01-01T00:00', t50: new Date(T0d + F * base25 * 86400000).toISOString(), temp: 25, method, batch });
 
-  ok(M.obsWeight({ method: 'count' }) === 1, 'peso: por conteo = 1');
-  ok(M.obsWeight({ method: 'eye' }) === 0.6, 'peso: a ojo = 0.6');
-  ok(M.obsWeight({ method: 'past' }) === 0.35, 'peso: "ya pasó" = 0.35');
-  ok(M.obsWeight({ late: true }) === 0.35, 'peso: late (dato viejo) = 0.35');
-  ok(M.obsWeight({}) === 0.6, 'peso por defecto = 0.6');
-
-  ok(near(M.obsFactor(obs(1.1, 'eye')), 1.1, 1e-6), 'obsFactor = observado / base (1.1)');
+  ok(near(M.obsFactor(obs(1.1, 'eye', 'b1')), 1.1, 1e-6), 'obsFactor = observado / base (1.1)');
   ok(M.normGeno('  w[1118]   ;  CyO ') === 'w[1118] ; CyO', 'normGeno recorta y colapsa espacios');
 
-  // regla de ≥3 réplicas (CALIB_MIN)
-  M.saveCalib({ G: [obs(1.1, 'eye'), obs(1.1, 'eye')] });
-  ok(M.calibInfo('G').applied === false && M.calibFactorValue('G') === 1, '2 obs: NO se aplica (factor 1 = modelo base)');
+  // orden de precisión: conteo < a ojo < "ya pasó" (menor σ = más preciso)
+  const sC = M.obsSigmaFactor(obs(1, 'count', 'b')), sE = M.obsSigmaFactor(obs(1, 'eye', 'b')), sP = M.obsSigmaFactor(obs(1, 'past', 'b'));
+  ok(sC < sE && sE < sP, 'σ: conteo < a ojo < "ya pasó"');
+  // valor del conteo: √(σ_t0² + σ_t50²)/base, con σ_t50=0.15 d y ventana 6 h (σ_t0=(6/24)/√12)
+  const sT0 = (6 / 24) / Math.sqrt(12), sExpect = Math.sqrt(sT0 * sT0 + 0.15 * 0.15) / base25;
+  ok(near(sC, sExpect, 1e-6), 'σ(conteo) = √(σ_t0² + σ_t50²) / base');
+  // ventana de puesta más corta ⇒ menos incertidumbre
+  ok(M.obsSigmaFactor({ t0: '2025-01-01T00:00', t50: new Date(T0d + base25 * 86400000).toISOString(), temp: 25, method: 'count', windowH: 3 })
+     < M.obsSigmaFactor({ t0: '2025-01-01T00:00', t50: new Date(T0d + base25 * 86400000).toISOString(), temp: 25, method: 'count', windowH: 12 }),
+     'ventana de puesta más corta ⇒ σ menor');
 
-  M.saveCalib({ G: [obs(1.1, 'eye'), obs(1.1, 'eye'), obs(1.1, 'eye')] });
+  ok(M.obsBatch({ batch: 'x', t0: 'y' }) === 'x', 'obsBatch usa el id de tanda si existe');
+  ok(M.obsBatch({ t0: 'y' }) === 'y', 'obsBatch cae al t0 como proxy si no hay batch');
+});
+
+group('Calibración v2 — encogimiento (shrinkage) hacia el prior', () => {
+  const T0d = Date.parse('2025-01-01T00:00');
+  const base25 = M.totalDays(25);
+  const obs = (F, method, batch) => ({ t0: '2025-01-01T00:00', t50: new Date(T0d + F * base25 * 86400000).toISOString(), temp: 25, method, batch });
+
+  ok(M.calibInfo('desconocido') === null && M.calibFactorValue('desconocido') === 1, 'sin datos → null y factor 1 (modelo base)');
+
+  // 1 tanda por conteo con F=1.3 → posterior ENTRE 1 y 1.3 (encogido), no 1.3
+  M.saveCalib({ G: [obs(1.3, 'count', 'b1')] });
+  const c1 = M.calibInfo('G');
+  ok(c1.factor > 1 && c1.factor < 1.3, '1 obs de 1.3 → posterior encogido dentro de (1, 1.3)');
+  ok(near(c1.factor, 1.231, 2e-3), 'valor del posterior con 1 tanda (conteo) ≈ 1.231');
+  ok(c1.state === 'calibrating' && c1.singleBatch === true, '1 tanda → estado "Calibrando" + aviso de tanda única');
+  ok(near(M.calibFactorValue('G'), c1.factor, 1e-9), 'calibFactorValue devuelve la media posterior');
+
+  // 3 tandas por conteo con F=1.3 → menos encogimiento (posterior más cerca de 1.3) y "Calibrado"
+  M.saveCalib({ G: [obs(1.3, 'count', 'b1'), obs(1.3, 'count', 'b2'), obs(1.3, 'count', 'b3')] });
   const c3 = M.calibInfo('G');
-  ok(c3.applied === true && near(c3.factor, 1.1, 1e-6) && c3.pct === 10, '3 obs: se aplica (factor 1.1 ≈ 10% más lento)');
-  ok(c3.conf === 'med', '3–4 obs → confianza media');
-  ok(near(M.calibFactorValue('G'), 1.1, 1e-6), 'calibFactorValue aplica el factor con ≥3 obs');
+  ok(c3.factor > c1.factor, '3 tandas encogen menos que 1 (posterior más cerca de los datos)');
+  ok(near(c3.factor, 1.273, 3e-3), 'valor del posterior con 3 tandas (conteo) ≈ 1.273');
+  ok(c3.state === 'calibrated' && c3.singleBatch === false, '3 tandas independientes → "Calibrado"');
+  ok(c3.conf === 'med' && c3.nBatch === 3, 'confianza media con 3 tandas; nBatch = 3');
 
-  M.saveCalib({ G: Array.from({ length: 5 }, () => obs(1.1, 'eye')) });
-  ok(M.calibInfo('G').conf === 'high', '≥5 obs → confianza alta');
+  // método más preciso encoge menos: 1 conteo (c1, ya capturado) pulla más que 1 "a ojo" (mismo F)
+  M.saveCalib({ E: [obs(1.3, 'eye', 'b1')] });
+  ok(c1.factor > M.calibInfo('E').factor, 'conteo pulla más hacia los datos que "a ojo" (mismo F, 1 tanda)');
 
-  // promedio PONDERADO por método: (1·1.2 + 1·1.2 + 0.6·1.0)/(1+1+0.6) = 3.0/2.6
-  M.saveCalib({ G: [obs(1.2, 'count'), obs(1.2, 'count'), obs(1.0, 'eye')] });
-  ok(near(M.calibInfo('G').factor, 3.0 / 2.6, 1e-6), 'factor = promedio ponderado por calidad del método');
+  // 5 tandas → confianza alta
+  M.saveCalib({ H: [1, 2, 3, 4, 5].map(i => obs(1.2, 'count', 'b' + i)) });
+  ok(M.calibInfo('H').conf === 'high', '≥5 tandas → confianza alta');
 
-  ok(M.calibInfo('desconocido') === null && M.calibFactorValue('desconocido') === 1, 'genotipo sin datos → modelo base');
+  // F=1.0 (igual al base) → pct 0 y factor ≈ 1
+  M.saveCalib({ B: [obs(1.0, 'count', 'b1'), obs(1.0, 'count', 'b2'), obs(1.0, 'count', 'b3')] });
+  ok(M.calibInfo('B').pct === 0 && near(M.calibInfo('B').factor, 1, 1e-6), 'observaciones = base → factor 1, pct 0');
+});
+
+group('Calibración v2 — heterogeneidad (estado "Inconsistente")', () => {
+  const T0d = Date.parse('2025-01-01T00:00');
+  const base25 = M.totalDays(25);
+  const obs = (F, method, batch) => ({ t0: '2025-01-01T00:00', t50: new Date(T0d + F * base25 * 86400000).toISOString(), temp: 25, method, batch });
+
+  // 3 tandas precisas que DISCREPAN (1.0 / 1.5 / 1.0) → I² alto → "Inconsistente"
+  M.saveCalib({ D: [obs(1.0, 'count', 'b1'), obs(1.5, 'count', 'b2'), obs(1.0, 'count', 'b3')] });
+  ok(M.calibInfo('D').state === 'inconsistent', 'tandas que discrepan más que su error → "Inconsistente"');
+
+  // 3 tandas consistentes (1.1 a ojo) → NO inconsistente (dentro de su σ), "Calibrado"
+  M.saveCalib({ C: [obs(1.1, 'eye', 'b1'), obs(1.1, 'eye', 'b2'), obs(1.1, 'eye', 'b3')] });
+  ok(M.calibInfo('C').state === 'calibrated', 'tandas consistentes → "Calibrado", no inconsistente');
+
+  // observaciones de una MISMA tanda (mismo batch) no cuentan como réplicas independientes
+  M.saveCalib({ S: [obs(1.2, 'count', 'same'), obs(1.2, 'count', 'same'), obs(1.2, 'count', 'same')] });
+  ok(M.calibInfo('S').nBatch === 1 && M.calibInfo('S').singleBatch === true, '3 obs de una sola tanda ⇒ nBatch 1 (no son independientes)');
 });
 
 /* ============================ resumen ============================ */
