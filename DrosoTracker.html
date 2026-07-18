@@ -504,6 +504,21 @@
   .model-notice b{color:var(--ink)}
   .model-notice .mn-x{flex:none;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:.9rem;padding:2px 7px;border-radius:8px;font-weight:700}
   .model-notice .mn-x:hover{background:var(--peach-soft);color:var(--coral)}
+  /* Comparar cohortes (KM + log-rank) */
+  .cmp-row{display:flex;align-items:center;gap:10px;padding:8px 11px;background:var(--bg-1);border-radius:11px;margin-bottom:6px;font-size:.84rem;cursor:pointer}
+  .cmp-row input{width:16px;height:16px;flex:none;accent-color:var(--lav)}
+  .cmp-name{font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cmp-meta{flex:none;color:var(--ink-soft);white-space:nowrap;font-size:.78rem}
+  .cmp-chart{background:var(--bg-1);border-radius:14px;padding:10px 8px 4px;margin:14px 0 10px}
+  .cmp-legend{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+  .cmp-leg{display:flex;align-items:center;gap:8px;font-size:.82rem}
+  .cmp-sw{width:13px;height:13px;border-radius:4px;flex:none}
+  .cmp-lg-name{font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cmp-lg-med{flex:none;color:var(--ink-soft);white-space:nowrap;font-size:.78rem}
+  .cmp-lr{background:var(--bg-1);border-radius:12px;padding:11px 14px;font-size:.86rem;font-weight:700;color:var(--ink);line-height:1.45;text-align:center}
+  .cmp-lr span{font-weight:500;color:var(--ink-soft);font-size:.82rem}
+  .cmp-lr.sig{background:var(--mint-soft);color:#3fae8c}
+  .cmp-lr.sig span{color:#3fae8c}
   /* Google Calendar */
   .gcal-on{color:#3fae8c;font-weight:700}
   .gcal-off{color:var(--ink-soft);font-weight:700}
@@ -530,6 +545,7 @@
         <div class="menu-pop" id="dataMenu">
           <button onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">🗓 Plan</button>
           <button onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
+          <button onclick="openCompare()" data-i18n="cmp.menu" data-tip-key="tip.cmp">Compare cohorts (KM)</button>
           <button onclick="openGcal()" data-i18n="gcal.menu" data-tip-key="tip.gcal">📅 Google Calendar</button>
           <div class="menu-sep"></div>
           <button onclick="exportJSON()" data-i18n="menu.exportBackup" data-tip-key="tip.exportBackup">⬇ Export backup (JSON)</button>
@@ -833,6 +849,19 @@
   </div>
 </div>
 
+<!-- Comparar cohortes de envejecimiento: superponer curvas KM + log-rank -->
+<div class="overlay" id="compareOverlay" onclick="if(event.target===this)closeCompare()">
+  <div class="modal">
+    <div class="calib-head"><h2 data-i18n="cmp.title">Compare cohorts</h2></div>
+    <div class="sub" data-i18n="cmp.sub">Overlay survival curves (Kaplan–Meier) and run a log-rank test between the selected cohorts.</div>
+    <div id="compareList"></div>
+    <div id="compareResult"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" onclick="closeCompare()" data-i18n="cmp.close">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Registrar el T50 (eclosión de la mitad) sin pedir cálculos -->
 <div class="overlay" id="t50Overlay" onclick="if(event.target===this)closeT50()">
   <div class="modal confirm-modal">
@@ -970,6 +999,10 @@ const I18N = {
     'form.adults':'Adult flies <span class="opt">(optional)</span>','form.adultsHint':'Total number, and optionally females/males separately.','form.adultsTotalPh':'total','form.container':'Container <span class="opt">(optional)</span>','form.nContTitle':'Number of containers','cont.vial':'Vial','cont.bottle':'Bottle','cont.plate':'Plate','form.notes':'Comments <span class="opt">(optional)</span>','form.notesPh':'Notes about this record…',
     'card.info':'Details ▾','card.hideInfo':'Details ▴','info.adults':'Adult flies','info.container':'Container','info.notes':'Comments','info.empty':'No extra details yet — edit the record to add them.','tip.info':'Extra details: adult count, container and comments.',
     'calib.btn':'Calibrate','tip.calib':'Calibrate the development model for a specific genotype using a real observation.','obj.calibrate':'Calibration',
+    'cmp.menu':'Compare cohorts (KM)','tip.cmp':'Overlay the survival curves of several aging cohorts and run a log-rank test between them.',
+    'cmp.title':'Compare cohorts','cmp.sub':'Overlay survival curves (Kaplan–Meier) and run a log-rank test between the selected cohorts.','cmp.close':'Close',
+    'cmp.none':'No aging cohorts yet. Set up a record with a defined cohort (N) to compare survival.','cmp.pick':'Select at least one cohort above.','cmp.pick2':'Select 2 or more cohorts to run the log-rank test.','cmp.noEvents':'Not enough death events among the selected cohorts to run the test.',
+    'cmp.med':'median {d} d','cmp.medNone':'median: >50% alive','cmp.logrank':'Log-rank:  χ² = {chi},  df = {df},  p = {p}','cmp.sig':'Survival differs significantly between cohorts (p < 0.05).','cmp.nosig':'No significant difference in survival (p ≥ 0.05).',
     'calib.title':'Calibrate a genotype','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
     'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and updates the genotype\'s correction. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half; the count method is more precise. Each observation is weighted by how precisely it was recorded and blended with the published model, shrinking toward it while data is thin — so one rough observation barely moves the prediction. The correction is shown with its uncertainty (±), reads as fully <b>Calibrated</b> at <b>≥3 independent batches</b>, and is flagged <b>Inconsistent</b> if batches disagree more than their error allows (usually a data-entry slip or a batch effect).',
     'calib.t0':'Egg-lay start (t₀) *','calib.t0Cross':'Cross set-up day *','calib.t0Rough':'Approximate t₀ *',
@@ -1058,6 +1091,10 @@ const I18N = {
     'form.adults':'Moscas adultas <span class="opt">(opcional)</span>','form.adultsHint':'Número total, y opcionalmente hembras y machos por separado.','form.adultsTotalPh':'total','form.container':'Recipiente <span class="opt">(opcional)</span>','form.nContTitle':'Cantidad de recipientes','cont.vial':'Vial','cont.bottle':'Botella','cont.plate':'Placa','form.notes':'Comentarios <span class="opt">(opcional)</span>','form.notesPh':'Notas sobre este registro…',
     'card.info':'Detalles ▾','card.hideInfo':'Detalles ▴','info.adults':'Moscas adultas','info.container':'Recipiente','info.notes':'Comentarios','info.empty':'Sin datos adicionales — editá el registro para agregarlos.','tip.info':'Datos adicionales: cantidad de adultos, recipiente y comentarios.',
     'calib.btn':'Calibrar','tip.calib':'Calibrá el modelo de desarrollo de un genotipo con una observación real.','obj.calibrate':'Calibración',
+    'cmp.menu':'Comparar cohortes (KM)','tip.cmp':'Superponé las curvas de supervivencia de varias cohortes de envejecimiento y corré un test de log-rank entre ellas.',
+    'cmp.title':'Comparar cohortes','cmp.sub':'Superponé las curvas de supervivencia (Kaplan–Meier) y corré un test de log-rank entre las cohortes elegidas.','cmp.close':'Cerrar',
+    'cmp.none':'Todavía no hay cohortes de envejecimiento. Definí un registro con una cohorte (N) para comparar supervivencia.','cmp.pick':'Elegí al menos una cohorte arriba.','cmp.pick2':'Elegí 2 o más cohortes para correr el test de log-rank.','cmp.noEvents':'No hay suficientes muertes entre las cohortes elegidas para correr el test.',
+    'cmp.med':'mediana {d} d','cmp.medNone':'mediana: >50% vivas','cmp.logrank':'Log-rank:  χ² = {chi},  df = {df},  p = {p}','cmp.sig':'La supervivencia difiere significativamente entre cohortes (p < 0.05).','cmp.nosig':'Sin diferencia significativa en la supervivencia (p ≥ 0.05).',
     'calib.title':'Calibrar un genotipo','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
     'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y actualiza la corrección del genotipo. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta; el conteo es más preciso. Cada observación se pesa según su precisión y se combina con el modelo publicado, encogiendo hacia él mientras hay pocos datos — así una observación tosca casi no mueve la predicción. La corrección se muestra con su incertidumbre (±), pasa a <b>Calibrado</b> con <b>≥3 tandas independientes</b>, y se marca <b>Inconsistente</b> si las tandas discrepan más de lo que su error permite (en general un error de carga o un efecto de tanda).',
     'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Cross':'Día de armado de la cruza *','calib.t0Rough':'t₀ aproximado *',
@@ -2161,6 +2198,148 @@ function survChart(km){
     <polyline points="${poly.trim()}" fill="none" stroke="#d96fa0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
     <text x="${pad}" y="${H-1}" font-size="8" fill="#8b86a3">${t('surv.day0')}</text>
     <text x="${W-pad}" y="${H-1}" font-size="8" fill="#8b86a3" text-anchor="end">${t('surv.dayN',{n:Math.round(maxDay)})}</text>
+  </svg></div>`;
+}
+
+/* ===== Comparación de cohortes: log-rank (Mantel–Haenszel) + p-valor χ² ===== */
+/* log Γ por Lanczos (para la gamma incompleta) */
+function lgamma(x){
+  const c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,
+           -176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if(x<0.5) return Math.log(Math.PI/Math.sin(Math.PI*x)) - lgamma(1-x);
+  x-=1; let a=c[0]; const tt=x+7.5;
+  for(let i=1;i<9;i++) a+=c[i]/(x+i);
+  return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(tt)-tt+Math.log(a);
+}
+/* Q(s,x) = gamma incompleta superior regularizada (serie / fracción continua, Numerical Recipes) */
+function gammincQ(s,x){
+  if(x<=0) return 1;
+  const gln=lgamma(s);
+  if(x < s+1){                                   // serie para P, Q=1-P
+    let sum=1/s, term=1/s;
+    for(let k=1;k<300;k++){ term*=x/(s+k); sum+=term; if(Math.abs(term)<Math.abs(sum)*1e-14) break; }
+    return 1 - sum*Math.exp(-x+s*Math.log(x)-gln);
+  }
+  let b=x+1-s, c2=1e300, d2=1/b, h=d2;            // fracción continua para Q
+  for(let i=1;i<300;i++){
+    const an=-i*(i-s); b+=2; d2=an*d2+b; if(Math.abs(d2)<1e-300)d2=1e-300;
+    c2=b+an/c2; if(Math.abs(c2)<1e-300)c2=1e-300; d2=1/d2; const del=d2*c2; h*=del;
+    if(Math.abs(del-1)<1e-14) break;
+  }
+  return h*Math.exp(-x+s*Math.log(x)-gln);
+}
+/* p-valor de cola superior de una χ² con df grados de libertad */
+function chiSqUpper(chi2, df){ return (chi2>0 && df>0) ? gammincQ(df/2, chi2/2) : 1; }
+/* resolver Vr·x = d (eliminación gaussiana con pivoteo) y devolver dᵀ·x = dᵀ·Vr⁻¹·d */
+function quadFormSolve(V, d){
+  const m=d.length, A=V.map((row,i)=>row.concat([d[i]]));
+  for(let col=0; col<m; col++){
+    let piv=col; for(let r=col+1;r<m;r++) if(Math.abs(A[r][col])>Math.abs(A[piv][col])) piv=r;
+    if(Math.abs(A[piv][col])<1e-12) return NaN;
+    [A[col],A[piv]]=[A[piv],A[col]];
+    for(let r=0;r<m;r++){ if(r===col) continue; const f=A[r][col]/A[col][col];
+      for(let k=col;k<=m;k++) A[r][k]-=f*A[col][k]; }
+  }
+  let q=0; for(let i=0;i<m;i++) q += d[i]*(A[i][m]/A[i][i]);
+  return q;
+}
+/* serie de eventos de una cohorte en EDAD (días desde eclosión): {times:[{day,d,c}], n0} */
+function cohortSeries(cross){
+  const a=ensureAging(cross), ecl=computeState(cross).eclosionDate, byDay={};
+  a.events.forEach(e=>{
+    const dt=new Date(e.date).getTime(); if(!isFinite(dt)||!ecl) return;
+    const day=Math.max((dt-ecl)/86400000,0), k=day.toFixed(3);
+    (byDay[k]=byDay[k]||{day,d:0,c:0}); byDay[k].d+=e.deaths||0; byDay[k].c+=e.censored||0;
+  });
+  return { times:Object.values(byDay).sort((x,y)=>x.day-y.day), n0:a.startN||0 };
+}
+/* Log-rank para G≥2 grupos (cada uno = {times,n0}). Devuelve {chi2, df, p, O, E} o null. */
+function logRankTest(groups){
+  const G=groups.length; if(G<2) return null;
+  const dayset=new Set();
+  groups.forEach(g=> g.times.forEach(t=>{ if(t.d>0) dayset.add(t.day); }));
+  const days=[...dayset].sort((a,b)=>a-b); if(!days.length) return null;
+  const O=new Array(G).fill(0), E=new Array(G).fill(0), V=Array.from({length:G},()=>new Array(G).fill(0));
+  days.forEach(D=>{
+    const ng=new Array(G).fill(0), dg=new Array(G).fill(0); let n=0, dtot=0;
+    for(let j=0;j<G;j++){
+      let atRisk=groups[j].n0, dAtD=0;
+      groups[j].times.forEach(t=>{ if(t.day<D) atRisk-=(t.d+t.c); else if(t.day===D) dAtD=t.d; });
+      ng[j]=Math.max(atRisk,0); dg[j]=dAtD; n+=ng[j]; dtot+=dAtD;
+    }
+    if(n<=0||dtot<=0) return;
+    for(let j=0;j<G;j++){ O[j]+=dg[j]; E[j]+=dtot*ng[j]/n; }
+    if(n>1){ const f=dtot*(n-dtot)/(n-1)/(n*n);   // varianza hipergeométrica multivariada
+      for(let j=0;j<G;j++) for(let k=0;k<G;k++) V[j][k]+= f*((j===k? ng[j]*n : 0) - ng[j]*ng[k]);
+    }
+  });
+  const m=G-1, dvec=O.slice(0,m).map((o,i)=>o-E[i]), Vr=V.slice(0,m).map(r=>r.slice(0,m));
+  const chi2=quadFormSolve(Vr, dvec);
+  if(!isFinite(chi2)) return null;
+  return { chi2, df:m, p:chiSqUpper(chi2, m), O, E };
+}
+
+/* ---- UI de comparación de cohortes (modal): checklist + overlay KM + log-rank ---- */
+const CMP_COLORS = ['#d96fa0','#5b8fc7','#3fae8c','#c79a2e','#9b6fd9','#d98162'];
+function agingCohorts(){ return crosses.filter(c=> !c.calib && c.aging && c.aging.startN!=null); }
+let _cmpChecked = new Set();
+function openCompare(){
+  closeMenu();
+  const list = agingCohorts();
+  _cmpChecked = new Set(list.filter(c=> (c.aging.events||[]).some(e=>e.deaths>0)).map(c=>c.id));
+  renderCompareList(); renderCompare();
+  document.getElementById('compareOverlay').classList.add('open');
+}
+function closeCompare(){ document.getElementById('compareOverlay').classList.remove('open'); }
+function toggleCmp(id){ _cmpChecked.has(id) ? _cmpChecked.delete(id) : _cmpChecked.add(id); renderCompareList(); renderCompare(); }
+function renderCompareList(){
+  const list = agingCohorts(), box = document.getElementById('compareList');
+  if(!list.length){ box.innerHTML = `<div class="hint">${t('cmp.none')}</div>`; return; }
+  box.innerHTML = list.map(c=>{
+    const meta = `${c.temp}°C · N=${c.aging.startN}`;
+    return `<label class="cmp-row"><input type="checkbox" ${_cmpChecked.has(c.id)?'checked':''} onchange="toggleCmp('${c.id}')"><span class="cmp-name" title="${esc(c.genotype)}">${esc(c.genotype)}</span><span class="cmp-meta">${esc(meta)}</span></label>`;
+  }).join('');
+}
+function renderCompare(){
+  const box = document.getElementById('compareResult');
+  const sel = agingCohorts().filter(c=>_cmpChecked.has(c.id));
+  if(!sel.length){ box.innerHTML = `<div class="hint" style="margin-top:12px">${t('cmp.pick')}</div>`; return; }
+  const cohorts = sel.map((c,i)=>{
+    const km = kmCurve(c, computeState(c));
+    return { color:CMP_COLORS[i%CMP_COLORS.length], km, series:cohortSeries(c), label:c.genotype, median:km.median };
+  });
+  let html = compareChart(cohorts)
+    + `<div class="cmp-legend">` + cohorts.map(co=>
+        `<div class="cmp-leg"><span class="cmp-sw" style="background:${co.color}"></span><span class="cmp-lg-name" title="${esc(co.label)}">${esc(co.label)}</span><span class="cmp-lg-med">${co.median!=null?t('cmp.med',{d:co.median}):t('cmp.medNone')}</span></div>`
+      ).join('') + `</div>`;
+  if(sel.length>=2){
+    const lr = logRankTest(cohorts.map(co=>co.series));
+    if(lr){
+      const pstr = lr.p<0.001 ? '<0.001' : lr.p.toFixed(3);
+      const sig = lr.p<0.05;
+      html += `<div class="cmp-lr${sig?' sig':''}">${t('cmp.logrank',{chi:lr.chi2.toFixed(2), df:lr.df, p:pstr})}<br><span>${t(sig?'cmp.sig':'cmp.nosig')}</span></div>`;
+    } else html += `<div class="hint" style="margin-top:10px">${t('cmp.noEvents')}</div>`;
+  } else html += `<div class="hint" style="margin-top:10px">${t('cmp.pick2')}</div>`;
+  box.innerHTML = html;
+}
+function compareChart(cohorts){
+  const W=320,H=190,padL=26,padR=10,padT=8,padB=20;
+  const maxDay = Math.max(1, ...cohorts.map(co=> Math.max(...co.km.points.map(p=>p.day).filter(Number.isFinite))));
+  const X = d=> padL + d/maxDay*(W-padL-padR);
+  const Y = s=> padT + (1-s)*(H-padT-padB);
+  let g = `<line x1="${padL}" y1="${Y(0.5).toFixed(1)}" x2="${W-padR}" y2="${Y(0.5).toFixed(1)}" stroke="var(--line)" stroke-dasharray="4 4"/>`
+    + `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${(H-padB).toFixed(1)}" stroke="var(--line)"/>`
+    + `<line x1="${padL}" y1="${(H-padB).toFixed(1)}" x2="${W-padR}" y2="${(H-padB).toFixed(1)}" stroke="var(--line)"/>`;
+  [[1,'100'],[0.5,'50'],[0,'0']].forEach(([s,lab])=> g+=`<text x="${padL-4}" y="${(Y(s)+3).toFixed(1)}" font-size="7.5" fill="#8b86a3" text-anchor="end">${lab}</text>`);
+  let curves='';
+  cohorts.forEach(co=>{
+    const pts=co.km.points; let poly='';
+    pts.forEach((p,i)=>{ if(i) poly+=` ${X(p.day).toFixed(1)},${Y(pts[i-1].surv).toFixed(1)}`; poly+=` ${X(p.day).toFixed(1)},${Y(p.surv).toFixed(1)}`; });
+    curves+=`<polyline points="${poly.trim()}" fill="none" stroke="${co.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  });
+  return `<div class="cmp-chart"><svg viewBox="0 0 ${W} ${H}" style="width:100%">${g}${curves}
+    <text x="${padL}" y="${H-5}" font-size="8" fill="#8b86a3">0</text>
+    <text x="${W-padR}" y="${H-5}" font-size="8" fill="#8b86a3" text-anchor="end">${Math.round(maxDay)} d</text>
   </svg></div>`;
 }
 

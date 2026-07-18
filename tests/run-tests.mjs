@@ -51,8 +51,9 @@ const code = [
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('ensureAging'), grabFn('kmCurve'), grabFn('computeT50FromCounts'),
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
   grabFn('icsEsc'), grabFn('icsFold'),
+  grabFn('lgamma'), grabFn('gammincQ'), grabFn('chiSqUpper'), grabFn('quadFormSolve'), grabFn('logRankTest'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, icsEsc, icsFold };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, icsEsc, icsFold, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -290,6 +291,43 @@ group('Export .ics — escapado y plegado de líneas', () => {
   ok(folded.includes('\r\n '), 'línea larga se pliega con CRLF + espacio');
   ok(folded.split('\r\n').every(l => l.length <= 75), 'ningún segmento plegado supera 75 octetos');
   ok(folded.replace(/\r\n /g, '') === long, 'desplegar reconstruye la línea original (sin pérdida)');
+});
+
+/* ============================ 6) LOG-RANK Y χ² (comparar cohortes) ============================ */
+group('χ² — p-valor de cola superior (gamma incompleta)', () => {
+  ok(near(M.chiSqUpper(3.8415, 1), 0.05, 2e-3), 'χ²=3.841, df=1 → p ≈ 0.05');
+  ok(near(M.chiSqUpper(5.9915, 2), 0.05, 2e-3), 'χ²=5.991, df=2 → p ≈ 0.05');
+  ok(near(M.chiSqUpper(7.8147, 3), 0.05, 2e-3), 'χ²=7.815, df=3 → p ≈ 0.05');
+  ok(near(M.chiSqUpper(2.7055, 1), 0.10, 2e-3), 'χ²=2.706, df=1 → p ≈ 0.10');
+  ok(M.chiSqUpper(0, 1) === 1, 'χ²=0 → p = 1');
+  ok(Math.abs(Math.exp(M.lgamma(5)) - 24) < 1e-6, 'lgamma(5) → ln(4!) (Γ(5)=24)');
+});
+
+group('Log-rank (Mantel–Haenszel) entre cohortes', () => {
+  // Ejemplo intercalado (calculado a mano): G1 muere en día 1 y 3; G2 en 2 y 4 (n0=2 c/u).
+  // O1=2, E1=1.3333, V11=0.7222 → χ² = 0.6667²/0.7222 = 0.6155, df=1.
+  const g1 = { n0: 2, times: [{ day: 1, d: 1, c: 0 }, { day: 3, d: 1, c: 0 }] };
+  const g2 = { n0: 2, times: [{ day: 2, d: 1, c: 0 }, { day: 4, d: 1, c: 0 }] };
+  const lr = M.logRankTest([g1, g2]);
+  ok(near(lr.chi2, 0.6155, 2e-3), 'χ² del ejemplo intercalado ≈ 0.6155 (a mano)');
+  ok(lr.df === 1, '2 grupos → df = 1');
+  ok(near(lr.O[0], 2, 1e-9) && near(lr.E[0], 1.3333, 1e-3), 'O1=2, E1≈1.333');
+  ok(lr.p > 0.42 && lr.p < 0.45, 'p ≈ 0.43 (sin diferencia significativa)');
+
+  // cohortes idénticas → sin diferencia (χ² ≈ 0, p ≈ 1)
+  const same = { n0: 10, times: [{ day: 5, d: 3, c: 0 }, { day: 10, d: 4, c: 0 }] };
+  const lr0 = M.logRankTest([same, { ...same, times: same.times.map(t => ({ ...t })) }]);
+  ok(near(lr0.chi2, 0, 1e-9) && near(lr0.p, 1, 1e-9), 'cohortes idénticas → χ²=0, p=1');
+
+  // separación fuerte → χ² grande, p pequeño
+  const early = { n0: 8, times: [{ day: 1, d: 4, c: 0 }, { day: 2, d: 4, c: 0 }] };
+  const late = { n0: 8, times: [{ day: 9, d: 4, c: 0 }, { day: 10, d: 4, c: 0 }] };
+  const lrsep = M.logRankTest([early, late]);
+  ok(lrsep.chi2 > 3.84 && lrsep.p < 0.05, 'cohortes bien separadas → χ² > 3.84, p < 0.05');
+
+  // 3 grupos → df = 2
+  ok(M.logRankTest([g1, g2, { n0: 2, times: [{ day: 5, d: 2, c: 0 }] }]).df === 2, '3 grupos → df = 2');
+  ok(M.logRankTest([g1]) === null, 'un solo grupo → null (nada que comparar)');
 });
 
 /* ============================ resumen ============================ */
