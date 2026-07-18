@@ -1,6 +1,9 @@
 # Artefactos locales de pruebas (no forman parte de la app)
 .playwright-mcp/
 *.png
+
+# Figuras generadas por analysis/calibracion.py (salida determinística; se regeneran)
+analysis/figures/
 # ...excepto los íconos del PWA (sí forman parte de la app)
 !icon-192.png
 !icon-512.png
