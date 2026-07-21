@@ -4,6 +4,9 @@
 
 # Figuras generadas por analysis/calibracion.py (salida determinística; se regeneran)
 analysis/figures/
+
+# Planillas generadas por analysis/exportar_tablas.py (salida determinística; se regeneran)
+analysis/tablas/
 # ...excepto los íconos del PWA (sí forman parte de la app)
 !icon-192.png
 !icon-512.png
