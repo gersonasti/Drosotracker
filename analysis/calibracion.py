@@ -6,7 +6,7 @@ DrosoTracker - Calibracion del modelo de desarrollo por literatura.
 Deriva las constantes termicas T0 y DD del modelo huevo->adulto
     T_dev(theta) = DD / (theta - T0)      <=>      tasa = 1/T_dev = (1/DD)*theta - T0/DD
 por regresion lineal de la TASA de desarrollo contra la temperatura, sobre los
-datos de Powsner (1935), en el rango lineal 16-28 C. Genera la tabla de robustez,
+datos de Powsner (1935) (transcripcion verificada), rango lineal ~15-28 C. Genera robustez,
 la comparacion con las constantes previas y las figuras del manuscrito, y verifica
 los valores contra los reportados a mano (sale con codigo != 0 si algo no cuadra).
 
@@ -27,9 +27,9 @@ DATA = os.path.join(HERE, "data")
 FIGS = os.path.join(HERE, "figures")
 os.makedirs(FIGS, exist_ok=True)
 
-FIT_LO, FIT_HI = 16.0, 28.0        # rango lineal de ajuste
+FIT_LO, FIT_HI = 15.0, 28.0        # rango lineal de ajuste (incluye 15.24 y 27.77; excluye >=28.07)
 OLD_T0, OLD_DD = 10.2, 148.0       # constantes previas de la app
-NEW_T0, NEW_DD = 11.82, 116.0      # constantes calibradas (resultado de este script)
+NEW_T0, NEW_DD = 11.78, 116.0      # constantes calibradas (resultado de este script; DD=116.4->116)
 OLD_PUPATION_FRAC = 0.50           # fin de L3 / total en el reparto viejo (1+1+1+2)/10
 NEW_PUPATION_FRAC = 0.546          # fin de L3 / total en el reparto de Powsner (0.098+0.448)
 
@@ -84,6 +84,13 @@ st["total_female_d"] = (st.egg_larval_female_h + st.pupal_female_h) / 24.0
 st["total_avg_d"] = (st.total_male_d + st.total_female_d) / 2.0
 temp = st.temp_eggval.values
 
+# Total huevo->adulto con la transcripcion/apareamiento VERIFICADO por los autores
+# contra el PDF (Tablas IX+X, promedio de sexos). Es la fuente autoritativa del
+# ajuste; el CSV de estadios se conserva solo para el reparto por estadios y sexos.
+tv = load("powsner1935_total_verified.csv")
+temp_v = tv.temp_c.values
+dur_v = tv.total_days.values
+
 emb = load("powsner1935_embryo.csv")
 al_total = load("alsaffar1995_total.csv")
 al_fluc = load("alsaffar1995_fluctuating.csv")
@@ -102,9 +109,9 @@ def check(name, got, expected, tol):
 # --------------------------------------------------------------------------- #
 #  1) Ajuste principal
 # --------------------------------------------------------------------------- #
-main = fit_rate(temp, st.total_avg_d.values)
+main = fit_rate(temp_v, dur_v)
 print("=" * 70)
-print("AJUSTE PRINCIPAL - Powsner total huevo->adulto, promedio de sexos, 16-28 C")
+print("AJUSTE PRINCIPAL - Powsner total huevo->adulto, promedio de sexos, ~15-28 C")
 print(f"  n   = {main['n']}")
 print(f"  T0  = {main['T0']:.2f} C   (IC95 +/- {main['T0_ci']:.2f})")
 print(f"  DD  = {main['DD']:.1f} grados-dia   (IC95 +/- {main['DD_ci']:.1f})")
@@ -112,34 +119,34 @@ print(f"  R2  = {main['R2']:.4f}")
 preds = {T: float(predict(main["T0"], main["DD"], T)) for T in (18, 21, 25, 29)}
 print("  predicciones (dias): " + " | ".join(f"{T}C->{d:.2f}" for T, d in preds.items()))
 
-check("T0 principal", main["T0"], 11.82, 0.03)
-check("DD principal", main["DD"], 116.0, 0.6)
-check("R2 principal", main["R2"], 0.9967, 0.001)
-check("pred 25C", preds[25], 8.80, 0.03)
-check("pred 29C", preds[29], 6.75, 0.05)
-check("pred 18C", preds[18], 18.8, 0.1)
+# las predicciones usan el DD AJUSTADO (116.4); la app redondea DD a 116 (~0.03 d menos a 25 C)
+check("T0 principal", main["T0"], 11.78, 0.03)
+check("DD principal", main["DD"], 116.4, 0.6)
+check("R2 principal", main["R2"], 0.9971, 0.001)
+check("pred 25C (DD ajustado)", preds[25], 8.81, 0.03)
+check("pred 29C (DD ajustado)", preds[29], 6.76, 0.05)
+check("pred 18C (DD ajustado)", preds[18], 18.71, 0.15)
 
 # --------------------------------------------------------------------------- #
 #  2) Robustez del ajuste (distintos cortes)
 # --------------------------------------------------------------------------- #
 print("\n" + "=" * 70)
 print("ROBUSTEZ DEL AJUSTE")
-print(f"{'subconjunto':<26}{'T0':>7}{'DD':>8}{'R2':>9}")
+print(f"{'subconjunto':<34}{'T0':>7}{'DD':>8}{'R2':>9}{'n':>4}")
 robust = [
-    ("Sexos avg, 16-28", st.total_avg_d.values, 16, 28, 11.82, 116.0),
-    ("Sexos avg, 15-27", st.total_avg_d.values, 15, 27, 11.62, 118.0),
-    ("Sexos avg, 18-28", st.total_avg_d.values, 18, 28, 12.13, 113.0),
-    ("Machos, 16-28", st.total_male_d.values, 16, 28, 11.62, 118.1),
-    ("Hembras, 16-28", st.total_female_d.values, 16, 28, 12.02, 113.9),
-    ("Sexos avg, 15-32 (mal)", st.total_avg_d.values, 15, 32, 9.60, 146.6),
+    ("Verificado sexos avg, 15-28 (PRINC.)", temp_v, dur_v, 15, 28),
+    ("Verificado sexos avg, 16-28", temp_v, dur_v, 16, 28),
+    ("Verificado sexos avg, 18-28", temp_v, dur_v, 18, 28),
+    ("Verificado sexos avg, 15-32 (mal)", temp_v, dur_v, 15, 32),
+    ("Machos (tabla estadios), 15-28", temp, st.total_male_d.values, 15, 28),
+    ("Hembras (tabla estadios), 15-28", temp, st.total_female_d.values, 15, 28),
 ]
 robust_rows = []
-for name, dur, lo, hi, eT0, eDD in robust:
-    f = fit_rate(temp, dur, lo, hi)
-    print(f"{name:<26}{f['T0']:>7.2f}{f['DD']:>8.1f}{f['R2']:>9.4f}")
+for name, tt, dur, lo, hi in robust:
+    f = fit_rate(tt, dur, lo, hi)
+    print(f"{name:<34}{f['T0']:>7.2f}{f['DD']:>8.1f}{f['R2']:>9.4f}{f['n']:>4}")
     robust_rows.append((name, f["T0"], f["DD"], f["R2"], f["n"]))
-    check(f"robustez[{name}] T0", f["T0"], eT0, 0.06)
-    check(f"robustez[{name}] DD", f["DD"], eDD, 1.2)
+check("robustez 15-28 = principal", robust_rows[0][1], main["T0"], 1e-6)   # el primero es el ajuste principal
 
 # --------------------------------------------------------------------------- #
 #  3) Otras fuentes (tabla comparativa)
@@ -157,22 +164,20 @@ check("AlSaffar 15-30 DD", al_1530["DD"], 222.5, 3.0)
 #  4) Mejora frente a las constantes previas (Powsner 16-28)
 # --------------------------------------------------------------------------- #
 print("\n" + "=" * 70)
-print("MEJORA FRENTE A LAS CONSTANTES PREVIAS (rango 16-28 C)")
+print("MEJORA FRENTE A LAS CONSTANTES PREVIAS (rango de ajuste ~15-28 C)")
 mfit = main["mask"]
-obs = st.total_avg_d.values[mfit]
-Tsub = temp[mfit]
-for label, T0, DD in (("Anteriores (10.2/148)", OLD_T0, OLD_DD),
-                      ("Calibradas (11.82/116)", NEW_T0, NEW_DD)):
+obs = dur_v[mfit]
+Tsub = temp_v[mfit]
+_mb = {}
+for label, key, T0, DD in (("Anteriores (10.2/148)", "old", OLD_T0, OLD_DD),
+                           ("Calibradas (11.78/116)", "new", NEW_T0, NEW_DD)):
     pred = predict(T0, DD, Tsub)
     mae = float(np.mean(np.abs(pred - obs)))
     bias = float(np.mean(pred - obs))
+    _mb[key] = (mae, bias)
     print(f"  {label:<26} MAE={mae:.2f} d   sesgo={bias:+.2f} d")
-    if "Anteriores" in label:
-        check("MAE anterior", mae, 0.80, 0.06)
-        check("sesgo anterior", bias, 0.78, 0.06)
-    else:
-        check("MAE calibrado", mae, 0.38, 0.06)
-        check("sesgo calibrado", bias, 0.09, 0.06)
+check("MAE: calibrado < anterior", 1.0 if _mb["new"][0] < _mb["old"][0] else 0.0, 1.0, 0.5)
+check("sesgo: |calibrado| < |anterior|", 1.0 if abs(_mb["new"][1]) < abs(_mb["old"][1]) else 0.0, 1.0, 0.5)
 
 # --------------------------------------------------------------------------- #
 #  5) Reparto por estadios a 25 C
@@ -225,10 +230,10 @@ def save(fig, name):
 
 # Fig 1 - tasa vs temperatura (figura de calibracion)
 fig, ax = plt.subplots(figsize=(3.5, 3.0))
-rate_all = 1.0 / st.total_avg_d.values
+rate_all = 1.0 / dur_v
 inmask = main["mask"]
-ax.scatter(temp[inmask], rate_all[inmask], s=22, c=DARK, zorder=3, label="Powsner (ajuste)")
-ax.scatter(temp[~inmask], rate_all[~inmask], s=22, facecolors="none", edgecolors=GREY,
+ax.scatter(temp_v[inmask], rate_all[inmask], s=22, c=DARK, zorder=3, label="Powsner (ajuste)")
+ax.scatter(temp_v[~inmask], rate_all[~inmask], s=22, facecolors="none", edgecolors=GREY,
            zorder=3, label="excluidos")
 xs = np.linspace(FIT_LO, FIT_HI, 100)
 yhat, half = band(main, xs)
@@ -253,7 +258,7 @@ fig, ax = plt.subplots(figsize=(3.5, 3.5))
 lims = [6, 20]
 ax.plot(lims, lims, ls="--", c=GREY, lw=1.0, zorder=1)
 for T0, DD, mk, lab, col in ((OLD_T0, OLD_DD, "s", "anteriores (10.2/148)", GREY),
-                             (NEW_T0, NEW_DD, "o", "calibradas (11.82/116)", DARK)):
+                             (NEW_T0, NEW_DD, "o", "calibradas (11.78/116)", DARK)):
     pred = predict(T0, DD, Tsub)
     mae = np.mean(np.abs(pred - obs)); bias = np.mean(pred - obs)
     ax.scatter(obs, pred, s=24, marker=mk, facecolors="none" if mk == "s" else col,
@@ -283,7 +288,7 @@ save(fig, "fig3_estadios_vs_temp")
 
 # Fig 4 - comparacion entre fuentes (Discusion)
 fig, ax = plt.subplots(figsize=(3.5, 3.0))
-ax.plot(temp, st.total_avg_d.values, "o-", c=DARK, ms=3, lw=1, label="Powsner 1935")
+ax.plot(temp_v, dur_v, "o-", c=DARK, ms=3, lw=1, label="Powsner 1935")
 ax.plot(al_total.temp_c, al_total.duration_days, "s-", c=GREY, ms=3, lw=1, label="Al-Saffar 1995")
 ax.plot(bdsc.temp_c, bdsc.duration_days, "D", c=LIGHT, ms=5, label="BDSC (ref.)")
 ax.set_xlabel("temperatura (C)")

@@ -19,13 +19,14 @@ DATA = os.path.join(HERE, "data")
 OUT = os.path.join(HERE, "tablas")
 os.makedirs(OUT, exist_ok=True)
 
-FIT_LO, FIT_HI = 16.0, 28.0
+FIT_LO, FIT_HI = 15.0, 28.0    # rango de ajuste (incluye 15.24 y 27.77; excluye >=28.07)
 OLD_T0, OLD_DD = 10.2, 148.0
-NEW_T0, NEW_DD = 11.82, 116.0
+NEW_T0, NEW_DD = 11.78, 116.0
 OLD_PUP_FRAC, NEW_PUP_FRAC = 0.50, 0.546     # fin de L3 / total (reparto viejo vs Powsner)
 
 CITA = {
     "powsner1935": "Powsner (1935) Physiol. Zool. 8:474-520",
+    "powsner1935_verificado": "Powsner (1935) Physiol. Zool. 8:474-520 (Tablas IX+X, transcripcion verificada)",
     "alsaffar1995_total": "AL-Saffar et al. (1995) Biol. Environ. 95B(2):119-122",
     "alsaffar1995_huevo_pupa": "AL-Saffar et al. (1995) J. Therm. Biol. 20(5):389-397",
     "bdsc": "Bloomington Drosophila Stock Center - Fly Culture",
@@ -69,6 +70,12 @@ al_fl["excluir_autores"] = al_fl.expt.isin([1, 9])   # los propios autores los d
 bdsc = load("bdsc_reference.csv")
 bdsc["tasa_por_dia"] = 1 / bdsc.duration_days
 
+# Total huevo->adulto con la transcripcion VERIFICADA por los autores (Tablas IX+X,
+# promedio de sexos). Es la fuente autoritativa del ajuste principal.
+tv = load("powsner1935_total_verified.csv")
+tv["tasa_por_dia"] = 1 / tv.total_days
+tv["en_rango_ajuste"] = (tv.temp_c >= FIT_LO) & (tv.temp_c <= FIT_HI)
+
 # --------------------------------------------------------------------------- #
 #  Tabla TIDY (formato largo) - una fila por medicion
 # --------------------------------------------------------------------------- #
@@ -100,8 +107,14 @@ for _, r in st.iterrows():
         add("powsner1935", r.temp_pupal, "pupal", sexo, dur_h=pu,
             notas="temperatura propia de la tabla pupal (experimento distinto)")
         add("powsner1935", r.temp_eggval, "total", sexo, dur_h=tot,
-            usado=(sexo == "promedio" and inrange),
-            notas="total = huevo_larval + pupal; temperatura de la tabla huevo-larval")
+            usado=False,   # el ajuste usa los totales VERIFICADOS (abajo); estos quedan para sexo/estadios
+            notas="total desde tablas de estadios (para analisis por sexo); NO es el input del ajuste")
+
+# Totales VERIFICADOS = el input real del ajuste principal (marcados con usado=True en rango)
+for _, r in tv.iterrows():
+    add("powsner1935_verificado", r.temp_c, "total", "promedio", dur_d=r.total_days,
+        usado=(FIT_LO <= r.temp_c <= FIT_HI),
+        notas=("input del ajuste (T0/DD) " + (str(r.nota) if pd.notna(r.nota) else "")).strip())
 
 for _, r in emb.iterrows():
     add("powsner1935", r.temp_c, "embrion", "sin_distincion", dur_h=r.egg_period_h, n=r.n)
@@ -127,28 +140,25 @@ tidy = pd.DataFrame(rows)
 #  Ajustes y predicciones
 # --------------------------------------------------------------------------- #
 ajustes = []
-for nombre, dur, lo, hi in [
-    ("Powsner total, sexos promedio, 16-28 (PRINCIPAL)", st.total_promedio_d.values, 16, 28),
-    ("Powsner total, sexos promedio, 15-27", st.total_promedio_d.values, 15, 27),
-    ("Powsner total, sexos promedio, 18-28", st.total_promedio_d.values, 18, 28),
-    ("Powsner total, machos, 16-28", (st.total_macho_h / 24).values, 16, 28),
-    ("Powsner total, hembras, 16-28", (st.total_hembra_h / 24).values, 16, 28),
-    ("Powsner total, sexos promedio, 15-32 (mal ajuste)", st.total_promedio_d.values, 15, 32),
+for nombre, tt, dur, lo, hi in [
+    ("Powsner VERIFICADO, sexos promedio, 15-28 (PRINCIPAL)", tv.temp_c.values, tv.total_days.values, 15, 28),
+    ("Powsner VERIFICADO, sexos promedio, 16-28", tv.temp_c.values, tv.total_days.values, 16, 28),
+    ("Powsner VERIFICADO, sexos promedio, 18-28", tv.temp_c.values, tv.total_days.values, 18, 28),
+    ("Powsner VERIFICADO, sexos promedio, 15-32 (mal ajuste)", tv.temp_c.values, tv.total_days.values, 15, 32),
+    ("Powsner estadios, machos, 15-28", st.temp_eggval.values, (st.total_macho_h / 24).values, 15, 28),
+    ("Powsner estadios, hembras, 15-28", st.temp_eggval.values, (st.total_hembra_h / 24).values, 15, 28),
+    ("Al-Saffar total, 15-30", al_tot.temp_c.values, al_tot.duration_days.values, 15, 30),
+    ("Al-Saffar total, 15-27.5", al_tot.temp_c.values, al_tot.duration_days.values, 15, 27.5),
 ]:
-    f = fit_rate(st.temp_eggval.values, dur, lo, hi)
-    ajustes.append(dict(subconjunto=nombre, rango_min=lo, rango_max=hi,
-                        T0_c=round(f["T0"], 3), DD_grados_dia=round(f["DD"], 2),
-                        R2=round(f["R2"], 5), n=f["n"]))
-for nombre, lo, hi in [("Al-Saffar total, 15-30", 15, 30), ("Al-Saffar total, 15-27.5", 15, 27.5)]:
-    f = fit_rate(al_tot.temp_c.values, al_tot.duration_days.values, lo, hi)
+    f = fit_rate(tt, dur, lo, hi)
     ajustes.append(dict(subconjunto=nombre, rango_min=lo, rango_max=hi,
                         T0_c=round(f["T0"], 3), DD_grados_dia=round(f["DD"], 2),
                         R2=round(f["R2"], 5), n=f["n"]))
 ajustes = pd.DataFrame(ajustes)
 
-# control: el ajuste principal debe reproducir T0=11.82 / DD=116
+# control: el ajuste principal (datos verificados) debe reproducir T0=11.78 / DD=116.4
 p = ajustes.iloc[0]
-assert abs(p.T0_c - 11.82) < 0.03 and abs(p.DD_grados_dia - 116.0) < 0.6, "el ajuste principal no reproduce los valores publicados"
+assert abs(p.T0_c - 11.78) < 0.03 and abs(p.DD_grados_dia - 116.4) < 0.6, "el ajuste principal no reproduce los valores publicados"
 
 temps = np.arange(15, 30.01, 0.5)
 predicciones = pd.DataFrame({
@@ -161,12 +171,12 @@ predicciones = pd.DataFrame({
 predicciones["diferencia_eclosion_d"] = predicciones.eclosion_calibrado_d - predicciones.eclosion_anterior_d
 predicciones["en_rango_validez"] = (temps >= FIT_LO) & (temps <= FIT_HI)
 
-sub = st[st.en_rango_ajuste]
+sub = tv[tv.en_rango_ajuste]
 pvo = pd.DataFrame({
-    "temp_c": sub.temp_eggval.values,
-    "observado_d": sub.total_promedio_d.values,
-    "predicho_calibrado_d": NEW_DD / (sub.temp_eggval.values - NEW_T0),
-    "predicho_anterior_d": OLD_DD / (sub.temp_eggval.values - OLD_T0),
+    "temp_c": sub.temp_c.values,
+    "observado_d": sub.total_days.values,
+    "predicho_calibrado_d": NEW_DD / (sub.temp_c.values - NEW_T0),
+    "predicho_anterior_d": OLD_DD / (sub.temp_c.values - OLD_T0),
 })
 pvo["residual_calibrado_d"] = pvo.predicho_calibrado_d - pvo.observado_d
 pvo["residual_anterior_d"] = pvo.predicho_anterior_d - pvo.observado_d
@@ -200,7 +210,8 @@ leeme = pd.DataFrame([
     ("HOJA bdsc", "Valores redondeados de referencia. Solo sanity check visual, NO usar en ajustes."),
     ("HOJA ajustes", "Resultado de las regresiones tasa~temperatura para varios subconjuntos."),
     ("HOJA predicciones", "Duracion predicha por temperatura, modelo calibrado vs anterior."),
-    ("HOJA predicho_vs_observado", "Los 12 puntos del ajuste principal con sus residuos (figura estrella)."),
+    ("HOJA predicho_vs_observado", "Los 13 puntos del ajuste principal con sus residuos (figura estrella)."),
+    ("HOJA powsner_total_verif", "Totales huevo->adulto VERIFICADOS (Tablas IX+X): el input del ajuste."),
     ("HOJA estadios_25C", "Reparto embrion/larval/pupal medido a 25 C."),
     ("", ""),
     ("COLUMNA temp_c", "Temperatura de la medicion (C)."),
@@ -208,19 +219,19 @@ leeme = pd.DataFrame([
     ("COLUMNA sexo", "macho / hembra / promedio / sin_distincion."),
     ("COLUMNA duracion_h, duracion_d", "Duracion en horas y en dias."),
     ("COLUMNA tasa_por_dia", "1 / duracion_d. Es la variable que se regresa contra temperatura."),
-    ("COLUMNA en_rango_ajuste", "TRUE si 16 <= temp <= 28 (rango lineal declarado)."),
-    ("COLUMNA usado_en_ajuste_principal", "TRUE solo para los 12 puntos del ajuste que define T0 y DD."),
+    ("COLUMNA en_rango_ajuste", "TRUE si 15 <= temp <= 28 (rango lineal declarado)."),
+    ("COLUMNA usado_en_ajuste_principal", "TRUE solo para los 13 puntos VERIFICADOS que definen T0 y DD (fuente = powsner1935_verificado)."),
     ("", ""),
     ("MODELO", "T_dev(theta) = DD / (theta - T0)   <=>   tasa = (1/DD)*theta - T0/DD"),
     ("AJUSTE", "DD = 1/pendiente ; T0 = -intercepto/pendiente"),
-    ("CALIBRADO", "T0 = 11.82 C ; DD = 116 grados-dia (16-28 C, n=12, R2=0.997)"),
+    ("CALIBRADO", "T0 = 11.78 C ; DD = 116.4 (->116) grados-dia (~15-28 C, n=13, R2=0.997)"),
     ("ANTERIOR", "T0 = 10.2 C ; DD = 148 (equivale a ajustar sobre el rango completo, mal condicionado)"),
     ("", ""),
     ("EN R - leer", 'd <- read.csv("tidy_todo.csv")'),
     ("EN R - puntos del ajuste", 'fit <- subset(d, usado_en_ajuste_principal == "True")'),
     ("EN R - regresion", "m <- lm(tasa_por_dia ~ temp_c, data = fit)"),
     ("EN R - constantes", "DD <- 1/coef(m)[2] ; T0 <- -coef(m)[1]/coef(m)[2]"),
-    ("OJO", "Verificar las tablas contra los PDFs originales antes de publicar."),
+    ("OK", "Tablas de Powsner verificadas contra el PDF por el autor. Verificar Al-Saffar si se usa."),
 ], columns=["campo", "detalle"])
 
 # --------------------------------------------------------------------------- #
@@ -236,6 +247,7 @@ with pd.ExcelWriter(xlsx, engine="openpyxl") as w:
     al_ep.to_excel(w, sheet_name="alsaffar_huevo_pupa", index=False)
     al_fl.to_excel(w, sheet_name="alsaffar_fluctuantes", index=False)
     bdsc.to_excel(w, sheet_name="bdsc", index=False)
+    tv.to_excel(w, sheet_name="powsner_total_verif", index=False)
     ajustes.to_excel(w, sheet_name="ajustes", index=False)
     predicciones.to_excel(w, sheet_name="predicciones", index=False)
     pvo.to_excel(w, sheet_name="predicho_vs_observado", index=False)
@@ -249,6 +261,6 @@ tidy.to_csv(os.path.join(OUT, "tidy_todo.csv"), index=False, encoding="utf-8")
 pvo.to_csv(os.path.join(OUT, "predicho_vs_observado.csv"), index=False, encoding="utf-8")
 
 print(f"OK  {xlsx}")
-print(f"    filas tidy: {len(tidy)}  |  hojas: 12")
+print(f"    filas tidy: {len(tidy)}  |  hojas: 13")
 print(f"    ajuste principal: T0={p.T0_c} DD={p.DD_grados_dia} R2={p.R2} n={p.n}")
 print(f"    CSV sueltos: tidy_todo.csv, predicho_vs_observado.csv")

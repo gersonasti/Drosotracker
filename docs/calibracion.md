@@ -33,7 +33,7 @@ Por lo tanto una **regresión lineal de la tasa contra la temperatura** entrega
 `DD = 1/pendiente` y `T₀ = −intercepto/pendiente`, con sus intervalos de
 confianza (método delta sobre la covarianza del ajuste) y R².
 
-El ajuste se hace **solo en el rango lineal 16–28 °C**. Fuera de ese rango la
+El ajuste se hace **solo en el rango lineal ~15–28 °C**. Fuera de ese rango la
 relación se curva (§4) y se excluye del ajuste, aunque se grafica para mostrar la
 desviación.
 
@@ -51,18 +51,21 @@ período huevo-larval está corregido por el tiempo previo a 25 °C (se usa la
 columna corregida). El total huevo→adulto se calcula como
 `egg_larval + pupal` (Tablas IX y X), promediando ambos sexos. Las temperaturas
 de las dos tablas difieren en decimales (experimentos distintos) y se aparean por
-proximidad (≤0,11 °C); se usa la temperatura de la tabla huevo-larval.
+proximidad; se usa la temperatura de la tabla huevo-larval. **La transcripción y
+el apareamiento fueron verificados contra el PDF original por los autores**
+(`analysis/data/powsner1935_total_verified.csv`).
 
-### Ajuste principal (promedio de sexos, 16–28 °C, n = 12)
+### Ajuste principal (promedio de sexos, ~15–28 °C, n = 13)
 
 | Parámetro | Valor | IC 95 % |
 |---|---|---|
-| **T₀** | **11,82 °C** | ±0,4 |
-| **DD** | **116,0 grados-día** | ±4,7 |
-| **R²** | **0,9967** | — |
+| **T₀** | **11,78 °C** | ±0,4 |
+| **DD** | **116,4 grados-día** (→ 116) | ±4,2 |
+| **R²** | **0,9971** | — |
 
-Predicciones huevo→adulto: 18 °C → 18,8 d · 21 °C → 12,6 d · 25 °C → 8,8 d ·
-29 °C → 6,8 d.
+Predicciones huevo→adulto (con el DD ajustado 116,4): 18 °C → 18,7 d ·
+21 °C → 12,6 d · 25 °C → 8,8 d · 29 °C → 6,8 d. La app redondea DD a 116, ~0,03 d
+menos a 25 °C. El rango de ajuste incluye 15,24 °C y 27,77 °C y excluye ≥28,07 °C.
 
 *(Figura 1 — tasa vs. temperatura con la recta ajustada, su banda de confianza y
 el intercepto T₀; los puntos ≥29 °C, excluidos, se apartan de la recta.)*
@@ -71,30 +74,31 @@ el intercepto T₀; los puntos ≥29 °C, excluidos, se apartan de la recta.)*
 
 El ajuste es estable frente a cambios de rango y de sexo:
 
-| Subconjunto | T₀ (°C) | DD | R² |
-|---|---|---|---|
-| Sexos avg, 16–28 | 11,82 | 116,0 | 0,9967 |
-| Sexos avg, 15–27 | 11,62 | 118,0 | 0,9963 |
-| Sexos avg, 18–28 | 12,13 | 113,0 | 0,9982 |
-| Machos, 16–28 | 11,62 | 118,1 | 0,9970 |
-| Hembras, 16–28 | 12,02 | 113,9 | 0,9955 |
-| **Sexos avg, 15–32 (mal ajuste)** | **9,60** | **146,6** | **0,9335** |
+| Subconjunto | T₀ (°C) | DD | R² | n |
+|---|---|---|---|---|
+| Verificado, 15–28 (**principal**) | 11,78 | 116,4 | 0,9971 | 13 |
+| Verificado, 16–28 | 12,12 | 113,2 | 0,9986 | 12 |
+| Verificado, 18–28 | 12,12 | 113,2 | 0,9986 | 12 |
+| Machos (tablas), 15–28 | 11,48 | 119,6 | 0,9972 | 13 |
+| Hembras (tablas), 15–28 | 11,76 | 116,5 | 0,9947 | 13 |
+| **Sexos avg, 15–32 (mal ajuste)** | **9,56** | **145,5** | **0,9193** | 18 |
 
 La última fila es reveladora: **ajustar sobre el rango completo, incluidos los
-extremos no lineales, da T₀ ≈ 9,6 y DD ≈ 147 — casi exactamente las constantes
+extremos no lineales, da T₀ ≈ 9,6 y DD ≈ 146 — casi exactamente las constantes
 que la app usaba antes (10,2 / 148).** Es la explicación más probable de su origen
-y de su sesgo, y desaparece al restringir el ajuste al rango lineal.
+y de su sesgo, y desaparece al restringir el ajuste al rango lineal. (Al no haber
+un punto verificado entre 16 y 18 °C, los cortes 16–28 y 18–28 coinciden.)
 
 ---
 
 ## 3. Mejora frente a las constantes previas
 
-Sobre los mismos 12 puntos de Powsner (16–28 °C):
+Sobre los 13 puntos verificados de Powsner (~15–28 °C), con las constantes de la app:
 
 | Constantes | MAE | Sesgo |
 |---|---|---|
-| Anteriores (T₀ = 10,2 / DD = 148) | 0,80 d | **+0,78 d** (predice tarde) |
-| Calibradas (T₀ = 11,82 / DD = 116) | 0,38 d | +0,08 d |
+| Anteriores (T₀ = 10,2 / DD = 148) | 0,83 d | **+0,76 d** (predice tarde) |
+| Calibradas (T₀ = 11,78 / DD = 116) | 0,50 d | +0,13 d |
 
 *(Figura 2 — predicho vs. observado con la línea de identidad; las constantes
 anteriores se apartan sistemáticamente hacia arriba, las calibradas caen sobre la
@@ -139,7 +143,7 @@ consecuencia de un T₀ más alto (cerca del umbral, dividir por `θ − T₀` s
 
 ## 4. Rango de validez y comparación entre fuentes
 
-La aproximación lineal vale en **16–28 °C** y se rompe en los extremos:
+La aproximación lineal vale en **~15–28 °C** y se rompe en los extremos:
 
 - Por encima de ~29 °C la duración vuelve a subir (el mínimo de Powsner cae en
   28–29 °C; el estadio pupal de Al-Saffar sube de 87,2 h a 27,5 °C a 101,3 h a 30 °C).
@@ -149,7 +153,7 @@ Otras fuentes, para contexto (no usadas en las constantes):
 
 | Fuente | Rango | T₀ (°C) | DD | R² |
 |---|---|---|---|---|
-| Powsner 1935 (total) | 16–28 | 11,82 | 116,0 | 0,997 |
+| Powsner 1935 (total) | ~15–28 | 11,78 | 116,4 | 0,997 |
 | Al-Saffar 1995 (total) | 15–30 | 9,71 | 222,5 | 0,987 |
 | Al-Saffar 1995 (total) | 15–27,5 | 9,10 | 236,1 | 0,986 |
 
@@ -166,7 +170,7 @@ por genotipo/laboratorio de la app. *(Figuras 4 y 6.)*
 1. **T₀ es un parámetro de ajuste, no un cero fisiológico.** Powsner mostró que
    huevos a 10,3 °C completaron un 9,1 % de su desarrollo embrionario, casi 2 °C
    por debajo del cero extrapolado, y que la curva tasa-temperatura es sigmoidea.
-2. **Rango de validez 16–28 °C** (§4).
+2. **Rango de validez ~15–28 °C** (§4).
 3. **Las constantes no son transferibles entre genotipos.** Sewall Wright, citado
    al pie por el propio Powsner, advierte que los datos valen solo para ese stock
    endocriado. Es la **justificación bibliográfica del módulo de calibración por
@@ -230,7 +234,7 @@ y genera seis figuras en PDF vectorial + PNG 300 dpi.
 Las constantes viven en `DrosoTracker.html`:
 
 ```js
-const T0 = 11.82;         // Powsner 1935, regresión 16–28 °C (n=12, R²=0.997)
+const T0 = 11.78;         // Powsner 1935, regresión ~15–28 °C (n=13, R²=0.997)
 const DEGREE_DAYS = 116.0;
 ```
 

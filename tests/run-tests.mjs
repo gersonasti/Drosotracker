@@ -63,15 +63,15 @@ function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.log('  ✗
 function group(name, fn) { console.log('\n▶ ' + name); fn(); }
 
 /* ============================ 1) MODELO DE DESARROLLO ============================ */
-group('Modelo de desarrollo (suma térmica, Powsner 1935 · 16–28 °C)', () => {
-  // Constantes calibradas: T0 = 11.82 °C, DD = 116 grados-día (no hardcodear: se leen del módulo).
-  ok(near(M.T0, 11.82) && near(M.DEGREE_DAYS, 116), 'constantes = T0 11.82 / DD 116 (Powsner)');
+group('Modelo de desarrollo (suma térmica, Powsner 1935 · ~15–28 °C)', () => {
+  // Constantes calibradas (transcripción verificada): T0 = 11.78 °C, DD = 116 (no hardcodear: se leen del módulo).
+  ok(near(M.T0, 11.78) && near(M.DEGREE_DAYS, 116), 'constantes = T0 11.78 / DD 116 (Powsner, n=13)');
   ok(near(M.totalDays(25), M.DEGREE_DAYS / (25 - M.T0)), 'totalDays sigue D(T)=DD/(T−T0)');
-  ok(near(M.totalDays(25), 8.80, 1e-2), '25 °C ≈ 8.80 d (antes 10)');   // §5.1
-  ok(near(M.totalDays(18), 18.77, 1e-2), '18 °C ≈ 18.8 d');
-  ok(near(M.totalDays(29), 6.75, 1e-2), '29 °C ≈ 6.75 d');
-  ok(near(M.totalDays(16), 27.75, 1e-2), '16 °C ≈ 27.8 d (T0 alto ⇒ cerca del umbral tarda más)');  // §5.6
-  ok(near(M.totalDays(20), 14.18, 1e-2), '20 °C ≈ 14.2 d');
+  ok(near(M.totalDays(25), 8.77, 1e-2), '25 °C ≈ 8.77 d (antes 10)');
+  ok(near(M.totalDays(18), 18.65, 1e-2), '18 °C ≈ 18.6 d');
+  ok(near(M.totalDays(29), 6.74, 1e-2), '29 °C ≈ 6.74 d');
+  ok(near(M.totalDays(16), 27.49, 1e-2), '16 °C ≈ 27.5 d (T0 alto ⇒ cerca del umbral tarda más)');
+  ok(near(M.totalDays(20), 14.11, 1e-2), '20 °C ≈ 14.1 d');
   ok(near(M.totalDays(25, 1.1), 1.1 * M.totalDays(25)), 'el factor escala el total linealmente');
   ok(M.totalDays(29) < M.totalDays(25) && M.totalDays(25) < M.totalDays(18), 'monótona: más calor = más rápido');
 

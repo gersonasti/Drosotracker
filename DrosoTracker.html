@@ -608,7 +608,7 @@
 
   <div class="footer-note">
     <span data-i18n="foot.tagline" style="display:block;margin-bottom:5px">Tracks the fly life cycle, tasks and lifespan — not a behaviour-tracking tool.</span>
-    <span data-i18n="foot.model">Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for 16–28 °C). Estimated times · Data stored locally in your browser.</span>
+    <span data-i18n="foot.model">Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for ~15–28 °C). Estimated times · Data stored locally in your browser.</span>
   </div>
 </div>
 
@@ -1013,7 +1013,7 @@ const I18N = {
     'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
     'foot.tagline':'Tracks the fly life cycle, tasks and lifespan — not a behaviour-tracking tool.',
-    'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for 16–28 °C). Estimated times · Data stored locally in your browser.',
+    'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for ~15–28 °C). Estimated times · Data stored locally in your browser.',
     'empty.title':'No records yet','empty.text':'Add your first record with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New record','group.none':'No experiment',
     // objetivos
     'obj.none':'— No specific objective','obj.cross':'Genetic cross','obj.amplify':'Line amplification','obj.stock':'Stock maintenance','obj.aging':'Aging cohort','obj.dissect':'Larval dissection',
@@ -1124,7 +1124,7 @@ const I18N = {
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
     'foot.tagline':'Sigue el ciclo de vida, las tareas y la longevidad de la mosca — no es una herramienta de tracking de comportamiento.',
-    'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 11.8 °C · ~116 grados-día, calibrado para 16–28 °C). Tiempos estimados · Datos guardados localmente en tu navegador.',
+    'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 11.8 °C · ~116 grados-día, calibrado para ~15–28 °C). Tiempos estimados · Datos guardados localmente en tu navegador.',
     'empty.title':'Todavía no hay registros','empty.text':'Agregá tu primer registro con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nuevo registro','group.none':'Sin experimento',
     'obj.none':'— Sin objetivo específico','obj.cross':'Cruza genética','obj.amplify':'Amplificación de línea','obj.stock':'Mantenimiento de stock','obj.aging':'Cohorte de envejecimiento','obj.dissect':'Disección larval',
     'stage.egg':'Embrión','stage.l1':'Larva L1','stage.l2':'Larva L2','stage.l3':'Larva L3','stage.pupa':'Pupa','stage.adult':'Adulto',
@@ -1611,12 +1611,13 @@ function gcalUpdateUI(){
    Suma térmica (degree-days): D(T) = DD / (T - T0)
    Constantes derivadas por regresión de la TASA de desarrollo vs temperatura
    (tasa = (1/DD)·T − T0/DD) sobre los datos huevo→adulto de Powsner (1935)
-   Physiol. Zool. 8:474-520, promedio de sexos, rango 16–28 °C (n=12, R²=0.997).
-   Válidas en 16–28 °C; fuera de ese rango la relación deja de ser lineal.
+   Physiol. Zool. 8:474-520, promedio de sexos, transcripción verificada de las
+   Tablas IX+X, rango ~15–28 °C (n=13, R²=0.997). DD=116.4 → se redondea a 116.
+   Válidas en ~15–28 °C; por encima de ~28 °C la relación se revierte.
    T0 es un parámetro de AJUSTE, no un cero fisiológico (ver docs/calibracion.md).
    Nota: los valores previos (10.2 / 148) equivalían a un mal ajuste sobre el
    rango completo 15–32 °C; el nuevo modelo adelanta la eclosión ~1.2 d a 20–28 °C. */
-const T0 = 11.82;
+const T0 = 11.78;
 const DEGREE_DAYS = 116.0;
 
 /* --- Vida adulta estimada (días), dependiente de temperatura ---

@@ -4,7 +4,7 @@
      sin internet, abre la última versión guardada.
    - Íconos / manifest / fuentes: CACHÉ primero, y se actualizan en segundo plano.
    Subí VERSION cada vez que quieras forzar una actualización limpia. */
-const VERSION = 'v6';
+const VERSION = 'v7';
 const CACHE = 'drosotracker-' + VERSION;
 const ASSETS = [
   'DrosoTracker.html',
