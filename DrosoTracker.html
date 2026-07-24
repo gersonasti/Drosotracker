@@ -1055,9 +1055,9 @@ const I18N = {
     'stat.menu':'Sample size / power','tip.stat':'Plan a lifespan experiment: sample size, power and estimated duration for a log-rank comparison.',
     'stat.title':'Sample size & power','stat.sub':'Plan a lifespan experiment: how many flies you need to detect a difference in survival with a log-rank test.',
     'stat.mA':'Median lifespan A (days)','stat.mB':'Median lifespan B (days)','stat.alpha':'Significance α','stat.power':'Power','stat.mort':'Run until mortality (%)','stat.temp':'Temperature (°C)',
-    'stat.perGroup':'flies / group','stat.total':'flies total','stat.events':'deaths needed',
+    'stat.perGroup':'min. per group','stat.total':'min. total','stat.events':'deaths needed',
     'stat.hr':'Hazard ratio ≈ {hr}','stat.durLine':'Est. duration ≈ {d} d (~{w} wk, incl. development)','stat.perSex':'Per sex — analyse sexes separately, so double this to run both.',
-    'stat.needDiff':'Enter two different median lifespans to size the experiment.','stat.okStd':'Feasible with the standard design (≤100 per condition — the field norm is 10 flies × 10 vials).','stat.bigN':'Large experiment: ~{n} flies per condition, above the usual 100. Consider detecting a larger effect, fewer conditions, or accepting less power.',
+    'stat.needDiff':'Enter two different median lifespans to size the experiment.','stat.okStd':'Minimum for this effect: ~{n} per group. That fits within the standard design (≥100 per condition = 10 flies × 10 vials) — run ~100 per group for a safety margin (attrition, uncertain effect size).','stat.bigN':'Minimum for this effect: ~{n} per group — above the standard ~100 per condition. Consider a larger effect, fewer conditions, or accepting less power.',
     'tpl.menu':'Cross templates','tip.tpl':'Pre-fill a new record from a common cross scheme (GAL4/UAS, balancing).',
     'tpl.title':'Cross templates','tpl.sub':'Common Drosophila cross schemes. Pick one to pre-fill a new record — everything stays editable.','tpl.use':'Use this template','tpl.note':'Starting points only. Adjust the genotype, markers and chromosomes to your exact stocks.',
     'tpl.gal4uas.name':'GAL4 / UAS (targeted expression)','tpl.gal4uas.desc':'Express a UAS-transgene in the pattern of a GAL4 driver. P0: GAL4 driver × UAS-transgene; the F1 carrying both expresses the transgene.','tpl.gal4uas.notes':'GAL4/UAS binary expression. P0: GAL4 driver x UAS-transgene (either direction). Collect the F1 carrying both. Run a GAL4-only and a UAS-only sibling as controls. Driver and transgene are often on different chromosomes (";" separates them).',
@@ -1160,9 +1160,9 @@ const I18N = {
     'stat.menu':'Tamaño muestral / potencia','tip.stat':'Planificá un experimento de longevidad: tamaño muestral, potencia y duración estimada para una comparación por log-rank.',
     'stat.title':'Tamaño muestral y potencia','stat.sub':'Planificá un experimento de longevidad: cuántas moscas necesitás para detectar una diferencia de supervivencia con un test de log-rank.',
     'stat.mA':'Mediana de vida A (días)','stat.mB':'Mediana de vida B (días)','stat.alpha':'Significancia α','stat.power':'Potencia','stat.mort':'Correr hasta mortalidad (%)','stat.temp':'Temperatura (°C)',
-    'stat.perGroup':'moscas / grupo','stat.total':'moscas en total','stat.events':'muertes necesarias',
+    'stat.perGroup':'mín. por grupo','stat.total':'mín. total','stat.events':'muertes necesarias',
     'stat.hr':'Razón de hazards ≈ {hr}','stat.durLine':'Duración est. ≈ {d} d (~{w} sem, incl. desarrollo)','stat.perSex':'Por sexo — los sexos se analizan por separado, así que duplicá esto para correr ambos.',
-    'stat.needDiff':'Ingresá dos medianas de vida distintas para dimensionar el experimento.','stat.okStd':'Factible con el diseño estándar (≤100 por condición — la norma del campo es 10 moscas × 10 viales).','stat.bigN':'Experimento grande: ~{n} moscas por condición, por encima de las 100 habituales. Considerá detectar un efecto más grande, menos condiciones, o aceptar menos potencia.',
+    'stat.needDiff':'Ingresá dos medianas de vida distintas para dimensionar el experimento.','stat.okStd':'Mínimo para este efecto: ~{n} por grupo. Entra dentro del diseño estándar (≥100 por condición = 10 moscas × 10 viales) — corré ~100 por grupo para tener margen (atrición, efecto incierto).','stat.bigN':'Mínimo para este efecto: ~{n} por grupo — por encima del estándar de ~100 por condición. Considerá un efecto más grande, menos condiciones, o aceptar menos potencia.',
     'tpl.menu':'Plantillas de cruza','tip.tpl':'Pre-llená un registro nuevo a partir de un esquema de cruza frecuente (GAL4/UAS, balanceo).',
     'tpl.title':'Plantillas de cruza','tpl.sub':'Esquemas de cruza frecuentes en Drosophila. Elegí uno para pre-llenar un registro nuevo — todo queda editable.','tpl.use':'Usar esta plantilla','tpl.note':'Solo son puntos de partida. Ajustá el genotipo, los marcadores y los cromosomas a tus stocks exactos.',
     'tpl.gal4uas.name':'GAL4 / UAS (expresión dirigida)','tpl.gal4uas.desc':'Expresá un transgén UAS en el patrón de un driver GAL4. P0: driver GAL4 × UAS-transgén; la F1 que lleva ambos expresa el transgén.','tpl.gal4uas.notes':'Expresión binaria GAL4/UAS. P0: driver GAL4 x UAS-transgén (en cualquier sentido). Recolectá la F1 que lleva ambos. Corré un hermano solo-GAL4 y otro solo-UAS como controles. El driver y el transgén suelen estar en cromosomas distintos (";" los separa).',
@@ -2379,8 +2379,15 @@ function logRankPlan(m1, m2, alpha, power, pEvent){
   const nPerGroup = Math.ceil(events/2/pe);
   return { hr, events: Math.ceil(events), nPerGroup, nTotal: nPerGroup*2, pEvent: pe };
 }
-/* Días hasta una fracción q de mortalidad, en el modelo exponencial con esa mediana. */
-function timeToMortality(median, q){ return (median>0 && q>0 && q<1) ? median*Math.log2(1/(1-q)) : null; }
+/* Días hasta una fracción q de mortalidad, a partir de la mediana. Usa un modelo
+   de Weibull con forma > 1 (cola más corta que la exponencial), que se ajusta al
+   patrón real de Drosophila: la mortalidad se acelera con la edad (tipo Gompertz),
+   así que el 90 % de mortalidad cae a ~1.5× la mediana, no a ~3.3× (exponencial).
+   La mediana siempre se mapea a sí misma. SURV_SHAPE mayor = cola más corta. */
+const SURV_SHAPE = 3;
+function timeToMortality(median, q){
+  return (median>0 && q>0 && q<1) ? median * Math.pow(Math.log2(1/(1-q)), 1/SURV_SHAPE) : null;
+}
 
 /* ---- UI de comparación de cohortes (modal): checklist + overlay KM + log-rank ---- */
 const CMP_COLORS = ['#d96fa0','#5b8fc7','#3fae8c','#c79a2e','#9b6fd9','#d98162'];
@@ -2457,7 +2464,7 @@ function renderStatPlan(){
   const plan = logRankPlan(mA, mB, alpha, power, q);
   if(!plan){ box.innerHTML = `<div class="hint" style="margin-top:6px">${t('stat.needDiff')}</div>`; return; }
   const dur = timeToMortality(Math.max(mA,mB), q) + totalDays(temp);   // hasta q% de mortalidad + desarrollo huevo→adulto
-  const feasible = plan.nPerGroup <= 100;                              // estándar de campo ≈ 100/condición (10×10)
+  const fitsStd = plan.nPerGroup <= 100;      // el mínimo entra dentro del estándar de campo (≥100/condición, 10×10)
   box.innerHTML = `
     <div class="stat-out">
       <div class="so"><b>${plan.nPerGroup}</b><span>${t('stat.perGroup')}</span></div>
@@ -2466,7 +2473,7 @@ function renderStatPlan(){
     </div>
     <div class="hint" style="margin:2px 0 4px">${t('stat.hr',{hr:plan.hr.toFixed(2)})} · ${t('stat.durLine',{d:Math.round(dur), w:Math.round(dur/7)})}</div>
     <div class="hint" style="margin:0 0 10px">${t('stat.perSex')}</div>
-    <div class="cmp-lr${feasible?' sig':''}">${feasible?t('stat.okStd'):t('stat.bigN',{n:plan.nPerGroup})}</div>`;
+    <div class="cmp-lr${fitsStd?' sig':''}">${fitsStd?t('stat.okStd',{n:plan.nPerGroup}):t('stat.bigN',{n:plan.nPerGroup})}</div>`;
 }
 
 function cohortForm(cross){

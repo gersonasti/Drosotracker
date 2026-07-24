@@ -52,9 +52,9 @@ const code = [
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
   grabFn('icsEsc'), grabFn('icsFold'),
   grabFn('lgamma'), grabFn('gammincQ'), grabFn('chiSqUpper'), grabFn('quadFormSolve'), grabFn('logRankTest'),
-  grabFn('normInv'), grabFn('logRankPlan'), grabFn('timeToMortality'),
+  grabConst('SURV_SHAPE'), grabFn('normInv'), grabFn('logRankPlan'), grabFn('timeToMortality'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, icsEsc, icsFold, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, icsEsc, icsFold, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -353,9 +353,13 @@ group('Cuantil normal (normInv) y tamaño muestral log-rank (Schoenfeld)', () =>
   ok(M.logRankPlan(40, 30, 0.05, 0.80, 1).events > p.events, 'efecto más chico (HR 1.33) pide más eventos');
   ok(M.logRankPlan(20, 20, 0.05, 0.80, 1) === null, 'medianas iguales (sin efecto) → null');
 
-  // duración: días hasta 90% de mortalidad ≈ mediana · log2(10) ≈ 3.32 · mediana
-  ok(near(M.timeToMortality(30, 0.9), 30*Math.log2(10), 1e-6), 'tiempo al 90% de mortalidad = mediana · log2(10)');
+  // duración: modelo de Weibull (forma > 1) para el patrón real de moscas (cola corta, no exponencial)
+  ok(near(M.timeToMortality(30, 0.5), 30, 1e-9), 'la mediana se mapea a sí misma (q=0.5 ⇒ tiempo = mediana)');
+  ok(near(M.timeToMortality(30, 0.9), 30 * Math.pow(Math.log2(10), 1/M.SURV_SHAPE), 1e-6), 'tiempo al 90% = mediana · (log2(10))^(1/forma)');
   ok(M.timeToMortality(30, 0.5) < M.timeToMortality(30, 0.9), 'más mortalidad objetivo ⇒ más tiempo');
+  // cola más corta que la exponencial: al 90% da ~1.5× la mediana, no ~3.3×
+  ok(M.timeToMortality(50, 0.9) < 50 * Math.log2(10) && M.timeToMortality(50, 0.9) > 50, 'cola de Weibull < cola exponencial (evita sobrestimar la duración)');
+  ok(near(M.timeToMortality(50, 0.9) / 50, 1.49, 0.05), 'al 90% de mortalidad ≈ 1.5× la mediana (realista para Drosophila)');
 });
 
 /* ============================ resumen ============================ */
