@@ -2,14 +2,16 @@
 
 Este documento deriva y justifica las constantes térmicas del modelo huevo→adulto
 de *Drosophila melanogaster* que usa DrosoTracker, a partir de datos publicados.
-Todo lo que sigue se reproduce con:
+Las constantes y la Figura 1 se reproducen con (desde la carpeta `analysis/`):
 
 ```
-python analysis/calibracion.py
+Rscript calibration.R
 ```
 
-que regenera las figuras (`analysis/figures/`) y verifica cada valor reportado
-(sale con código ≠ 0 si algún número no cuadra).
+que ajusta la regresión sobre los datos verificados, **se auto-verifica** (se
+detiene si T₀/DD se desvían) y genera la figura de calibración en `analysis/figures/`.
+Las tablas de robustez y el reparto por estadios de más abajo son valores
+documentados, derivados de la misma regresión y de los mismos datos.
 
 ---
 
@@ -174,15 +176,15 @@ Datos primarios transcritos en `analysis/data/`:
 
 | Archivo | Fuente |
 |---|---|
+| `powsner1935_total_verified.csv` | Powsner 1935 total huevo→adulto (Tablas IX+X, prom. sexos), **transcripción verificada — input del ajuste** |
 | `powsner1935_stages.csv` | Powsner 1935, Tablas IX (huevo-larval) y X (pupal), por sexo |
 | `powsner1935_embryo.csv` | Powsner 1935, Tabla VIII (período embrionario) |
 | `alsaffar1995_total.csv` | Al-Saffar et al. 1995 (*Biol. Environ.*), Tabla 1 |
-| `alsaffar1995_fluctuating.csv` | Al-Saffar et al. 1995 (*Biol. Environ.*), Tabla 2 |
-| `alsaffar1995_egg_pupa.csv` | Al-Saffar et al. 1995 (*J. Therm. Biol.*), 100 % HR |
 | `bdsc_reference.csv` | Bloomington Drosophila Stock Center (sanity check) |
 
-El script `analysis/calibracion.py` reproduce todos los números de este documento
-y genera seis figuras en PDF vectorial + PNG 300 dpi.
+El script `analysis/calibration.R` (R) ajusta la regresión sobre
+`powsner1935_total_verified.csv`, reproduce las constantes (T₀ = 11,78 · DD = 116,38 ·
+R² = 0,997), se auto-verifica, y genera la Figura 1 en PDF vectorial + PNG 300 dpi.
 
 ### Referencias de calibración
 
