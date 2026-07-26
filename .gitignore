@@ -19,3 +19,9 @@ drosotracker-*.csv
 # Documentos de trabajo internos (no se despliegan al sitio público)
 DrosoTracker-funcionalidades.md
 DrosoTracker-*.md
+
+# Assets del paper y material de trabajo (NO van al repo público)
+_archivo/
+Papers/
+figures & tables/
+*.pdf
