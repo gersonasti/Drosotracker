@@ -496,6 +496,12 @@
   .calib-row .cx:hover{background:var(--peach-soft);color:var(--coral)}
   .t50-opts{display:flex;flex-direction:column;gap:9px}
   .t50-opts .btn{width:100%;justify-content:center}
+  .calib-labref{display:flex;align-items:flex-start;gap:9px;font-size:.83rem;color:var(--ink-soft);line-height:1.4;margin:2px 0 4px;cursor:pointer}
+  .calib-labref input{width:16px;height:16px;flex:none;margin-top:1px;accent-color:var(--lav)}
+  .calib-row.is-labref{background:var(--lav-soft)}
+  .calib-row .cx.lab-toggle{color:var(--line)}
+  .calib-row .cx.lab-toggle:hover{background:var(--lav-soft);color:var(--lav)}
+  .calib-row .cx.lab-toggle.on{color:var(--lav)}
   .calib-done{background:var(--mint-soft);color:#3fae8c;border-radius:14px;padding:11px 14px;margin-top:10px;font-size:.85rem;font-weight:700;text-align:center;line-height:1.35}
   .calib-done.prov{background:var(--bg-1);color:var(--ink-soft)}
   .t50-div{text-align:center;font-size:.73rem;color:var(--ink-soft);margin:6px 0 2px}
@@ -854,6 +860,7 @@
         <label for="calibTemp" data-i18n="calib.temp">Incubation temperature (°C) *</label>
         <input id="calibTemp" type="number" min="12" max="30" step="0.5" value="25" required />
       </div>
+      <label class="calib-labref"><input type="checkbox" id="calibLabRef" /><span data-i18n="calib.labRefOpt">Use as my lab's wild-type reference (calibrates the base model for all genotypes)</span></label>
       <div class="modal-actions">
         <button type="button" class="btn ghost" onclick="closeCalib()" data-i18n="form.cancel">Cancel</button>
         <button type="submit" class="btn" data-i18n="calib.start">Start calibration</button>
@@ -1083,6 +1090,7 @@ const I18N = {
     'calib.sMain':'{st} · {trend} (±{ci}%, {nb})',
     'calib.sInconsistent':'Inconsistent · {n} batches disagree beyond their uncertainty — check for a data-entry error or a batch effect.',
     'calib.warnSingle':'Only one batch so far — genotype and batch effects are still mixed. Add another independent cross to separate them.',
+    'calib.labRefOpt':'Use as my lab\'s wild-type reference (calibrates the base model for all genotypes).','calib.labRefBadge':'lab reference','calib.labRefLegend':'★ = your lab\'s wild-type reference: calibrates the base model for all genotypes.','calib.labRefSet':'Set as lab reference (wild-type)','calib.labRefClear':'Remove lab reference','calib.vsLab':'· vs your lab reference',
     // planificación
     'plan.title':'Planning','plan.titleEdit':'Edit planned record','plan.sub':'Upcoming events and reverse scheduling.',
     'plan.upcoming':'📆 Upcoming events','plan.backward':'⏪ Plan backward','plan.backwardSub':'When to set it up to reach a stage by a target date?',
@@ -1188,6 +1196,7 @@ const I18N = {
     'calib.sMain':'{st} · {trend} (±{ci}%, {nb})',
     'calib.sInconsistent':'Inconsistente · {n} tandas discrepan más de lo esperable — revisá si hay un error de carga o un efecto de tanda.',
     'calib.warnSingle':'Una sola tanda por ahora — el genotipo y el efecto de tanda todavía están mezclados. Agregá otra cruza independiente para separarlos.',
+    'calib.labRefOpt':'Usar como wild-type de referencia de mi lab (calibra el modelo base para todos los genotipos).','calib.labRefBadge':'ref. del lab','calib.labRefLegend':'★ = wild-type de referencia de tu lab: calibra el modelo base para todos los genotipos.','calib.labRefSet':'Fijar como referencia del lab (wild-type)','calib.labRefClear':'Quitar referencia del lab','calib.vsLab':'· vs tu referencia del lab',
     'plan.title':'Planificación','plan.titleEdit':'Editar registro planificado','plan.sub':'Agenda de próximos eventos y cálculo inverso de fechas.',
     'plan.upcoming':'📆 Próximos eventos','plan.backward':'⏪ Planificar hacia atrás','plan.backwardSub':'¿Cuándo montarlo para llegar a un estadio en una fecha objetivo?',
     'plan.expPh':'ej. Fenotipo del ojo (separá con comas)','plan.reachStage':'Quiero llegar a','plan.stEgg':'Embrión (puesta)','plan.stAdult':'Adultos / vírgenes (eclosión)',
@@ -1279,13 +1288,14 @@ function calibTrendText(ci){
 function calibBatchesText(n){ return t(n===1 ? 'calib.batchOne' : 'calib.batchMany', { n }); }
 /* Línea principal de estado (Calibrando/Calibrado/Inconsistente + tendencia ± IC). */
 function calibStatusText(geno){
-  const ci = calibInfo(geno); if(!ci) return '';
+  const ci = calibInfoFor(geno); if(!ci) return '';
+  const vs = (!isLabRef(geno) && loadLabRef()) ? ' '+t('calib.vsLab') : '';   // genotipo vs wild-type del lab
   if(ci.state==='inconsistent') return t('calib.sInconsistent', { n: ci.nBatch });
-  return t('calib.sMain', { st: calibStateWord(ci.state), trend: calibTrendText(ci), ci: ci.ciPct, nb: calibBatchesText(ci.nBatch) });
+  return t('calib.sMain', { st: calibStateWord(ci.state), trend: calibTrendText(ci), ci: ci.ciPct, nb: calibBatchesText(ci.nBatch) }) + vs;
 }
 /* Aviso de tanda única (genotipo × lote confundidos); vacío si ya hay ≥2 tandas. */
 function calibWarnText(geno){
-  const ci = calibInfo(geno); if(!ci) return '';
+  const ci = calibInfoFor(geno); if(!ci) return '';
   return (ci.singleBatch && ci.state!=='inconsistent') ? t('calib.warnSingle') : '';
 }
 function openCalib(){
@@ -1326,20 +1336,27 @@ function renderCalibStatus(){
 let _calibKeys = [];
 function renderCalibList(){
   const all = loadCalib();
-  _calibKeys = Object.keys(all).filter(k=>calibInfo(k));
+  _calibKeys = Object.keys(all).filter(k=>calibInfoFor(k));
   const box = document.getElementById('calibList');
   if(!_calibKeys.length){ box.innerHTML = `<div class="hint">${t('calib.none')}</div>`; return; }
   box.innerHTML = _calibKeys.map((k,i)=>{
-    const ci = calibInfo(k);
+    const ci = calibInfoFor(k), lab = isLabRef(k);
     const detail = ci.state==='inconsistent'
       ? `${calibStateWord('inconsistent')} · ${ci.nBatch}×`
       : `${calibStateWord(ci.state)} · ${calibTrendText(ci)} · ±${ci.ciPct}% · ${ci.nBatch}×`;
-    return `<div class="calib-row"><span class="cg" title="${esc(k)}">${esc(k)}</span><span class="cd">${esc(detail)}</span><button class="cx" title="${esc(t('task.remove'))}" onclick="clearCalibGeno(${i})">✕</button></div>`;
-  }).join('');
+    const labBtn = `<button class="cx lab-toggle${lab?' on':''}" title="${esc(t(lab?'calib.labRefClear':'calib.labRefSet'))}" onclick="toggleLabRef(${i})">★</button>`;
+    return `<div class="calib-row${lab?' is-labref':''}"><span class="cg" title="${esc(k)}">${esc(k)}</span><span class="cd">${esc(detail)}</span>${labBtn}<button class="cx" title="${esc(t('task.remove'))}" onclick="clearCalibGeno(${i})">✕</button></div>`;
+  }).join('') + `<div class="hint" style="margin-top:7px;font-size:.76rem">${t('calib.labRefLegend')}</div>`;
+}
+/* designar / quitar el wild-type de referencia del laboratorio (calibra el base para todo) */
+function toggleLabRef(i){
+  const geno = _calibKeys[i]; if(!geno) return;
+  saveLabRef(isLabRef(geno) ? '' : geno);
+  renderCalibList(); renderCalibStatus(); render();
 }
 function clearCalibGeno(i){
   const geno = _calibKeys[i]; if(!geno) return;
-  askConfirm(t('cf.clearCalib'), ()=>{ clearCalib(geno); renderCalibList(); renderCalibStatus(); render(); });
+  askConfirm(t('cf.clearCalib'), ()=>{ if(isLabRef(geno)) saveLabRef(''); clearCalib(geno); renderCalibList(); renderCalibStatus(); render(); });
 }
 function startCalib(e){
   e.preventDefault();
@@ -1347,6 +1364,7 @@ function startCalib(e){
   if(!genotype){ alert(t('al.geno')); return; }
   const t0Mode = document.getElementById('calibT0Mode').value;
   const windowH = parseFloat(document.getElementById('calibWindowH').value);
+  if(document.getElementById('calibLabRef').checked) saveLabRef(genotype);   // wild-type de referencia del lab
   crosses.push({
     id:'c'+Date.now()+Math.random().toString(36).slice(2,5),
     calib:true, calibDone:false, parentsRemoved:true, experiments:[],
@@ -1690,6 +1708,7 @@ function stageBounds(temp, factor=1){
    térmicas no son transferibles entre genotipos — Wright/Powsner).
    ============================================================ */
 const CALIB_KEY = 'drosotrack.calib.v1';
+const LABREF_KEY = 'drosotrack.labref.v1';   // genotipo wild-type designado como referencia del laboratorio
 const CALIB_MIN = 3;   // tandas independientes para el estado "Calibrado" (menos = "Calibrando")
 // Incertidumbre del T50 (en DÍAS) según cómo se registró la eclosión.
 const CALIB_SIGMA_T50 = { count: 0.15, eye: 0.5, past: 1.0 };
@@ -1734,7 +1753,12 @@ function obsSigmaFactor(o){
 function obsBatch(o){ return o.batch || o.t0 || 'b'; }
 /* resumen de calibración de un genotipo, o null si no hay observaciones válidas.
    Devuelve {n, nBatch, factor, pct, sdPost, ciPct, state, singleBatch, conf}. */
-function calibInfo(geno){
+/* priorMean = hacia dónde encoge el estimador: 1 = modelo base de literatura;
+   con un wild-type de referencia calibrado, un genotipo encoge hacia el factor
+   del laboratorio (calibrado a dos niveles). El factor devuelto es ABSOLUTO
+   (relativo a literatura); pct es relativo al prior (vs literatura o vs el lab). */
+function calibInfo(geno, priorMean){
+  priorMean = (priorMean>0) ? priorMean : 1;
   const raw = (loadCalib()[normGeno(geno)] || [])
     .map(o=>({ o, f: obsFactor(o), s: obsSigmaFactor(o) }))
     .filter(x => x.f!=null && isFinite(x.f) && x.f>0 && x.s>0 && isFinite(x.s));
@@ -1758,25 +1782,38 @@ function calibInfo(geno){
   const i2 = (df>=1 && Q>0) ? Math.max(0, (Q - df) / Q) : 0;
   const inconsistent = nBatch>=2 && i2 > 0.5;                       // las tandas discrepan más de lo esperable
 
-  // 3) re-agrupar con τ² y encoger hacia el prior N(1, τ_prior²)
+  // 3) re-agrupar con τ² y encoger hacia el prior N(priorMean, τ_prior²)
   let W2=0, WF2=0; batches.forEach(b=>{ const w=1/(b.varTot+tau2); W2+=w; WF2+=w*b.f; });
   const wPrior = 1/(CALIB_PRIOR_SD*CALIB_PRIOR_SD);
   const wSum = wPrior + W2;
-  const factor = (wPrior*1 + WF2) / wSum;                           // media posterior (0 obs ⇒ 1)
+  const factor = (wPrior*priorMean + WF2) / wSum;                   // media posterior (0 obs ⇒ priorMean)
   const sdPost = Math.sqrt(1/wSum);
 
   // 4) estado y confianza, por nº de tandas independientes
   const state = inconsistent ? 'inconsistent' : (nBatch>=CALIB_MIN ? 'calibrated' : 'calibrating');
   const conf = nBatch>=5 ? 'high' : (nBatch>=3 ? 'med' : 'low');
   return {
-    n: nObs, nBatch, factor, pct: Math.round((factor-1)*100),
+    n: nObs, nBatch, factor, pct: Math.round((factor/priorMean-1)*100),   // pct relativo al prior
     sdPost, ciPct: Math.round(1.96*sdPost*100),                     // semiancho del IC 95 %, en puntos %
-    state, singleBatch: nBatch<2, conf,
+    state, singleBatch: nBatch<2, conf, priorMean,
   };
 }
-/* factor a aplicar al modelo: la media posterior (con 0 obs ⇒ 1 = modelo base).
-   El encogimiento la mantiene cerca de 1 mientras los datos no justifiquen más. */
-function calibFactorValue(geno){ const c = calibInfo(geno); return c ? c.factor : 1; }
+/* --- Calibrado a dos niveles: laboratorio (wild-type) + genotipo --- */
+function loadLabRef(){ try{ return localStorage.getItem(LABREF_KEY) || ''; }catch(e){ return ''; } }
+function saveLabRef(geno){ const g = normGeno(geno); if(g) localStorage.setItem(LABREF_KEY, g); else localStorage.removeItem(LABREF_KEY); }
+function isLabRef(geno){ const r = loadLabRef(); return !!r && normGeno(geno) === r; }
+/* factor global del laboratorio (del wild-type de referencia), encogido hacia literatura; 1 si no hay */
+function labFactorValue(){ const r = loadLabRef(); if(!r) return 1; const ci = calibInfo(r, 1); return ci ? ci.factor : 1; }
+/* calibInfo con el prior correcto: el wild-type encoge hacia literatura (1);
+   cualquier otro genotipo encoge hacia el factor del laboratorio. */
+function calibInfoFor(geno){ return isLabRef(geno) ? calibInfo(geno, 1) : calibInfo(geno, labFactorValue()); }
+/* factor a aplicar al modelo: posterior del genotipo si tiene datos; si no, el
+   factor del laboratorio (con wild-type calibrado) o 1 (solo literatura). */
+function calibFactorValue(geno){
+  const ci = calibInfoFor(geno);
+  if(ci) return ci.factor;
+  return isLabRef(geno) ? 1 : labFactorValue();
+}
 function addCalibObs(geno, t0, t50, temp, method, batch, windowH, t0Mode){
   const all = loadCalib();
   const key = normGeno(geno);
@@ -2159,7 +2196,7 @@ function card(cross){
   if(cross.calib){
     const tlBtn = `<div class="btn-row"><button class="timeline-btn" onclick="toggleTL(this)" data-tip="${esc(t('tip.timeline'))}">${t('card.viewTimeline')}</button></div>`;
     if(cross.calibDone){
-      const ci = calibInfo(cross.genotype);
+      const ci = calibInfoFor(cross.genotype);
       const res = ci ? calibStatusText(cross.genotype) : '';
       const muted = ci && ci.state!=='calibrated' ? ' prov' : '';   // "Calibrando"/"Inconsistente" → estilo apagado
       actionHtml = `<div class="calib-done${muted}">✓ ${esc(res)}</div>${tlBtn}${tlBlock}`;

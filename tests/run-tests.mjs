@@ -45,16 +45,17 @@ let _calibCache = null;`;
 const code = [
   stub,
   grabConst('T0'), grabConst('DEGREE_DAYS'), grabConst('STAGES'), grabConst('REF_TOTAL'),
-  grabConst('CALIB_KEY'), grabConst('CALIB_MIN'),
+  grabConst('CALIB_KEY'), grabConst('LABREF_KEY'), grabConst('CALIB_MIN'),
   grabConst('CALIB_SIGMA_T50'), grabConst('CALIB_SIGMA_BATCH'), grabConst('CALIB_PRIOR_SD'),
   grabConst('CALIB_SIGMA_T0_CROSSDAY'), grabConst('CALIB_SIGMA_T0_UNKNOWN'),
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('ensureAging'), grabFn('kmCurve'), grabFn('computeT50FromCounts'),
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
+  grabFn('loadLabRef'), grabFn('saveLabRef'), grabFn('isLabRef'), grabFn('labFactorValue'), grabFn('calibInfoFor'),
   grabFn('icsEsc'), grabFn('icsFold'),
   grabFn('lgamma'), grabFn('gammincQ'), grabFn('chiSqUpper'), grabFn('quadFormSolve'), grabFn('logRankTest'),
   grabConst('SURV_SHAPE'), grabFn('normInv'), grabFn('logRankPlan'), grabFn('timeToMortality'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, icsEsc, icsFold, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, icsEsc, icsFold, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -275,6 +276,36 @@ group('Calibración v2 — modos de t₀ (incertidumbre del inicio de puesta)', 
   M.addCalibObs('G', '2025-01-01T00:00', t50, 25, 'count', 'cid', 4, 'bounded');
   const recBounded = M.loadCalib()['G'][0];
   ok(recBounded.t0Mode === undefined && recBounded.windowH === 4, 'modo acotado: no guarda t0Mode y sí la ventana (4 h)');
+});
+
+group('Calibración a dos niveles — laboratorio (wild-type) + genotipo', () => {
+  const T0d = Date.parse('2025-01-01T00:00'), base25 = M.totalDays(25);
+  const obs = (F, m, b) => ({ t0: '2025-01-01T00:00', t50: new Date(T0d + F * base25 * 86400000).toISOString(), temp: 25, method: m, batch: b });
+  const three = F => [obs(F, 'count', 'b1'), obs(F, 'count', 'b2'), obs(F, 'count', 'b3')];
+
+  // el estimador encoge hacia el prior que se le pase (no solo hacia 1 = literatura)
+  M.saveCalib({ G: three(1.3) });
+  ok(M.calibInfo('G', 1.2).factor > M.calibInfo('G', 1).factor, 'prior mayor (lab) ⇒ posterior más alto (encoge hacia el lab)');
+  ok(M.calibInfo('G', 1.3).pct === 0, 'pct = 0 cuando el genotipo coincide con el prior del lab');
+  ok(M.calibInfo('G', 1).pct === Math.round((M.calibInfo('G', 1).factor - 1) * 100), 'con prior 1, pct es relativo a literatura (compat.)');
+
+  // wild-type de referencia del laboratorio
+  M.saveCalib({ 'Canton-S': three(1.1), G: three(1.3) });
+  M.saveLabRef('Canton-S');
+  ok(M.isLabRef('Canton-S') === true && M.isLabRef('G') === false, 'isLabRef marca solo el wild-type');
+  const labF = M.labFactorValue();
+  ok(labF > 1 && labF < 1.1, 'el factor del lab está encogido hacia literatura (entre 1 y 1.1)');
+  ok(Math.abs(M.calibInfoFor('Canton-S').factor - M.calibInfo('Canton-S', 1).factor) < 1e-9, 'el wild-type encoge hacia literatura (prior 1)');
+  ok(Math.abs(M.calibInfoFor('G').factor - M.calibInfo('G', labF).factor) < 1e-9, 'un genotipo encoge hacia el factor del lab');
+
+  // jerarquía de calibFactorValue
+  ok(Math.abs(M.calibFactorValue('nunca-visto') - labF) < 1e-9, 'genotipo sin calibrar ⇒ usa el factor del lab');
+  ok(M.calibFactorValue('Canton-S') === M.calibInfoFor('Canton-S').factor, 'el wild-type usa su propio factor (vs literatura)');
+  ok(M.calibFactorValue('G') === M.calibInfoFor('G').factor && M.calibFactorValue('G') > labF, 'un genotipo calibrado usa su posterior (vs lab) y va más lento que el lab');
+
+  // sin wild-type de referencia ⇒ comportamiento de un nivel (backward compatible)
+  M.saveLabRef('');
+  ok(M.labFactorValue() === 1 && M.calibFactorValue('nunca-visto') === 1, 'sin referencia de lab ⇒ factor 1 (solo literatura)');
 });
 
 /* ============================ 5) EXPORT .ics (RFC 5545) ============================ */
