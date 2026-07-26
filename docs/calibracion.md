@@ -83,28 +83,14 @@ El ajuste es estable frente a cambios de rango y de sexo:
 | Hembras (tablas), 15–28 | 11,76 | 116,5 | 0,9947 | 13 |
 | **Sexos avg, 15–32 (mal ajuste)** | **9,56** | **145,5** | **0,9193** | 18 |
 
-La última fila es reveladora: **ajustar sobre el rango completo, incluidos los
-extremos no lineales, da T₀ ≈ 9,6 y DD ≈ 146 — casi exactamente las constantes
-que la app usaba antes (10,2 / 148).** Es la explicación más probable de su origen
-y de su sesgo, y desaparece al restringir el ajuste al rango lineal. (Al no haber
-un punto verificado entre 16 y 18 °C, los cortes 16–28 y 18–28 coinciden.)
+La última fila muestra por qué importa restringir el ajuste al rango lineal:
+**incluir los extremos no lineales degrada el ajuste** (T₀ ≈ 9,6 · DD ≈ 146 ·
+R² baja a 0,92). Las constantes solo son fiables en ~15–28 °C. (Al no haber un
+punto verificado entre 16 y 18 °C, los cortes 16–28 y 18–28 coinciden.)
 
 ---
 
-## 3. Mejora frente a las constantes previas
-
-Sobre los 13 puntos verificados de Powsner (~15–28 °C), con las constantes de la app:
-
-| Constantes | MAE | Sesgo |
-|---|---|---|
-| Anteriores (T₀ = 10,2 / DD = 148) | 0,83 d | **+0,76 d** (predice tarde) |
-| Calibradas (T₀ = 11,78 / DD = 116) | 0,50 d | +0,13 d |
-
-*(Figura 2 — predicho vs. observado con la línea de identidad; las constantes
-anteriores se apartan sistemáticamente hacia arriba, las calibradas caen sobre la
-identidad.)*
-
-### Reparto por estadios (a 25 °C, Powsner)
+## 3. Reparto por estadios (a 25 °C, Powsner)
 
 | Estadio | Duración | Proporción |
 |---|---|---|
@@ -118,26 +104,6 @@ la temperatura. El período larval se subdivide **L1 : L2 : L3 = 1 : 1 : 2** a p
 de una revisión de *Current Biology* (embriogénesis, L1 y L2 de un día cada uno,
 L3 de dos días), **no de Powsner**, que mide el período larval como un bloque único
 (ver caveat 9).
-
-### Impacto sobre las predicciones
-
-El error del modelo anterior estaba concentrado **casi por completo en el estadio
-pupal** (sobreestimado ~25 %). Por eso la recalibración es despareja:
-
-| T (°C) | Eclosión antes | Eclosión nueva | Δ | Pupación antes | Pupación nueva | Δ |
-|---|---|---|---|---|---|---|
-| 16 | 25,5 | 27,8 | **+2,2** | 12,8 | 15,2 | +2,4 |
-| 18 | 19,0 | 18,8 | −0,2 | 9,5 | 10,2 | +0,8 |
-| 20 | 15,1 | 14,2 | −0,9 | 7,6 | 7,7 | +0,2 |
-| 22 | 12,5 | 11,4 | −1,1 | 6,3 | 6,2 | −0,0 |
-| 25 | 10,0 | 8,8 | **−1,2** | 5,0 | 4,8 | −0,2 |
-| 27 | 8,8 | 7,6 | −1,2 | 4,4 | 4,2 | −0,2 |
-| 28 | 8,3 | 7,2 | −1,1 | 4,2 | 3,9 | −0,2 |
-
-La **pupación casi no se mueve** (los recordatorios de manejo larval y de retirar
-parentales quedan iguales); lo que cambia es **cuándo esperar adultos** (~1,2 d
-antes entre 20 y 28 °C). Por debajo de ~18 °C el modelo nuevo predice más largo,
-consecuencia de un T₀ más alto (cerca del umbral, dividir por `θ − T₀` se dispara).
 
 ---
 
@@ -195,9 +161,10 @@ por genotipo/laboratorio de la app. *(Figuras 4 y 6.)*
 9. **La subdivisión L1/L2/L3 proviene de una fuente distinta de Powsner** (revisión
    de *Current Biology*), que mide el período larval como bloque único. Parkin &
    Burnet 1986 implicaría 1 : 1 : 1,5; la diferencia es de horas.
-10. **El efecto de la recalibración no es uniforme** (§3): la pupación casi no se
-    mueve, la eclosión se adelanta ~1,2 d entre 20–28 °C, y por debajo de ~18 °C el
-    modelo nuevo predice más largo.
+10. **El modelo es muy sensible cerca del umbral inferior.** Por debajo de ~18 °C,
+    como θ se acerca a T₀, dividir por `(θ − T₀)` hace que la duración crezca rápido
+    y que un pequeño error de temperatura se amplifique. Usar las predicciones con
+    cautela cerca del límite frío.
 
 ---
 

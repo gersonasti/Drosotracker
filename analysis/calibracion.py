@@ -6,8 +6,8 @@ DrosoTracker - Calibracion del modelo de desarrollo por literatura.
 Deriva las constantes termicas T0 y DD del modelo huevo->adulto
     T_dev(theta) = DD / (theta - T0)      <=>      tasa = 1/T_dev = (1/DD)*theta - T0/DD
 por regresion lineal de la TASA de desarrollo contra la temperatura, sobre los
-datos de Powsner (1935) (transcripcion verificada), rango lineal ~15-28 C. Genera robustez,
-la comparacion con las constantes previas y las figuras del manuscrito, y verifica
+datos de Powsner (1935) (transcripcion verificada), rango lineal ~15-28 C. Genera la
+tabla de robustez, el reparto por estadios y las figuras del manuscrito, y verifica
 los valores contra los reportados a mano (sale con codigo != 0 si algo no cuadra).
 
 Correr:  python analysis/calibracion.py
@@ -28,10 +28,6 @@ FIGS = os.path.join(HERE, "figures")
 os.makedirs(FIGS, exist_ok=True)
 
 FIT_LO, FIT_HI = 15.0, 28.0        # rango lineal de ajuste (incluye 15.24 y 27.77; excluye >=28.07)
-OLD_T0, OLD_DD = 10.2, 148.0       # constantes previas de la app
-NEW_T0, NEW_DD = 11.78, 116.0      # constantes calibradas (resultado de este script; DD=116.4->116)
-OLD_PUPATION_FRAC = 0.50           # fin de L3 / total en el reparto viejo (1+1+1+2)/10
-NEW_PUPATION_FRAC = 0.546          # fin de L3 / total en el reparto de Powsner (0.098+0.448)
 
 # --------------------------------------------------------------------------- #
 #  Utilidades de ajuste
@@ -161,26 +157,7 @@ check("AlSaffar 15-30 T0", al_1530["T0"], 9.71, 0.1)
 check("AlSaffar 15-30 DD", al_1530["DD"], 222.5, 3.0)
 
 # --------------------------------------------------------------------------- #
-#  4) Mejora frente a las constantes previas (Powsner 16-28)
-# --------------------------------------------------------------------------- #
-print("\n" + "=" * 70)
-print("MEJORA FRENTE A LAS CONSTANTES PREVIAS (rango de ajuste ~15-28 C)")
-mfit = main["mask"]
-obs = dur_v[mfit]
-Tsub = temp_v[mfit]
-_mb = {}
-for label, key, T0, DD in (("Anteriores (10.2/148)", "old", OLD_T0, OLD_DD),
-                           ("Calibradas (11.78/116)", "new", NEW_T0, NEW_DD)):
-    pred = predict(T0, DD, Tsub)
-    mae = float(np.mean(np.abs(pred - obs)))
-    bias = float(np.mean(pred - obs))
-    _mb[key] = (mae, bias)
-    print(f"  {label:<26} MAE={mae:.2f} d   sesgo={bias:+.2f} d")
-check("MAE: calibrado < anterior", 1.0 if _mb["new"][0] < _mb["old"][0] else 0.0, 1.0, 0.5)
-check("sesgo: |calibrado| < |anterior|", 1.0 if abs(_mb["new"][1]) < abs(_mb["old"][1]) else 0.0, 1.0, 0.5)
-
-# --------------------------------------------------------------------------- #
-#  5) Reparto por estadios a 25 C
+#  4) Reparto por estadios a 25 C
 # --------------------------------------------------------------------------- #
 print("\n" + "=" * 70)
 print("REPARTO POR ESTADIOS A 25 C (Powsner)")
@@ -199,18 +176,6 @@ check("embrion 25C (d)", embryo_d, 0.85, 0.03)
 check("larval 25C (d)", larval_d, 3.90, 0.05)
 check("pupal 25C (d)", pupal_d, 3.96, 0.05)
 
-# --------------------------------------------------------------------------- #
-#  6) Impacto de la recalibracion sobre las predicciones
-# --------------------------------------------------------------------------- #
-print("\n" + "=" * 70)
-print("IMPACTO SOBRE LAS PREDICCIONES (eclosion y pupacion, dias)")
-print(f"{'T':>4}{'ecl_ant':>9}{'ecl_new':>9}{'d_ecl':>8}{'pup_ant':>9}{'pup_new':>9}{'d_pup':>8}")
-impact_rows = []
-for T in (16, 18, 20, 22, 25, 27, 28):
-    ea, en = predict(OLD_T0, OLD_DD, T), predict(NEW_T0, NEW_DD, T)
-    pa, pn = ea * OLD_PUPATION_FRAC, en * NEW_PUPATION_FRAC
-    print(f"{T:>4}{ea:>9.1f}{en:>9.1f}{en-ea:>+8.1f}{pa:>9.1f}{pn:>9.1f}{pn-pa:>+8.1f}")
-    impact_rows.append((T, ea, en, pa, pn))
 
 # --------------------------------------------------------------------------- #
 #  FIGURAS
@@ -252,23 +217,6 @@ ax.set_xlabel("temperatura (C)")
 ax.set_ylabel("tasa de desarrollo (1/dias)")
 ax.legend(fontsize=7, frameon=False, loc="lower right")
 save(fig, "fig1_tasa_vs_temp")
-
-# Fig 2 - predicho vs observado (figura estrella)
-fig, ax = plt.subplots(figsize=(3.5, 3.5))
-lims = [6, 20]
-ax.plot(lims, lims, ls="--", c=GREY, lw=1.0, zorder=1)
-for T0, DD, mk, lab, col in ((OLD_T0, OLD_DD, "s", "anteriores (10.2/148)", GREY),
-                             (NEW_T0, NEW_DD, "o", "calibradas (11.78/116)", DARK)):
-    pred = predict(T0, DD, Tsub)
-    mae = np.mean(np.abs(pred - obs)); bias = np.mean(pred - obs)
-    ax.scatter(obs, pred, s=24, marker=mk, facecolors="none" if mk == "s" else col,
-               edgecolors=col, zorder=3,
-               label=f"{lab}\nMAE={mae:.2f} sesgo={bias:+.2f}")
-ax.set_xlim(lims); ax.set_ylim(lims); ax.set_aspect("equal")
-ax.set_xlabel("duracion observada (dias)")
-ax.set_ylabel("duracion predicha (dias)")
-ax.legend(fontsize=6.5, frameon=False, loc="upper left")
-save(fig, "fig2_predicho_vs_observado")
 
 # Fig 3 - duracion por estadio vs temperatura
 fig, ax = plt.subplots(figsize=(3.5, 3.0))

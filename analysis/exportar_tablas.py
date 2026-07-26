@@ -20,9 +20,8 @@ OUT = os.path.join(HERE, "tablas")
 os.makedirs(OUT, exist_ok=True)
 
 FIT_LO, FIT_HI = 15.0, 28.0    # rango de ajuste (incluye 15.24 y 27.77; excluye >=28.07)
-OLD_T0, OLD_DD = 10.2, 148.0
 NEW_T0, NEW_DD = 11.78, 116.0
-OLD_PUP_FRAC, NEW_PUP_FRAC = 0.50, 0.546     # fin de L3 / total (reparto viejo vs Powsner)
+NEW_PUP_FRAC = 0.546           # fin de L3 / total en el reparto de Powsner (0.098+0.448)
 
 CITA = {
     "powsner1935": "Powsner (1935) Physiol. Zool. 8:474-520",
@@ -163,23 +162,18 @@ assert abs(p.T0_c - 11.78) < 0.03 and abs(p.DD_grados_dia - 116.4) < 0.6, "el aj
 temps = np.arange(15, 30.01, 0.5)
 predicciones = pd.DataFrame({
     "temp_c": temps,
-    "eclosion_calibrado_d": NEW_DD / (temps - NEW_T0),
-    "eclosion_anterior_d": OLD_DD / (temps - OLD_T0),
-    "pupacion_calibrado_d": NEW_DD / (temps - NEW_T0) * NEW_PUP_FRAC,
-    "pupacion_anterior_d": OLD_DD / (temps - OLD_T0) * OLD_PUP_FRAC,
+    "eclosion_d": NEW_DD / (temps - NEW_T0),
+    "pupacion_d": NEW_DD / (temps - NEW_T0) * NEW_PUP_FRAC,
+    "en_rango_validez": (temps >= FIT_LO) & (temps <= FIT_HI),
 })
-predicciones["diferencia_eclosion_d"] = predicciones.eclosion_calibrado_d - predicciones.eclosion_anterior_d
-predicciones["en_rango_validez"] = (temps >= FIT_LO) & (temps <= FIT_HI)
 
 sub = tv[tv.en_rango_ajuste]
 pvo = pd.DataFrame({
     "temp_c": sub.temp_c.values,
     "observado_d": sub.total_days.values,
-    "predicho_calibrado_d": NEW_DD / (sub.temp_c.values - NEW_T0),
-    "predicho_anterior_d": OLD_DD / (sub.temp_c.values - OLD_T0),
+    "predicho_d": NEW_DD / (sub.temp_c.values - NEW_T0),
 })
-pvo["residual_calibrado_d"] = pvo.predicho_calibrado_d - pvo.observado_d
-pvo["residual_anterior_d"] = pvo.predicho_anterior_d - pvo.observado_d
+pvo["residual_d"] = pvo.predicho_d - pvo.observado_d
 
 # reparto por estadios a 25 C
 r25 = st.iloc[(np.abs(st.temp_eggval - 25.14)).argmin()]
@@ -209,8 +203,8 @@ leeme = pd.DataFrame([
     ("HOJA alsaffar_fluctuantes", "22 regimenes alternantes. P = % del desarrollo predicho; P<100 = mas rapido."),
     ("HOJA bdsc", "Valores redondeados de referencia. Solo sanity check visual, NO usar en ajustes."),
     ("HOJA ajustes", "Resultado de las regresiones tasa~temperatura para varios subconjuntos."),
-    ("HOJA predicciones", "Duracion predicha por temperatura, modelo calibrado vs anterior."),
-    ("HOJA predicho_vs_observado", "Los 13 puntos del ajuste principal con sus residuos (figura estrella)."),
+    ("HOJA predicciones", "Duracion de eclosion y pupacion predicha por temperatura (modelo calibrado)."),
+    ("HOJA predicho_vs_observado", "Los 13 puntos del ajuste principal con sus residuos."),
     ("HOJA powsner_total_verif", "Totales huevo->adulto VERIFICADOS (Tablas IX+X): el input del ajuste."),
     ("HOJA estadios_25C", "Reparto embrion/larval/pupal medido a 25 C."),
     ("", ""),
@@ -225,7 +219,6 @@ leeme = pd.DataFrame([
     ("MODELO", "T_dev(theta) = DD / (theta - T0)   <=>   tasa = (1/DD)*theta - T0/DD"),
     ("AJUSTE", "DD = 1/pendiente ; T0 = -intercepto/pendiente"),
     ("CALIBRADO", "T0 = 11.78 C ; DD = 116.4 (->116) grados-dia (~15-28 C, n=13, R2=0.997)"),
-    ("ANTERIOR", "T0 = 10.2 C ; DD = 148 (equivale a ajustar sobre el rango completo, mal condicionado)"),
     ("", ""),
     ("EN R - leer", 'd <- read.csv("tidy_todo.csv")'),
     ("EN R - puntos del ajuste", 'fit <- subset(d, usado_en_ajuste_principal == "True")'),
