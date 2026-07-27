@@ -1456,6 +1456,7 @@ const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
 const GCAL_MAP_KEY = 'drosotrack.gcalmap.v1';   // { uid: {id, sig} } — eventos ya creados
 const GCAL_CFG_KEY = 'drosotrack.gcal.v1';       // { connected, auto, lastSync }
 let _gcalToken = null, _gcalTokenExp = 0, _gcalClient = null, _gcalGis = null, _gcalTokenCb = null, _gcalTimer = null;
+let _gcalInteractive = false;   // sólo una sync iniciada por el usuario puede abrir la ventana de login de Google
 
 function gcalCfg(){ try{ return JSON.parse(localStorage.getItem(GCAL_CFG_KEY)) || {}; }catch(e){ return {}; } }
 function gcalSetCfg(o){ localStorage.setItem(GCAL_CFG_KEY, JSON.stringify({ ...gcalCfg(), ...o })); }
@@ -1484,20 +1485,26 @@ async function gcalEnsureClient(){
 function gcalGetToken(interactive){
   return new Promise((resolve,reject)=>{
     if(_gcalToken && Date.now() < _gcalTokenExp-60000) return resolve(_gcalToken);
+    // En modo silencioso (auto-sync) NUNCA abrimos la ventana de Google: sin token
+    // en memoria, rechazamos y la sync se saltea sola. Sólo una acción del usuario
+    // (Conectar / Sincronizar) puede mostrar el login.
+    if(!interactive) return reject(new Error('no_silent_token'));
     gcalEnsureClient().then(()=>{
       _gcalTokenCb = (r)=>{ if(r && r.access_token) resolve(r.access_token); else reject(new Error((r&&r.error)||'token_error')); };
-      _gcalClient.requestAccessToken({ prompt: interactive ? 'consent' : '' });
+      _gcalClient.requestAccessToken({ prompt: 'consent' });
     }).catch(reject);
   });
 }
 async function gcalApi(method, path, body){
-  let token = await gcalGetToken(false);
+  let token;
+  try{ token = await gcalGetToken(false); }
+  catch(e){ if(!_gcalInteractive) throw e; token = await gcalGetToken(true); }
   const call = (tk)=> fetch('https://www.googleapis.com/calendar/v3'+path, {
     method, headers:{ 'Authorization':'Bearer '+tk, 'Content-Type':'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   });
   let res = await call(token);
-  if(res.status===401){ _gcalToken=null; token=await gcalGetToken(true); res=await call(token); }
+  if(res.status===401){ _gcalToken=null; if(!_gcalInteractive) throw new Error('unauthorized'); token=await gcalGetToken(true); res=await call(token); }
   return res;
 }
 /* --- construir los eventos deseados a partir de los registros --- */
@@ -1554,6 +1561,7 @@ function gcalMarkDoneFromEvent(uid){
 async function gcalSync(interactive, pull){
   if(pull===undefined) pull = true;
   if(!gcalConfigured()){ if(interactive) alert(t('gcal.noClient')); return; }
+  _gcalInteractive = !!interactive;   // gobierna si gcalApi puede escalar a login
   try{ await gcalGetToken(interactive); }
   catch(e){ if(interactive) alert(t('gcal.authFail')); gcalUpdateUI(); return; }
   const map=gcalGetMap();
