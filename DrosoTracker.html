@@ -1320,7 +1320,7 @@ function openCalib(){
   document.getElementById('calibT0Mode').value = 'bounded';
   document.getElementById('calibWindowH').value = 6;
   updateCalibT0Mode();
-  const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype), ...loadHistorySet(GENO_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
   document.getElementById('calibGenoList').innerHTML = genos.map(v=>`<option value="${esc(v)}"></option>`).join('');
   renderCalibStatus(); renderCalibList();
   document.getElementById('calibOverlay').classList.add('open');
@@ -2002,8 +2002,27 @@ function periodFromHour(h){ return h < 12 ? 'morning' : (h < 17 ? 'afternoon' : 
 
 /* --- Persistencia --- */
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }catch(e){ return []; } }
-function save(list){ localStorage.setItem(STORE_KEY, JSON.stringify(list)); }
+/* Historial de genotipos y tipos de experimento alguna vez escritos, aparte de las tarjetas
+   ("Vaciar registros" borra las tarjetas pero no este historial, para que el autocompletado
+   no se vacíe con ellas). Se alimenta solo (cada save() suma lo nuevo); nunca se borra sola. */
+const GENO_HISTORY_KEY = 'drosotrack.genoHistory.v1';
+const EXP_HISTORY_KEY = 'drosotrack.expHistory.v1';
+function loadHistorySet(key){ try{ return new Set(JSON.parse(localStorage.getItem(key)) || []); }catch(e){ return new Set(); } }
+function saveHistorySet(key, set){ localStorage.setItem(key, JSON.stringify([...set])); }
+function recordHistory(list){
+  const genos = loadHistorySet(GENO_HISTORY_KEY), exps = loadHistorySet(EXP_HISTORY_KEY);
+  let gChanged = false, eChanged = false;
+  list.forEach(c=>{
+    const g = String(c.genotype||'').trim();
+    if(g && !genos.has(g)){ genos.add(g); gChanged = true; }
+    (c.experiments||[]).forEach(x=>{ const s = String(x||'').trim(); if(s && !exps.has(s)){ exps.add(s); eChanged = true; } });
+  });
+  if(gChanged) saveHistorySet(GENO_HISTORY_KEY, genos);
+  if(eChanged) saveHistorySet(EXP_HISTORY_KEY, exps);
+}
+function save(list){ localStorage.setItem(STORE_KEY, JSON.stringify(list)); recordHistory(list); }
 let crosses = load();
+recordHistory(crosses);   // sembrar el historial con las tarjetas que ya existan (usuarios que actualizan)
 
 /* --- Ilustraciones SVG por estadio (estilo BioRender pastel, morfología real) --- */
 function larvaArt(scale, fill, spiracles){
@@ -3099,7 +3118,7 @@ function openPlan(){
   // autocompletado de experimentos y genotipos
   const exps = [...new Set(crosses.flatMap(c=>c.experiments||[]).filter(Boolean))];
   document.getElementById('planExpList').innerHTML = exps.map(v=>`<option value="${esc(v)}"></option>`).join('');
-  const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype), ...loadHistorySet(GENO_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
   document.getElementById('planGenoList').innerHTML = genos.map(v=>`<option value="${esc(v)}"></option>`).join('');
   document.getElementById('planOverlay').classList.add('open');
 }
@@ -3194,7 +3213,7 @@ function openPlanEdit(id){
 
 /* --- Autocompletado del campo Nombre (datalist nativo) a partir del historial --- */
 function populateDatalists(){
-  const exps = [...new Set(crosses.flatMap(c=>c.experiments||[]).filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  const exps = [...new Set([...crosses.flatMap(c=>c.experiments||[]), ...loadHistorySet(EXP_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
   const dl = document.getElementById('expList');
   if(dl) dl.innerHTML = exps.map(v=>`<option value="${esc(v)}"></option>`).join('');
 }
@@ -3340,6 +3359,7 @@ function rebuildAutocompleteCache(){
   const add = g => { const s=String(g).trim(); if(!s) return; fset.add(s); genoTokens(s).forEach(t=>cset.add(t)); };
   (labDB && labDB.list || []).forEach(add);
   crosses.forEach(c=> c.genotype && add(c.genotype));
+  loadHistorySet(GENO_HISTORY_KEY).forEach(add);
   GENO_COMPONENTS.forEach(t=> cset.add(t));
   _acFull=[...fset]; _acComps=[...cset];
 }
