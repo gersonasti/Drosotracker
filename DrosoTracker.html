@@ -867,6 +867,12 @@
       </div>
     </form>
     <h3 class="calib-list-title" data-i18n="calib.existing">Calibrated genotypes</h3>
+    <div class="hint" data-i18n="calib.shareHint">Share this calibration with your labmates so they don't have to start from zero — export it and have them import the file (adds to theirs, doesn't replace it).</div>
+    <div class="modal-actions" style="margin-top:8px">
+      <button type="button" class="btn ghost" onclick="exportCalibJSON()" data-i18n="calib.exportBtn">⬇ Share calibration (JSON)</button>
+      <button type="button" class="btn ghost" onclick="document.getElementById('importCalibFile').click()" data-i18n="calib.importBtn">⬆ Import calibration</button>
+      <input type="file" id="importCalibFile" accept="application/json,.json" style="display:none" onchange="importCalibJSON(event)" />
+    </div>
     <div id="calibList"></div>
   </div>
 </div>
@@ -1079,6 +1085,10 @@ const I18N = {
     'calib.t0HintCross':'You know the day you put the parents together but not the exact egg-lay — this observation will carry more uncertainty and pull the estimate less.',
     'calib.t0HintUnknown':'t₀ is only approximate — this observation will weigh very little. Prefer a bounded egg-lay window when you can.',
     'calib.temp':'Incubation temperature (°C) *','calib.start':'Start calibration','calib.existing':'Calibrated genotypes','calib.none':'No calibrations yet.',
+    'calib.shareHint':'Share this calibration with your labmates so they don\'t have to start from zero — export it and have them import the file (adds to theirs, doesn\'t replace it).',
+    'calib.exportBtn':'⬇ Share calibration (JSON)','calib.importBtn':'⬆ Import calibration',
+    'calib.importDone':'Added {n} new observation(s) to your calibration.','calib.importLabRefSet':'"{geno}" is now set as your lab\'s wild-type reference.',
+    'calib.importLabRefConflict':'The file marks "{b}" as the lab\'s wild-type reference, but on this device it\'s "{a}". Switch to "{b}"?',
     'card.calibRecord':'Log eclosion (T₅₀)','calib.q':'Has about half of the flies eclosed?','calib.qHalf':'~ Half (record now)','calib.qPast':'Past half already','calib.qNotYet':'Not yet','calib.slower':'slower','calib.faster':'faster','calib.confLow':'low','calib.confMed':'medium','calib.confHigh':'high',
     'calib.adjusted':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype runs ~{pct}% {dir} than the base model.','calib.adjusted0':'Prediction adjusted from {n} observation(s) (confidence: {conf}). This genotype matches the base model.','card.calibResult':'Calibrated · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrated · matches base ({n} obs)','calib.pendingHint':'When ~half of the flies have eclosed, tap "Log eclosion (T₅₀)".',
     'calib.orMore':'or, for higher quality:','calib.byCount':'Log by count (more accurate)',
@@ -1185,6 +1195,10 @@ const I18N = {
     'calib.t0HintCross':'Sabés el día que juntaste los parentales pero no la puesta exacta — esta observación va a arrastrar más incertidumbre y pesar menos.',
     'calib.t0HintUnknown':'El t₀ es solo aproximado — esta observación va a pesar muy poco. Cuando puedas, preferí una puesta acotada.',
     'calib.temp':'Temperatura de incubación (°C) *','calib.start':'Iniciar calibración','calib.existing':'Genotipos calibrados','calib.none':'Todavía no hay calibraciones.',
+    'calib.shareHint':'Compartí esta calibración con tus compañeros de lab para que no arranquen de cero — exportala y que importen el archivo (se suma a la suya, no la reemplaza).',
+    'calib.exportBtn':'⬇ Compartir calibración (JSON)','calib.importBtn':'⬆ Importar calibración',
+    'calib.importDone':'Se agregaron {n} observación(es) nueva(s) a tu calibración.','calib.importLabRefSet':'"{geno}" quedó como la referencia wild-type de tu laboratorio.',
+    'calib.importLabRefConflict':'El archivo marca a "{b}" como la referencia wild-type del laboratorio, pero en este dispositivo es "{a}". ¿Cambiar a "{b}"?',
     'card.calibRecord':'Registrar eclosión (T₅₀)','calib.q':'¿Ya eclosionó ~la mitad de las moscas?','calib.qHalf':'~ La mitad (registrar ahora)','calib.qPast':'Ya pasó la mitad','calib.qNotYet':'Todavía no','calib.slower':'más lento','calib.faster':'más rápido','calib.confLow':'baja','calib.confMed':'media','calib.confHigh':'alta',
     'calib.adjusted':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo va ~{pct}% {dir} que el modelo base.','calib.adjusted0':'Predicción ajustada según {n} observación(es) (confianza: {conf}). Este genotipo coincide con el modelo base.','card.calibResult':'Calibrado · ~{pct}% {dir} ({n} obs)','card.calibResult0':'Calibrado · igual al base ({n} obs)','calib.pendingHint':'Cuando haya eclosionado ~la mitad, tocá "Registrar eclosión (T₅₀)".',
     'calib.orMore':'o, para más calidad:','calib.byCount':'Registrar por conteo (más preciso)',
@@ -2962,6 +2976,61 @@ function importJSON(e){
   };
   r.readAsText(f);
   e.target.value=''; closeMenu();
+}
+/* Exportar/Importar la calibración (observaciones crudas + referencia wild-type del lab) para
+   compartirla entre integrantes del mismo laboratorio. Cada uno la abre en su propio dispositivo
+   (localStorage, sin cuenta), así que esto reemplaza una sincronización automática: quien calibra
+   exporta el archivo, lo comparte (Slack/email/USB) y cada compañero lo importa en el suyo.
+   Se guardan las observaciones crudas, no el factor ya calculado — el estimador (shrinkage) es
+   determinístico, así que cualquiera que importe el mismo set de observaciones llega al mismo
+   número. Importar COMBINA con lo que ya haya en el dispositivo (no reemplaza), para que nadie
+   pierda tandas propias al sumar el archivo de otro. */
+function exportCalibJSON(){
+  const payload = { calib: loadCalib(), labRef: loadLabRef() };
+  downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
+    `drosotracker-calibracion-${new Date().toISOString().slice(0,10)}.json`);
+}
+/* clave de una observación para detectar duplicados exactos al combinar dos sets */
+function obsDedupeKey(o){
+  return [o.t0, o.t50, o.temp, o.method||'', o.batch||'', o.t0Mode||'', o.windowH||''].join('|');
+}
+function importCalibJSON(e){
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const data = JSON.parse(r.result);
+      const incoming = (data && typeof data==='object' && !Array.isArray(data) && data.calib && typeof data.calib==='object') ? data.calib : null;
+      if(!incoming) throw new Error(t('err.notList'));
+      const all = loadCalib();
+      let added = 0;
+      Object.keys(incoming).forEach(genoRaw=>{
+        const geno = normGeno(genoRaw);
+        const list = Array.isArray(incoming[genoRaw]) ? incoming[genoRaw] : [];
+        const existing = all[geno] = all[geno] || [];
+        const seen = new Set(existing.map(obsDedupeKey));
+        list.forEach(o=>{
+          if(!o || typeof o!=='object' || !o.t0 || !o.t50 || typeof o.temp!=='number') return;
+          const key = obsDedupeKey(o);
+          if(seen.has(key)) return;
+          seen.add(key); existing.push(o); added++;
+        });
+      });
+      saveCalib(all);
+      let labMsg = '';
+      if(data.labRef){
+        const incomingRef = normGeno(data.labRef), currentRef = loadLabRef();
+        if(!currentRef){ saveLabRef(incomingRef); labMsg = '\n'+t('calib.importLabRefSet',{geno:incomingRef}); }
+        else if(currentRef!==incomingRef && confirm(t('calib.importLabRefConflict',{a:currentRef, b:incomingRef}))){
+          saveLabRef(incomingRef); labMsg = '\n'+t('calib.importLabRefSet',{geno:incomingRef});
+        }
+      }
+      renderCalibList(); renderCalibStatus(); render();
+      alert(t('calib.importDone',{n:added})+labMsg);
+    }catch(err){ alert(t('al.importFail',{e:err.message})); }
+  };
+  r.readAsText(f);
+  e.target.value='';
 }
 /* CSV listo para GraphPad Prism / R (una fila por mosca: día + estado 1=muerte 0=censura) */
 function exportSurvivalCSV(){
