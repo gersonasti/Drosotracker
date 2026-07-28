@@ -17,14 +17,14 @@ documentados, derivados de la misma regresión y de los mismos datos.
 
 ## 1. El modelo
 
-El desarrollo se describe con una **suma térmica** (grados-día):
+El desarrollo se describe con una **suma térmica** (°C·días):
 
 ```
 T_dev(θ) = DD / (θ − T₀)
 ```
 
 donde `θ` es la temperatura, `T₀` un umbral de desarrollo y `DD` la constante
-térmica (grados-día). Equivale a decir que la **tasa** de desarrollo es lineal en
+térmica (°C·días). Equivale a decir que la **tasa** de desarrollo es lineal en
 la temperatura:
 
 ```
@@ -62,7 +62,7 @@ el apareamiento fueron verificados contra el PDF original por los autores**
 | Parámetro | Valor | IC 95 % |
 |---|---|---|
 | **T₀** | **11,78 °C** | ±0,4 |
-| **DD** | **116,4 grados-día** (→ 116) | ±4,2 |
+| **DD** | **116,4 °C·días** (→ 116) | ±4,2 |
 | **R²** | **0,9971** | — |
 
 Predicciones huevo→adulto (con el DD ajustado 116,4): 18 °C → 18,7 d ·
