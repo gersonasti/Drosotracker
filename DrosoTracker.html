@@ -249,6 +249,7 @@
 
   /* ---------- Header actions ---------- */
   .header-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .header-actions-sub{display:flex;gap:10px;align-items:center}
 
   /* ---------- Tareas pendientes ---------- */
   .tasks{
@@ -558,6 +559,11 @@
       </div>
     </div>
     <div class="header-actions">
+      <button class="btn hero" onclick="openForm()" data-tip-key="tip.newCross">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span data-i18n="hdr.newCross">New record</span>
+      </button>
+      <div class="header-actions-sub">
       <div class="menu">
         <button class="btn ghost" onclick="toggleMenu()" data-i18n="hdr.more" data-tip-key="tip.more">More ▾</button>
         <div class="menu-pop" id="dataMenu">
@@ -595,10 +601,7 @@
           </div>
         </div>
       </div>
-      <button class="btn hero" onclick="openForm()" data-tip-key="tip.newCross">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
-        <span class="lbl" data-i18n="hdr.newCross">New record</span>
-      </button>
+      </div>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(event)" />
       <input type="file" id="labFile" accept=".csv,.tsv,.tab,.txt,text/csv,text/tab-separated-values,text/plain" style="display:none" onchange="importLabDB(event)" />
     </div>
