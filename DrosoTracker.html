@@ -424,7 +424,7 @@
   .modal h2{font-size:1.3rem;margin-bottom:4px;text-align:center}
   .modal .sub{color:var(--ink-soft);font-size:.86rem;margin-bottom:20px;text-align:center}
   .field{margin-bottom:16px}
-  .field label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--ink)}
+  .field label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--ink);text-align:center}
   .field input{
     width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);
     font-family:'Nunito';font-size:.95rem;color:var(--ink);background:var(--bg-2);transition:border .12s;
@@ -440,7 +440,7 @@
   .duo input{width:82px;flex:none;text-align:center}
   .field .hint{font-size:.74rem;color:var(--ink-soft);margin-top:5px}
   /* etiqueta con un (?) que muestra la explicación en un tooltip (en vez de un párrafo fijo) */
-  .lbl-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .lbl-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px}
   .lbl-row label{margin-bottom:0}
   .qh{flex:none;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;
     border:1.4px solid var(--lav);color:var(--lav);background:var(--lav-soft);font-size:.68rem;font-weight:800;cursor:help;font-family:'Nunito'}
@@ -466,7 +466,7 @@
     border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;color:var(--ink);background:var(--bg-2)}
   .cross-pair-half input:focus,.cross-pair-half select:focus{outline:none;border-color:var(--lav)}
   .cross-pair-half .trio,.cross-pair-half .duo{margin-top:0}
-  .cross-pair-sub{display:block;font-weight:700;font-size:.78rem;color:var(--ink-soft);margin:12px 0 6px}
+  .cross-pair-sub{display:block;font-weight:700;font-size:.78rem;color:var(--ink-soft);margin:12px 0 6px;text-align:center}
 
   .footer-note{text-align:center;color:var(--ink-soft);font-size:.78rem;margin-top:40px}
   .footer-note b{color:var(--ink)}
@@ -536,7 +536,7 @@
   .calib-help ol{margin:8px 0 0 18px;display:flex;flex-direction:column;gap:6px}
   .calib-status{font-size:.78rem;margin-top:6px;color:var(--ink-soft);line-height:1.4}
   .calib-status b{color:var(--ink)}
-  .calib-list-title{font-size:1rem;margin:20px 0 8px}
+  .calib-list-title{font-size:1rem;margin:20px 0 8px;text-align:center}
   .calib-row{display:flex;align-items:baseline;gap:10px;padding:9px 12px;background:var(--bg-1);border-radius:11px;margin-bottom:6px;font-size:.83rem}
   .calib-row .cg{font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .calib-row .cd{color:var(--ink-soft);flex:none;white-space:nowrap}
@@ -634,6 +634,8 @@
           <button onclick="document.getElementById('labFile').click()" data-i18n="menu.importLab" data-tip-key="tip.importLab">🧬 Import lab genotype database</button>
           <div class="menu-fmt" data-i18n="menu.fmt">.csv · .tab · .tsv</div>
           <div id="labStatus"></div>
+          <div class="menu-sep"></div>
+          <button onclick="openFeedbackForm()" data-i18n="menu.feedback" data-tip-key="tip.feedback">Report a bug / suggest an improvement</button>
           <div class="menu-sep"></div>
           <button class="menu-danger" onclick="clearAllRecords()" data-i18n="menu.clearAll" data-tip-key="tip.clearAll">Clear all records</button>
         </div>
@@ -734,8 +736,8 @@
             <label class="cross-pair-sub" data-i18n-html="form.adults">Adult flies <span class="opt">(optional)</span></label>
             <div class="trio">
               <input id="fAdultsA" type="number" min="0" step="1" placeholder="total" data-i18n-ph="form.adultsTotalPh" />
-              <input id="fFemalesA" type="number" min="0" step="1" placeholder="♀" />
-              <input id="fMalesA" type="number" min="0" step="1" placeholder="♂" />
+              <input id="fFemalesA" type="number" min="0" step="1" placeholder="♀" oninput="syncAdultsTotal('fAdultsA','fFemalesA','fMalesA')" />
+              <input id="fMalesA" type="number" min="0" step="1" placeholder="♂" oninput="syncAdultsTotal('fAdultsA','fFemalesA','fMalesA')" />
             </div>
             <label class="cross-pair-sub" for="fContainerA" data-i18n-html="form.container">Container <span class="opt">(optional)</span></label>
             <div class="duo">
@@ -765,8 +767,8 @@
             <label class="cross-pair-sub" data-i18n-html="form.adults">Adult flies <span class="opt">(optional)</span></label>
             <div class="trio">
               <input id="fAdultsB" type="number" min="0" step="1" placeholder="total" data-i18n-ph="form.adultsTotalPh" />
-              <input id="fFemalesB" type="number" min="0" step="1" placeholder="♀" />
-              <input id="fMalesB" type="number" min="0" step="1" placeholder="♂" />
+              <input id="fFemalesB" type="number" min="0" step="1" placeholder="♀" oninput="syncAdultsTotal('fAdultsB','fFemalesB','fMalesB')" />
+              <input id="fMalesB" type="number" min="0" step="1" placeholder="♂" oninput="syncAdultsTotal('fAdultsB','fFemalesB','fMalesB')" />
             </div>
             <label class="cross-pair-sub" for="fContainerB" data-i18n-html="form.container">Container <span class="opt">(optional)</span></label>
             <div class="duo">
@@ -808,8 +810,8 @@
           <label data-i18n-html="form.adults">Adult flies <span class="opt">(optional)</span></label>
           <div class="trio">
             <input id="fAdults" type="number" min="0" step="1" placeholder="total" data-i18n-ph="form.adultsTotalPh" />
-            <input id="fFemales" type="number" min="0" step="1" placeholder="♀" />
-            <input id="fMales" type="number" min="0" step="1" placeholder="♂" />
+            <input id="fFemales" type="number" min="0" step="1" placeholder="♀" oninput="syncAdultsTotal('fAdults','fFemales','fMales')" />
+            <input id="fMales" type="number" min="0" step="1" placeholder="♂" oninput="syncAdultsTotal('fAdults','fFemales','fMales')" />
           </div>
         </div>
         <div class="field">
@@ -842,9 +844,9 @@
   <div class="modal">
     <h2 id="planTitle">Planning</h2>
     <div class="sub" data-i18n="plan.sub">Upcoming events and reverse scheduling.</div>
-    <h3 style="font-size:1rem;margin:6px 0 10px" data-i18n="plan.upcoming">📆 Upcoming events</h3>
+    <h3 style="font-size:1rem;margin:6px 0 10px;text-align:center" data-i18n="plan.upcoming">📆 Upcoming events</h3>
     <div id="agendaBox"></div>
-    <h3 style="font-size:1rem;margin:18px 0 6px" data-i18n="plan.backward">⏪ Plan backward</h3>
+    <h3 style="font-size:1rem;margin:18px 0 6px;text-align:center" data-i18n="plan.backward">⏪ Plan backward</h3>
     <div class="sub" style="margin-bottom:14px" data-i18n="plan.backwardSub">When to set it up to reach a stage by a target date?</div>
     <form id="planForm" onsubmit="computePlan(event)">
       <div class="field">
@@ -1256,6 +1258,8 @@ const I18N = {
     'ac.comp':'common','ac.stock':'stock',
     // alertas / confirmaciones / notificaciones
     'al.crossSameSex':'Pick one genotype as females (♀) and the other as males (♂) — a cross needs both.',
+    'menu.feedback':'Report a bug / suggest an improvement','tip.feedback':'Opens a short form (no account, no email required) — goes straight to the developer.',
+    'al.feedbackNotReady':'This isn\'t wired up yet — coming soon.',
     'al.cohortN':'Enter a valid initial N of adults.','cf.importReplace':'Importing will replace the {n} current records with {m}. Continue?','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
@@ -1370,6 +1374,8 @@ const I18N = {
     'lab.sub':'{file} · {n} filas. Elegí la columna del genotipo y confirmá.','lab.noCol':'La columna elegida no tiene genotipos.','lab.loaded':'Base del lab: {n} genotipos','lab.clear':'Borrar','lab.colN':'Columna {n}','err.labFormat':'Se espera una fila de títulos + al menos una fila de datos.',
     'ac.comp':'común','ac.stock':'stock',
     'al.crossSameSex':'Elegí un genotipo como hembras (♀) y el otro como machos (♂) — una cruza necesita los dos.',
+    'menu.feedback':'Reportar un error / sugerir una mejora','tip.feedback':'Abre un formulario corto (sin cuenta, sin pedir tu mail) — llega directo al desarrollador.',
+    'al.feedbackNotReady':'Todavía no está conectado — pronto va a estar.',
     'al.cohortN':'Ingresá un N inicial válido de adultos.','cf.importReplace':'Importar reemplazará los {n} registros actuales por {m}. ¿Continuar?','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
@@ -3384,6 +3390,14 @@ function exportCohortCSV(id){
 }
 function toggleMenu(){ updateLabStatus(); document.getElementById('dataMenu').classList.toggle('open'); }
 function closeMenu(){ document.getElementById('dataMenu').classList.remove('open'); }
+/* Reportar un error / sugerencia: Google Form (sin backend, no pide el mail de quien
+   reporta). FEEDBACK_FORM_URL se completa cuando esté armado el formulario. */
+const FEEDBACK_FORM_URL = '';
+function openFeedbackForm(){
+  closeMenu();
+  if(!FEEDBACK_FORM_URL){ alert(t('al.feedbackNotReady')); return; }
+  window.open(FEEDBACK_FORM_URL, '_blank', 'noopener');
+}
 
 /* --- Planificación: agenda + cálculo inverso de cruzas --- */
 let planEditId = null;
@@ -3830,6 +3844,14 @@ function useTemplate(id){
   document.getElementById('fNotes').value = t('tpl.'+tp.id+'.notes');
   onObjectiveChange();
   document.getElementById('genotype').focus();
+}
+/* Autocompleta "total" sumando ♀+♂ cuando se carga al menos uno de los dos; si ninguno
+   tiene valor, no toca "total" (el usuario puede seguir cargándolo directo, sin desglose). */
+function syncAdultsTotal(totalId, femId, maleId){
+  const fRaw = document.getElementById(femId).value, mRaw = document.getElementById(maleId).value;
+  if(fRaw==='' && mRaw==='') return;
+  const f = parseInt(fRaw,10), m = parseInt(mRaw,10);
+  document.getElementById(totalId).value = (isNaN(f)?0:f) + (isNaN(m)?0:m);
 }
 /* muestra el selector de estadio sólo si el objetivo es disección larval */
 function onObjectiveChange(){
