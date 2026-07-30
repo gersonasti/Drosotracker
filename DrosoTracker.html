@@ -163,6 +163,17 @@
 
   .card-mid{display:flex;align-items:center;gap:18px;margin:16px 0 6px}
 
+  /* Tarjeta doble: los dos padres de una cruza, criándose por separado hasta "Montar la cruza" */
+  .pair-card{grid-column:span 2}
+  .pair-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .pair-title{font-family:'Poppins';font-weight:600;font-size:1.05rem;color:var(--ink)}
+  .pair-body{display:flex;gap:18px;flex-wrap:wrap}
+  .pair-half{flex:1;min-width:260px}
+  .pair-half + .pair-half{border-left:1.5px dashed var(--line);padding-left:18px}
+  .pair-half-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .pair-role{font-size:.72rem;font-weight:800;color:var(--lav);background:var(--lav-soft);padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.02em}
+  @media (max-width:900px){ .pair-card{grid-column:span 1} .pair-half+.pair-half{border-left:none;padding-left:0;border-top:1.5px dashed var(--line);padding-top:14px} }
+
   /* Ring */
   .ring-wrap{position:relative;width:128px;height:128px;flex:none}
   .ring-track,.ring-fill{position:absolute;inset:0;border-radius:50%}
@@ -440,6 +451,18 @@
   .modal-actions{display:flex;gap:10px;margin-top:24px}
   .modal-actions .btn{flex:1;justify-content:center}
 
+  /* Cruza con dos genotipos (♀ de uno, ♂ de otro) */
+  .link-btn{border:none;background:none;color:var(--lav);font-family:'Nunito';font-weight:700;font-size:.83rem;
+    cursor:pointer;padding:8px 2px;text-align:left}
+  .link-btn:hover{text-decoration:underline}
+  .cross-pair-grid{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+  .cross-pair-half{flex:1;min-width:220px;background:var(--bg-1);border-radius:14px;padding:14px}
+  .cross-pair-half input,.cross-pair-half select{width:100%;padding:11px 13px;border-radius:12px;
+    border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;color:var(--ink);background:var(--bg-2)}
+  .cross-pair-half input:focus,.cross-pair-half select:focus{outline:none;border-color:var(--lav)}
+  .cross-pair-half .trio,.cross-pair-half .duo{margin-top:0}
+  .cross-pair-sub{display:block;font-weight:700;font-size:.78rem;color:var(--ink-soft);margin:12px 0 6px}
+
   .footer-note{text-align:center;color:var(--ink-soft);font-size:.78rem;margin-top:40px}
   .footer-note b{color:var(--ink)}
 
@@ -667,12 +690,76 @@
           </div>
         </div>
       </div>
-      <div class="field">
+      <div class="field" id="genoSingleBlock">
         <div class="lbl-row"><label for="genotype" data-i18n="form.genotype">Genotype *</label><span class="qh" data-tip-key="form.genoHint">?</span></div>
         <div class="ac-wrap">
           <input id="genotype" autocomplete="off" placeholder="e.g. w[1118] ; UAS-GFP / CyO" required maxlength="120" />
           <div class="ac-pop" id="genoAC"></div>
         </div>
+        <button type="button" class="link-btn" id="crossPairBtn" style="display:none" onclick="setCrossPairMode(true)" data-i18n="cross.addSecond">+ Add a second genotype (set up a cross)</button>
+      </div>
+      <div class="field cross-pair-block" id="crossPairBlock" style="display:none">
+        <div class="hint" data-i18n="cross.pairHint">A cross needs females of one genotype and males of another. Each keeps its own set-up date, temperature and counts.</div>
+        <div class="cross-pair-grid">
+          <div class="cross-pair-half">
+            <div class="lbl-row"><label for="genotypeA" data-i18n="cross.genoA">Genotype A *</label></div>
+            <input id="genotypeA" list="genoListPair" autocomplete="off" placeholder="e.g. w[1118]" required maxlength="120" />
+            <select id="sexRoleA" style="margin-top:6px">
+              <option value="female" data-i18n="cross.roleFemale">♀ provides females (virgins)</option>
+              <option value="male" data-i18n="cross.roleMale">♂ provides males</option>
+            </select>
+            <label class="cross-pair-sub" data-i18n="form.crossDate">Set-up date and time *</label>
+            <input id="crossDateA" type="datetime-local" required />
+            <label class="cross-pair-sub" data-i18n="form.temp">Incubation temperature (°C) *</label>
+            <input id="tempA" type="number" min="12" max="30" step="0.5" placeholder="25" required />
+            <label class="cross-pair-sub" data-i18n-html="form.adults">Adult flies <span class="opt">(optional)</span></label>
+            <div class="trio">
+              <input id="fAdultsA" type="number" min="0" step="1" placeholder="total" data-i18n-ph="form.adultsTotalPh" />
+              <input id="fFemalesA" type="number" min="0" step="1" placeholder="♀" />
+              <input id="fMalesA" type="number" min="0" step="1" placeholder="♂" />
+            </div>
+            <label class="cross-pair-sub" for="fContainerA" data-i18n-html="form.container">Container <span class="opt">(optional)</span></label>
+            <div class="duo">
+              <select id="fContainerA">
+                <option value="">—</option>
+                <option value="vial" data-i18n="cont.vial">Vial</option>
+                <option value="bottle" data-i18n="cont.bottle">Bottle</option>
+                <option value="plate" data-i18n="cont.plate">Plate</option>
+              </select>
+              <input id="fNContA" type="number" min="1" step="1" placeholder="nº" />
+            </div>
+          </div>
+          <div class="cross-pair-half">
+            <div class="lbl-row"><label for="genotypeB" data-i18n="cross.genoB">Genotype B *</label></div>
+            <input id="genotypeB" list="genoListPair" autocomplete="off" placeholder="e.g. UAS-GFP / CyO" required maxlength="120" />
+            <select id="sexRoleB" style="margin-top:6px">
+              <option value="male" data-i18n="cross.roleMale">♂ provides males</option>
+              <option value="female" data-i18n="cross.roleFemale">♀ provides females (virgins)</option>
+            </select>
+            <label class="cross-pair-sub" data-i18n="form.crossDate">Set-up date and time *</label>
+            <input id="crossDateB" type="datetime-local" required />
+            <label class="cross-pair-sub" data-i18n="form.temp">Incubation temperature (°C) *</label>
+            <input id="tempB" type="number" min="12" max="30" step="0.5" placeholder="25" required />
+            <label class="cross-pair-sub" data-i18n-html="form.adults">Adult flies <span class="opt">(optional)</span></label>
+            <div class="trio">
+              <input id="fAdultsB" type="number" min="0" step="1" placeholder="total" data-i18n-ph="form.adultsTotalPh" />
+              <input id="fFemalesB" type="number" min="0" step="1" placeholder="♀" />
+              <input id="fMalesB" type="number" min="0" step="1" placeholder="♂" />
+            </div>
+            <label class="cross-pair-sub" for="fContainerB" data-i18n-html="form.container">Container <span class="opt">(optional)</span></label>
+            <div class="duo">
+              <select id="fContainerB">
+                <option value="">—</option>
+                <option value="vial" data-i18n="cont.vial">Vial</option>
+                <option value="bottle" data-i18n="cont.bottle">Bottle</option>
+                <option value="plate" data-i18n="cont.plate">Plate</option>
+              </select>
+              <input id="fNContB" type="number" min="1" step="1" placeholder="nº" />
+            </div>
+          </div>
+        </div>
+        <datalist id="genoListPair"></datalist>
+        <button type="button" class="link-btn" onclick="setCrossPairMode(false)" data-i18n="cross.removeSecond">✕ Remove the second genotype</button>
       </div>
       <div class="field">
         <div class="lbl-row"><label for="condInput" data-i18n="form.conditions">Condition(s)</label><span class="qh" data-tip-key="form.condHint">?</span></div>
@@ -681,38 +768,40 @@
         </div>
         <datalist id="condList"></datalist>
       </div>
-      <div class="field">
-        <div class="lbl-row"><label for="crossDate" data-i18n="form.crossDate">Set-up date and time *</label><span class="qh" data-tip-key="form.crossDateHint">?</span></div>
-        <input id="crossDate" type="datetime-local" required />
-      </div>
-      <div class="field">
-        <div class="lbl-row"><label for="temp" data-i18n="form.temp">Incubation temperature (°C) *</label><span class="qh" data-tip-key="form.tempHint">?</span></div>
-        <input id="temp" type="number" min="12" max="30" step="0.5" placeholder="25" required />
-        <div class="temp-presets" id="presets">
-          <button type="button" data-t="18">18 °C</button>
-          <button type="button" data-t="21">21 °C</button>
-          <button type="button" data-t="25">25 °C</button>
-          <button type="button" data-t="29">29 °C</button>
+      <div id="singleLogisticsBlock">
+        <div class="field">
+          <div class="lbl-row"><label for="crossDate" data-i18n="form.crossDate">Set-up date and time *</label><span class="qh" data-tip-key="form.crossDateHint">?</span></div>
+          <input id="crossDate" type="datetime-local" required />
         </div>
-      </div>
-      <div class="field">
-        <label data-i18n-html="form.adults">Adult flies <span class="opt">(optional)</span></label>
-        <div class="trio">
-          <input id="fAdults" type="number" min="0" step="1" placeholder="total" data-i18n-ph="form.adultsTotalPh" />
-          <input id="fFemales" type="number" min="0" step="1" placeholder="♀" />
-          <input id="fMales" type="number" min="0" step="1" placeholder="♂" />
+        <div class="field">
+          <div class="lbl-row"><label for="temp" data-i18n="form.temp">Incubation temperature (°C) *</label><span class="qh" data-tip-key="form.tempHint">?</span></div>
+          <input id="temp" type="number" min="12" max="30" step="0.5" placeholder="25" required />
+          <div class="temp-presets" id="presets">
+            <button type="button" data-t="18">18 °C</button>
+            <button type="button" data-t="21">21 °C</button>
+            <button type="button" data-t="25">25 °C</button>
+            <button type="button" data-t="29">29 °C</button>
+          </div>
         </div>
-      </div>
-      <div class="field">
-        <label for="fContainer" data-i18n-html="form.container">Container <span class="opt">(optional)</span></label>
-        <div class="duo">
-          <select id="fContainer">
-            <option value="">—</option>
-            <option value="vial" data-i18n="cont.vial">Vial</option>
-            <option value="bottle" data-i18n="cont.bottle">Bottle</option>
-            <option value="plate" data-i18n="cont.plate">Plate</option>
-          </select>
-          <input id="fNCont" type="number" min="1" step="1" placeholder="nº" data-i18n-title="form.nContTitle" title="Number of containers" />
+        <div class="field">
+          <label data-i18n-html="form.adults">Adult flies <span class="opt">(optional)</span></label>
+          <div class="trio">
+            <input id="fAdults" type="number" min="0" step="1" placeholder="total" data-i18n-ph="form.adultsTotalPh" />
+            <input id="fFemales" type="number" min="0" step="1" placeholder="♀" />
+            <input id="fMales" type="number" min="0" step="1" placeholder="♂" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="fContainer" data-i18n-html="form.container">Container <span class="opt">(optional)</span></label>
+          <div class="duo">
+            <select id="fContainer">
+              <option value="">—</option>
+              <option value="vial" data-i18n="cont.vial">Vial</option>
+              <option value="bottle" data-i18n="cont.bottle">Bottle</option>
+              <option value="plate" data-i18n="cont.plate">Plate</option>
+            </select>
+            <input id="fNCont" type="number" min="1" step="1" placeholder="nº" data-i18n-title="form.nContTitle" title="Number of containers" />
+          </div>
         </div>
       </div>
       <div class="field">
@@ -1048,13 +1137,19 @@ const I18N = {
     'empty.title':'No records yet','empty.text':'Add your first record with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New record','group.none':'No experiment',
     // objetivos
     'obj.none':'— No specific objective','obj.cross':'Genetic cross','obj.amplify':'Line amplification','obj.stock':'Stock maintenance','obj.aging':'Aging cohort','obj.dissect':'Larval dissection',
+    'cross.addSecond':'+ Add a second genotype (set up a cross)','cross.removeSecond':'✕ Remove the second genotype',
+    'cross.pairHint':'A cross needs females of one genotype and males of another. Each keeps its own set-up date, temperature and counts.',
+    'cross.genoA':'Genotype A *','cross.genoB':'Genotype B *','cross.roleFemale':'♀ provides females (virgins)','cross.roleMale':'♂ provides males',
+    'cross.female':'♀ Females','cross.male':'♂ Males','cross.mountBtn':'Mount the cross',
+    'cross.mountConfirm':'Mount the cross between {a} and {b}? Both parent records will be replaced by a single new one — development restarts at day 1, egg.',
+    'cross.mountConfirmBtn':'Mount the cross',
     // estadios
     'stage.egg':'Embryo','stage.l1':'Larva L1','stage.l2':'Larva L2','stage.l3':'Larva L3','stage.pupa':'Pupa','stage.adult':'Adult',
     'stage.short.egg':'Embryo','stage.short.l1':'L1','stage.short.l2':'L2','stage.short.l3':'L3','stage.short.pupa':'Pupa','stage.short.adult':'Adult',
     // avisos / tareas
     'rem.montar':'Set up (in {h})','rem.virgenesPrep':'Collect virgins: eclosion in {h}','rem.eclosionEn':'Eclosion in {h}','rem.muda':'Molt to {s} in {h}',
     'rem.retirarParentales':'Clear parents','rem.disecar':'Dissect larvae ({s})','rem.proxDiseccion':'Next dissection: {s}',
-    'rem.adultosEclosionados':'Adults eclosed','rem.virgenes':'Collect virgins ({h})','rem.botellas':'Move adults to fresh bottles','rem.cohorte':'Define aging cohort','rem.comida':'Flip to fresh food','rem.edad':'Adult age: day {d}',
+    'rem.adultosEclosionados':'Adults eclosed','rem.virgenes':'Collect virgins ({h})','rem.botellas':'Move adults to fresh bottles','rem.cohorte':'Define aging cohort','rem.comida':'Flip to fresh food','rem.edad':'Adult age: day {d}','rem.montarCruza':'Mount the cross',
     // tarjeta
     'card.plannedBadge':'Planned','card.setupIn':'Set up in <b>{h}</b>','card.postEcl':'<b>{d}</b> days post-eclosion','card.dayOf':'Day <b>{d}</b> of {t}',
     'card.metaSetup':'Set up','card.metaCross':'Start','card.metaEclosed':'Eclosed','card.metaEclEst':'Estimated eclosion',
@@ -1135,6 +1230,7 @@ const I18N = {
     'lab.sub':'{file} · {n} rows. Pick the genotype column and confirm.','lab.noCol':'The selected column has no genotypes.','lab.loaded':'Lab database: {n} genotypes','lab.clear':'Clear','lab.colN':'Column {n}','err.labFormat':'Expected a header row + at least one data row.',
     'ac.comp':'common','ac.stock':'stock',
     // alertas / confirmaciones / notificaciones
+    'al.crossSameSex':'Pick one genotype as females (♀) and the other as males (♂) — a cross needs both.',
     'al.cohortN':'Enter a valid initial N of adults.','cf.importReplace':'Importing will replace the {n} current records with {m}. Continue?','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
@@ -1164,11 +1260,17 @@ const I18N = {
     'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 11.8 °C · ~116 grados-día, calibrado para ~15–28 °C). Tiempos estimados · Datos guardados localmente en tu navegador.',
     'empty.title':'Todavía no hay registros','empty.text':'Agregá tu primer registro con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nuevo registro','group.none':'Sin experimento',
     'obj.none':'— Sin objetivo específico','obj.cross':'Cruza genética','obj.amplify':'Amplificación de línea','obj.stock':'Mantenimiento de stock','obj.aging':'Cohorte de envejecimiento','obj.dissect':'Disección larval',
+    'cross.addSecond':'+ Agregar un segundo genotipo (armar una cruza)','cross.removeSecond':'✕ Quitar el segundo genotipo',
+    'cross.pairHint':'Una cruza necesita hembras de un genotipo y machos de otro. Cada uno conserva su propia fecha de montaje, temperatura y conteos.',
+    'cross.genoA':'Genotipo A *','cross.genoB':'Genotipo B *','cross.roleFemale':'♀ aporta las hembras (vírgenes)','cross.roleMale':'♂ aporta los machos',
+    'cross.female':'♀ Hembras','cross.male':'♂ Machos','cross.mountBtn':'Montar la cruza',
+    'cross.mountConfirm':'¿Montar la cruza entre {a} y {b}? Los dos registros parentales se reemplazan por uno nuevo — el desarrollo arranca de cero, día 1, huevo.',
+    'cross.mountConfirmBtn':'Montar la cruza',
     'stage.egg':'Embrión','stage.l1':'Larva L1','stage.l2':'Larva L2','stage.l3':'Larva L3','stage.pupa':'Pupa','stage.adult':'Adulto',
     'stage.short.egg':'Embrión','stage.short.l1':'L1','stage.short.l2':'L2','stage.short.l3':'L3','stage.short.pupa':'Pupa','stage.short.adult':'Adulto',
     'rem.montar':'Montar (en {h})','rem.virgenesPrep':'Recolectar vírgenes: eclosión en {h}','rem.eclosionEn':'Eclosión en {h}','rem.muda':'Muda a {s} en {h}',
     'rem.retirarParentales':'Retirar parentales','rem.disecar':'Disecar larvas ({s})','rem.proxDiseccion':'Próxima disección: {s}',
-    'rem.adultosEclosionados':'Adultos eclosionados','rem.virgenes':'Recolectar vírgenes ({h})','rem.botellas':'Pasar adultos a botellas nuevas','rem.cohorte':'Definir cohorte de envejecimiento','rem.comida':'Pasar a comida fresca','rem.edad':'Edad adulta: día {d}',
+    'rem.adultosEclosionados':'Adultos eclosionados','rem.virgenes':'Recolectar vírgenes ({h})','rem.botellas':'Pasar adultos a botellas nuevas','rem.cohorte':'Definir cohorte de envejecimiento','rem.comida':'Pasar a comida fresca','rem.edad':'Edad adulta: día {d}','rem.montarCruza':'Montar la cruza',
     'card.plannedBadge':'Planificada','card.setupIn':'Se monta en <b>{h}</b>','card.postEcl':'<b>{d}</b> días post-eclosión','card.dayOf':'Día <b>{d}</b> de {t}',
     'card.metaSetup':'Se monta','card.metaCross':'Inicio','card.metaEclosed':'Eclosionó','card.metaEclEst':'Eclosión estimada',
     'card.edit':'Editar','card.delete':'Eliminar','card.markParents':'✓ Marcar parentales retirados',
@@ -1242,6 +1344,7 @@ const I18N = {
     'lab.title':'Importar base de genotipos','lab.col':'¿Qué columna tiene el genotipo?','lab.colHint':'Se asume que la primera fila son los títulos de las columnas.','lab.preview':'Vista previa','lab.cancel':'Cancelar','lab.import':'Importar genotipos',
     'lab.sub':'{file} · {n} filas. Elegí la columna del genotipo y confirmá.','lab.noCol':'La columna elegida no tiene genotipos.','lab.loaded':'Base del lab: {n} genotipos','lab.clear':'Borrar','lab.colN':'Columna {n}','err.labFormat':'Se espera una fila de títulos + al menos una fila de datos.',
     'ac.comp':'común','ac.stock':'stock',
+    'al.crossSameSex':'Elegí un genotipo como hembras (♀) y el otro como machos (♂) — una cruza necesita los dos.',
     'al.cohortN':'Ingresá un N inicial válido de adultos.','cf.importReplace':'Importar reemplazará los {n} registros actuales por {m}. ¿Continuar?','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
@@ -1947,8 +2050,10 @@ function buildReminders(cross, st, now=new Date()){
     const next = st.bounds.find(b => b.start > st.elapsedDays);
     const hoursToNext = (st.nextBoundaryDays - st.elapsedDays)*24;
     if(st.stage.key === 'pupa'){
-      /* TAREA (cruza genética): recolectar vírgenes → recién 1,5 días (36 h) antes de la eclosión */
-      if(obj==='cross'){ if(hoursToNext <= 36) push(t('rem.virgenesPrep',{h:fmtH(hoursToNext)}), 'action', true, hoursToNext<=24, 'virgenes-prep', hoursToNext); }
+      /* TAREA (cruza genética): recolectar vírgenes → recién 1,5 días (36 h) antes de la eclosión.
+         En una cruza con dos genotipos (pairId), solo aplica al que aporta las hembras. */
+      const isFemaleSide = !cross.pairId || cross.pairRole==='female';
+      if(obj==='cross' && isFemaleSide){ if(hoursToNext <= 36) push(t('rem.virgenesPrep',{h:fmtH(hoursToNext)}), 'action', true, hoursToNext<=24, 'virgenes-prep', hoursToNext); }
       else if(hoursToNext <= 48) push(t('rem.eclosionEn',{h:fmtH(hoursToNext)}), 'warn', false, hoursToNext<=24);
     } else if(next){
       if(hoursToNext <= 24) push(t('rem.muda',{s:stageShort(next),h:fmtH(hoursToNext)}), 'warn', false, hoursToNext<=8);
@@ -1968,8 +2073,9 @@ function buildReminders(cross, st, now=new Date()){
     /* --- ADULTO --- */
     push(t('rem.adultosEclosionados'), 'success', false);
     const ageD = st.adultAge;
-    /* TAREA: recolectar vírgenes (cruza genética; ventana que escala con la temperatura) */
-    if(obj==='cross'){
+    /* TAREA: recolectar vírgenes (cruza genética; ventana que escala con la temperatura).
+       En una cruza con dos genotipos, solo para el que aporta las hembras. */
+    if(obj==='cross' && (!cross.pairId || cross.pairRole==='female')){
       const windowH = 8 * (st.total / REF_TOTAL);
       const ageH = ageD*24;
       if(ageH < windowH) push(t('rem.virgenes',{h:fmtH(windowH-ageH)}), 'action', true, true, 'virgenes');
@@ -2308,6 +2414,73 @@ function card(cross){
 
     ${actionHtml}
   </div>`;
+}
+
+/* --- Tarjeta doble: los dos padres de una cruza, criándose por separado hasta "Montar la
+   cruza" (a partir de ahí pasan a ser un registro único, normal, con genotipo compuesto) --- */
+function pairMiniBlock(cross, roleLabel){
+  const st = computeState(cross);
+  const ti = tempInfo(cross.temp);
+  const start = parseCross(cross);
+  const eclDate = addDays(start, st.total);
+  const dayLine = st.isAdult ? t('card.postEcl',{d:Math.round(st.adultAge)}) : t('card.dayOf',{d:Math.round(st.elapsedDays),t:Math.ceil(st.total)});
+  return `<div class="pair-half">
+    <div class="pair-half-top">
+      <span class="pair-role">${esc(roleLabel)}</span>
+      <span class="temp-pill" style="background:${ti.bg};color:${ti.text}">${cross.temp} °C</span>
+      <button class="icon-btn edit" data-tip="${esc(t('tip.edit'))}" onclick="event.stopPropagation();openForm('${cross.id}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 6l4 4" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <button class="icon-btn" data-tip="${esc(t('tip.delete'))}" onclick="event.stopPropagation();delCross('${cross.id}')">✕</button>
+    </div>
+    <div class="card-title">${esc(cross.genotype)}</div>
+    <div class="card-mid">
+      ${ring(st)}
+      <div class="card-info">
+        <span class="stage-badge" style="background:${st.stage.soft};color:${st.stage.txt}">
+          <span class="dot" style="background:${st.stage.txt}"></span>${stageName(st.stage)}</span>
+        <div class="day-line">${dayLine}</div>
+        <div class="meta-table">
+          <div class="meta-row"><span class="k">${t('card.metaCross')}</span><span class="v">${fmtDate(start)}</span></div>
+          <div class="meta-row"><span class="k">${st.isAdult?t('card.metaEclosed'):t('card.metaEclEst')}</span><span class="v">${fmtDate(eclDate)}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function pairCard(female, male){
+  return `<div class="card pair-card" id="card-${female.pairId}">
+    <div class="pair-head">
+      <span class="pair-title">${esc(female.genotype)} × ${esc(male.genotype)}</span>
+      <button class="timeline-btn act-lav" onclick="mountCross('${female.pairId}')">${t('cross.mountBtn')}</button>
+    </div>
+    <div class="pair-body">
+      ${pairMiniBlock(female, t('cross.female'))}
+      ${pairMiniBlock(male, t('cross.male'))}
+    </div>
+  </div>`;
+}
+/* Tarjetas de una sección: las que son parte de una cruza de dos genotipos sin fusionar
+   todavía se combinan en UNA tarjeta doble (pairCard); el resto, tarjeta normal. */
+function renderCardsWithPairs(list){
+  const seen = new Set();
+  const out = [];
+  list.forEach(c=>{
+    if(seen.has(c.id)) return;
+    if(c.pairId){
+      const sib = list.find(x=>x.id!==c.id && x.pairId===c.pairId);
+      if(sib){
+        seen.add(c.id); seen.add(sib.id);
+        const female = c.pairRole==='female' ? c : sib;
+        const male   = c.pairRole==='male'   ? c : sib;
+        out.push(pairCard(female, male));
+        return;
+      }
+      // hermano ausente (p. ej. se borró a mano) → esta queda como tarjeta normal
+    }
+    out.push(card(c));
+  });
+  return out.join('');
 }
 
 /* --- Panel de envejecimiento (cohortes adultas, Kaplan-Meier) --- */
@@ -2655,12 +2828,45 @@ let _taskMap = {};
 function toggleTasksPanel(){ tasksPanelOpen = !tasksPanelOpen; renderTasks(); }
 function markTaskDone(id){
   const m = _taskMap[id]; if(!m) return;
+  // "Montar la cruza" no es un check más: fusiona los dos registros parentales, así que no
+  // se guarda como "hecha" (el par deja de existir, no tiene sentido llevar ese estado).
+  if(id.endsWith(':montarcruza')){ mountCross(id.split(':')[0]); return; }
   const done = loadTaskDone();
   done[id] = { doneAt: Date.now(), text:m.text, c:m.c, genotype:m.genotype, crossId:m.crossId };
   saveTaskDone(done);
   // "Retirar parentales" es una acción única/irreversible → marcar el registro y refrescar las tarjetas
   if(id.endsWith(':parentales')){ const c = crosses.find(x=>x.id===m.crossId); if(c){ c.parentsRemoved = true; save(crosses); } render(); return; }
   renderTasks(); gcalMaybeAutoSync();
+}
+/* Cruzas de dos genotipos donde ambos hermanos (♀/♂) todavía existen sin fusionar */
+function findCrossPairs(){
+  const byId = {};
+  crosses.forEach(c=>{ if(c.pairId) (byId[c.pairId]=byId[c.pairId]||[]).push(c); });
+  return Object.values(byId).filter(p=>p.length===2).map(p=>{
+    const female = p.find(c=>c.pairRole==='female'), male = p.find(c=>c.pairRole==='male');
+    return (female && male) ? {pairId:female.pairId, female, male} : null;
+  }).filter(Boolean);
+}
+/* Confirma "Montar la cruza": borra los dos registros parentales y abre "Nuevo registro"
+   precargado con el genotipo compuesto — el reloj arranca de cero (huevo, día 1) con la
+   fecha/hora que se confirme ahí, igual que cualquier registro nuevo. */
+function mountCross(pairId){
+  const female = crosses.find(c=>c.pairId===pairId && c.pairRole==='female');
+  const male = crosses.find(c=>c.pairId===pairId && c.pairRole==='male');
+  if(!female || !male) return;
+  askConfirm(t('cross.mountConfirm',{a:female.genotype, b:male.genotype}), ()=>{
+    crosses = crosses.filter(c=>c.pairId!==pairId);
+    save(crosses); render();
+    openForm();
+    document.getElementById('genotype').value = female.genotype+' × '+male.genotype;
+    document.getElementById('objective').value = '';
+    onObjectiveChange();
+    formExperiments = [...new Set([...(female.experiments||[]), ...(male.experiments||[])])]; renderExpTags();
+    formConditions = [...new Set([...(female.conditions||[]), ...(male.conditions||[])])]; renderCondTags();
+    document.getElementById('crossDate').value = toLocalInput(new Date());
+    document.getElementById('temp').value = female.temp;
+    document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on', b.dataset.t==String(female.temp)));
+  }, 'cross.mountConfirmBtn');
 }
 function unmarkTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); gcalMaybeAutoSync(); }
 function deleteTask(id){ askConfirm(t('cf.dismissTask'), ()=>{ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }, 'task.remove'); }
@@ -2695,6 +2901,18 @@ function renderTasks(){
         live.push({ id, crossId:c.id, genotype:c.genotype||'', exp:(c.experiments||[]).join(', '), r });
       }
     });
+  });
+  // TAREA (par de una cruza): "Montar la cruza" — ambos adultos, y la ♀ con ≥2 días desde que
+  // eclosionó (ventana en la que se supone que se están recolectando vírgenes).
+  findCrossPairs().forEach(({pairId, female, male})=>{
+    const fSt = computeState(female), mSt = computeState(male);
+    if(fSt.isAdult && mSt.isAdult && fSt.adultAge>=2){
+      const id = pairId+':montarcruza';
+      const label = female.genotype+' × '+male.genotype;
+      _taskMap[id] = { text:t('rem.montarCruza'), c:'action', genotype:label, crossId:pairId };
+      live.push({ id, crossId:pairId, genotype:label, exp:(female.experiments||[]).join(', '),
+        r:{ t:t('rem.montarCruza'), c:'action', task:true, pulse:true, key:'montarcruza', urgency:0 } });
+    }
   });
   // orden: más urgente arriba (menor "urgency" = antes); empates por orden de cruza
   const pending = live.filter(t=> !done[t.id]).sort((a,b)=> (a.r.urgency??9e9)-(b.r.urgency??9e9));
@@ -2793,7 +3011,7 @@ function render(){
         <span class="exp-name">${title}</span><span class="exp-count">${cards.length}</span>
         <span class="exp-arrow">${open?'▴':'▾'}</span>
       </button>
-      <div class="grid" style="${open?'':'display:none'}">${cards.map(card).join('')}</div>
+      <div class="grid" style="${open?'':'display:none'}">${renderCardsWithPairs(cards)}</div>
     </section>`;
   }).join('');
   restorePanels();
@@ -3242,6 +3460,9 @@ function populateDatalists(){
   const conds = [...new Set([...crosses.flatMap(c=>c.conditions||[]), ...loadHistorySet(COND_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
   const cdl = document.getElementById('condList');
   if(cdl) cdl.innerHTML = conds.map(v=>`<option value="${esc(v)}"></option>`).join('');
+  const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype), ...loadHistorySet(GENO_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  const gdl = document.getElementById('genoListPair');
+  if(gdl) gdl.innerHTML = genos.map(v=>`<option value="${esc(v)}"></option>`).join('');
 }
 /* --- Campo de Experimento(s) como etiquetas --- */
 let formExperiments = [];
@@ -3493,6 +3714,7 @@ function openForm(id){
   }
   const ov=document.getElementById('overlay');
   document.getElementById('crossForm').reset();
+  setCrossPairMode(false);  // editar un registro (incluso uno que fue parte de una cruza) siempre abre en modo simple
   newGenSourceId = null;  // por defecto un form nuevo no es una "nueva generación"
   populateDatalists();
   rebuildAutocompleteCache();
@@ -3564,6 +3786,32 @@ function useTemplate(id){
 function onObjectiveChange(){
   const obj = document.getElementById('objective').value;
   document.getElementById('dissectRow').style.display = obj==='dissect' ? 'block' : 'none';
+  document.getElementById('crossPairBtn').style.display = obj==='cross' ? 'block' : 'none';
+  if(obj!=='cross') setCrossPairMode(false);
+}
+/* Cruza con dos genotipos: ♀ vírgenes de uno, ♂ del otro. Cada uno queda como un registro
+   normal e independiente (propia fecha/temperatura/adultos), unidos por un pairId compartido
+   hasta que se confirma "Montar la cruza" (ver mountCross). */
+function setCrossPairMode(on){
+  document.getElementById('genoSingleBlock').style.display = on ? 'none' : 'block';
+  document.getElementById('crossPairBlock').style.display = on ? 'block' : 'none';
+  document.getElementById('singleLogisticsBlock').style.display = on ? 'none' : 'block';
+  document.getElementById('genotype').required = !on;
+  document.getElementById('crossDate').required = !on;
+  document.getElementById('temp').required = !on;
+  document.getElementById('genotypeA').required = on;
+  document.getElementById('genotypeB').required = on;
+  document.getElementById('crossDateA').required = on;
+  document.getElementById('crossDateB').required = on;
+  document.getElementById('tempA').required = on;
+  document.getElementById('tempB').required = on;
+  if(on){
+    const _now = toLocalInput(new Date());
+    if(!document.getElementById('crossDateA').value) document.getElementById('crossDateA').value = _now;
+    if(!document.getElementById('crossDateB').value) document.getElementById('crossDateB').value = _now;
+    if(!document.getElementById('tempA').value) document.getElementById('tempA').value = 25;
+    if(!document.getElementById('tempB').value) document.getElementById('tempB').value = 25;
+  }
 }
 
 document.getElementById('presets').addEventListener('click',e=>{
@@ -3581,6 +3829,35 @@ function saveCross(e){
   addExpTag(document.getElementById('expInput').value); document.getElementById('expInput').value=''; // capturar texto sin Enter
   addCondTag(document.getElementById('condInput').value); document.getElementById('condInput').value='';
   const numOr = v => { v = String(v).trim(); if(v==='') return null; const n = parseInt(v,10); return (isNaN(n) || n<0) ? null : n; };
+
+  /* Cruza con dos genotipos: crea DOS registros normales e independientes, unidos por un
+     pairId compartido — cada uno sigue su propio desarrollo con toda la lógica existente
+     (retirar parentales, etc.); "recolectar vírgenes" y "Montar la cruza" saben leer pairRole. */
+  if(!id && document.getElementById('crossPairBlock').style.display!=='none'){
+    const roleA = document.getElementById('sexRoleA').value, roleB = document.getElementById('sexRoleB').value;
+    if(roleA===roleB){ alert(t('al.crossSameSex')); return; }
+    const genoA = document.getElementById('genotypeA').value.trim(), genoB = document.getElementById('genotypeB').value.trim();
+    if(!genoA || !genoB) return;
+    const pairId = 'p'+Date.now()+Math.random().toString(36).slice(2,5);
+    const shared = { experiments:[...formExperiments], conditions:[...formConditions], objective, dissectStage:null, notes: document.getElementById('fNotes').value.trim() };
+    const buildParent = (suf, geno, role) => ({
+      id:'c'+Date.now()+Math.random().toString(36).slice(2,5)+suf,
+      parentsRemoved:false, pairId, pairRole:role, genotype:geno,
+      crossDate: document.getElementById('crossDate'+suf).value,
+      temp: parseFloat(document.getElementById('temp'+suf).value),
+      adults: numOr(document.getElementById('fAdults'+suf).value),
+      females: numOr(document.getElementById('fFemales'+suf).value),
+      males: numOr(document.getElementById('fMales'+suf).value),
+      container: document.getElementById('fContainer'+suf).value,
+      nContainers: numOr(document.getElementById('fNCont'+suf).value),
+      ...shared,
+    });
+    crosses.push(buildParent('A', genoA, roleA));
+    crosses.push(buildParent('B', genoB, roleB));
+    save(crosses); render(); closeForm();
+    return;
+  }
+
   const data = {
     experiments: [...formExperiments],
     conditions: [...formConditions],
