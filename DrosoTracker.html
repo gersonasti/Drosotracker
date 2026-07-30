@@ -293,9 +293,10 @@
   .tags-input input{flex:1;min-width:130px;border:none;outline:none;background:none;font-family:'Nunito';font-size:.95rem;color:var(--ink);padding:4px 2px}
   .tag-chip{display:inline-flex;align-items:center;gap:5px;background:var(--lav-soft);color:var(--lav);font-weight:700;font-size:.82rem;padding:4px 6px 4px 11px;border-radius:999px}
   .tag-chip button{border:none;background:none;cursor:pointer;color:var(--lav);font-size:.8rem;line-height:1;padding:0 2px}
-  /* etiquetas de experimento en la tarjeta */
+  /* etiquetas de experimento/condición en la tarjeta */
   .card-exps{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
   .exp-chip{font-size:.72rem;font-weight:700;color:var(--lav);background:var(--lav-soft);padding:2px 9px;border-radius:999px}
+  .cond-chip{color:#3fae8c;background:var(--mint-soft)}
   .obj-chip{color:#7c7990;background:#ebe9f0}
   .card.planned{filter:grayscale(.92);opacity:.75;border:1.5px dashed #cfcbd9}
   .card-title{word-break:break-word}
@@ -450,10 +451,20 @@
     .ring-wrap{width:112px;height:112px}
     .stage-art svg{width:54px;height:54px}
     header .btn span.lbl{display:inline}
-    /* el menú de Datos se abre hacia la derecha y nunca se sale de la pantalla */
-    .menu-pop{left:0;right:auto;max-width:calc(100vw - 28px)}
-    /* en celular, "New record" queda a la izquierda y Más/engranaje se van al extremo derecho */
+    /* Más/engranaje ahora viven en el extremo derecho: el menú se abre hacia la izquierda y nunca se sale de la pantalla */
+    .menu-pop{right:0;left:auto;max-width:calc(100vw - 28px)}
+    /* en celular, "New record" queda a la izquierda y Más/engranaje se van al extremo derecho.
+       margin-left:auto (no sólo justify-content:space-between) porque en pantallas muy angostas
+       (~320px) "New record" + Más + engranaje no entran en una fila y el grupo Más/engranaje
+       pasa a su propia línea — ahí, solo en esa línea, space-between no empuja nada a la derecha
+       y el popup terminaba abriéndose fuera de la pantalla por la izquierda. */
     .header-actions{width:100%;justify-content:space-between}
+    .header-actions-sub{margin-left:auto;position:relative}
+    /* El popup de "Más" (#dataMenu) debe abrirse desde el borde derecho del GRUPO, no del botón
+       "Más" en sí: en pantallas angostas ese botón queda a la izquierda del engranaje y no le
+       sobra espacio propio para sus 230px de ancho. Sacarle su propio position:relative hace que
+       right:0 se resuelva contra .header-actions-sub (mismo borde seguro que ya usa el engranaje). */
+    .header-actions-sub .menu:first-child{position:static}
   }
 
   /* Tooltips propios: hover en desktop, mantener apretado en touch (funcionan en ambos) */
@@ -636,6 +647,13 @@
           <input id="expInput" list="expList" autocomplete="off" placeholder="e.g. Eye phenotype…" data-i18n-ph="form.expPh" onkeydown="expInputKey(event)" />
         </div>
         <datalist id="expList"></datalist>
+      </div>
+      <div class="field">
+        <div class="lbl-row"><label for="condInput" data-i18n="form.conditions">Condition(s)</label><span class="qh" data-tip-key="form.condHint">?</span></div>
+        <div class="tags-input" id="condBox" onclick="document.getElementById('condInput').focus()">
+          <input id="condInput" list="condList" autocomplete="off" placeholder="e.g. CBD-supplemented food…" data-i18n-ph="form.condPh" onkeydown="condInputKey(event)" />
+        </div>
+        <datalist id="condList"></datalist>
       </div>
       <div class="field">
         <div class="lbl-row"><label for="genotype" data-i18n="form.genotype">Genotype *</label><span class="qh" data-tip-key="form.genoHint">?</span></div>
@@ -1059,6 +1077,7 @@ const I18N = {
     // form nueva cruza
     'form.newTitle':'New record','form.editTitle':'Edit record','form.newGenTitle':'New generation','form.sub':'Enter the genotype, set-up date and incubation temperature.',
     'form.experiments':'Experiment(s)','form.expPh':'e.g. Eye phenotype…','form.expHint':'Group records by experiment. You can add more than one (Enter or comma). Optional.',
+    'form.conditions':'Condition(s)','form.condPh':'e.g. CBD-supplemented food…','form.condHint':'The treatment this batch was reared under — different from "Experiment(s)", which is the study/project it belongs to (e.g. Experiment: "Autophagy in fat body"; Condition: "CBD food"). You can add more than one (Enter or comma). Optional.',
     'form.genotype':'Genotype *','form.genoHint':'Autocompletes from your history, the lab database and common components (CyO, UAS-GFP, elav-GAL4…). Start typing.',
     'form.objective':'Objective','form.dissectStage':'Stage to dissect:','form.objHint':'This drives the pending tasks (parent removal, virgin collection, etc.). Optional.',
     'form.crossDate':'Set-up date *','form.crossDateHint':'The day it was set up (egg-laying) and roughly when — refines the estimates.','period.morning':'Morning (7–12h)','period.afternoon':'Afternoon (12–17h)','period.night':'Night (17–22h)',
@@ -1169,6 +1188,7 @@ const I18N = {
     'cohort.hint':'Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.','cohort.nPh':'ej. 100','cohort.vialsPh':'opcional',
     'form.newTitle':'Nuevo registro','form.editTitle':'Editar registro','form.newGenTitle':'Nueva generación','form.sub':'Registrá el genotipo, la fecha de montaje y la temperatura de incubación.',
     'form.experiments':'Experimento(s)','form.expPh':'ej. Fenotipo del ojo…','form.expHint':'Agrupá los registros por experimento. Podés agregar más de uno (Enter o coma). Opcional.',
+    'form.conditions':'Condición(es)','form.condPh':'ej. Comida con CBD…','form.condHint':'El tratamiento con el que se crió esta tanda — distinto de "Experimento(s)", que es el proyecto/estudio al que pertenece (ej. Experimento: "Autofagia en cuerpo graso"; Condición: "Comida con CBD"). Podés agregar más de una (Enter o coma). Opcional.',
     'form.genotype':'Genotipo *','form.genoHint':'Autocompleta con tu historial, la base del laboratorio y componentes comunes (CyO, UAS-GFP, elav-GAL4…). Empezá a escribir.',
     'form.objective':'Objetivo','form.dissectStage':'Estadio a disecar:','form.objHint':'De esto se desprenden las tareas pendientes (retirar parentales, recolectar vírgenes, etc.). Opcional.',
     'form.crossDate':'Fecha de montaje *','form.crossDateHint':'El día en que se montó (puesta de huevos) y aproximadamente cuándo — afina las estimaciones.','period.morning':'Mañana (7–12 h)','period.afternoon':'Tarde (12–17 h)','period.night':'Noche (17–22 h)',
@@ -1965,8 +1985,9 @@ function buildReminders(cross, st, now=new Date()){
     if(obj==='aging' && (!cross.aging || cross.aging.startN==null)){
       push(t('rem.cohorte'), 'action', true, false, 'cohorte', 1e6);
     }
-    /* TAREA: pasar a comida fresca cada 2-3 d (envejecimiento, stock o sin objetivo) */
-    if((obj==='aging' || obj==='stock' || obj==='') && ageD >= 1){
+    /* TAREA: pasar a comida fresca cada 2-3 d — husbandry básico, independiente del objetivo
+       (los adultos la necesitan igual aunque el objetivo sea otro, p. ej. cruza o amplificación) */
+    if(ageD >= 1){
       const flips = (cross.aging && cross.aging.events || []).filter(e=>e.flipped).map(e=> new Date(e.date).getTime());
       const lastFlip = flips.length ? Math.max(...flips) : null;
       const daysSinceFlip = lastFlip ? (now - lastFlip)/86400000 : ageD;
@@ -2012,18 +2033,21 @@ function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; 
    no se vacíe con ellas). Se alimenta solo (cada save() suma lo nuevo); nunca se borra sola. */
 const GENO_HISTORY_KEY = 'drosotrack.genoHistory.v1';
 const EXP_HISTORY_KEY = 'drosotrack.expHistory.v1';
+const COND_HISTORY_KEY = 'drosotrack.condHistory.v1';
 function loadHistorySet(key){ try{ return new Set(JSON.parse(localStorage.getItem(key)) || []); }catch(e){ return new Set(); } }
 function saveHistorySet(key, set){ localStorage.setItem(key, JSON.stringify([...set])); }
 function recordHistory(list){
-  const genos = loadHistorySet(GENO_HISTORY_KEY), exps = loadHistorySet(EXP_HISTORY_KEY);
-  let gChanged = false, eChanged = false;
+  const genos = loadHistorySet(GENO_HISTORY_KEY), exps = loadHistorySet(EXP_HISTORY_KEY), conds = loadHistorySet(COND_HISTORY_KEY);
+  let gChanged = false, eChanged = false, cChanged = false;
   list.forEach(c=>{
     const g = String(c.genotype||'').trim();
     if(g && !genos.has(g)){ genos.add(g); gChanged = true; }
     (c.experiments||[]).forEach(x=>{ const s = String(x||'').trim(); if(s && !exps.has(s)){ exps.add(s); eChanged = true; } });
+    (c.conditions||[]).forEach(x=>{ const s = String(x||'').trim(); if(s && !conds.has(s)){ conds.add(s); cChanged = true; } });
   });
   if(gChanged) saveHistorySet(GENO_HISTORY_KEY, genos);
   if(eChanged) saveHistorySet(EXP_HISTORY_KEY, exps);
+  if(cChanged) saveHistorySet(COND_HISTORY_KEY, conds);
 }
 function save(list){ localStorage.setItem(STORE_KEY, JSON.stringify(list)); recordHistory(list); }
 let crosses = load();
@@ -2266,7 +2290,7 @@ function card(cross){
     <div class="card-top">
       <div>
         <div class="card-title">${esc(cross.genotype)}</div>
-        ${objLabel(cross)?`<div class="card-exps"><span class="exp-chip obj-chip">${esc(objLabel(cross))}</span></div>`:''}
+        ${(objLabel(cross) || (cross.conditions&&cross.conditions.length)) ? `<div class="card-exps">${objLabel(cross)?`<span class="exp-chip obj-chip">${esc(objLabel(cross))}</span>`:''}${(cross.conditions||[]).map(x=>`<span class="exp-chip cond-chip">${esc(x)}</span>`).join('')}</div>` : ''}
       </div>
       <div class="card-tools">
         <span class="temp-pill" style="background:${ti.bg};color:${ti.text}">${cross.temp} °C</span>
@@ -2869,6 +2893,7 @@ function cloneCross(id){
   newGenSourceId = id;  // los parentales de `id` se retiran recién al CONFIRMAR la nueva generación (saveCross)
   document.getElementById('modalTitle').textContent = t('form.newGenTitle');
   formExperiments = (c.experiments||[]).slice(); renderExpTags();
+  formConditions = (c.conditions||[]).slice(); renderCondTags();
   document.getElementById('genotype').value = c.genotype;
   document.getElementById('objective').value = c.objective||'';
   document.getElementById('dissectStage').value = c.dissectStage||'l3';
@@ -3058,12 +3083,13 @@ function importCalibJSON(e){
 }
 /* CSV listo para GraphPad Prism / R (una fila por mosca: día + estado 1=muerte 0=censura) */
 function exportSurvivalCSV(){
-  const rows = [['cross_id','cross_name','genotype','sex','vials','day','status','status_label']];
+  const rows = [['cross_id','cross_name','genotype','condition','sex','vials','day','status','status_label']];
   let any = false;
   crosses.forEach(c=>{
     const a = c.aging; if(!a || a.startN==null) return;
     const st = computeState(c); const ecl = st.eclosionDate;
-    const base = (day,status,label)=> rows.push([c.id, csvCell(c.name||''), csvCell(c.genotype||''), a.sex||'', a.vials||'', day, status, label]);
+    const cond = csvCell((c.conditions||[]).join('; '));
+    const base = (day,status,label)=> rows.push([c.id, csvCell(c.name||''), csvCell(c.genotype||''), cond, a.sex||'', a.vials||'', day, status, label]);
     a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date)).forEach(e=>{
       const day = Math.max((new Date(e.date)-ecl)/86400000, 0).toFixed(2);
       for(let i=0;i<(e.deaths||0);i++){ base(day,1,'death'); any=true; }
@@ -3221,6 +3247,9 @@ function populateDatalists(){
   const exps = [...new Set([...crosses.flatMap(c=>c.experiments||[]), ...loadHistorySet(EXP_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
   const dl = document.getElementById('expList');
   if(dl) dl.innerHTML = exps.map(v=>`<option value="${esc(v)}"></option>`).join('');
+  const conds = [...new Set([...crosses.flatMap(c=>c.conditions||[]), ...loadHistorySet(COND_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
+  const cdl = document.getElementById('condList');
+  if(cdl) cdl.innerHTML = conds.map(v=>`<option value="${esc(v)}"></option>`).join('');
 }
 /* --- Campo de Experimento(s) como etiquetas --- */
 let formExperiments = [];
@@ -3244,6 +3273,31 @@ function removeExpTag(i){ formExperiments.splice(i,1); renderExpTags(); }
 function expInputKey(e){
   if(e.key==='Enter' || e.key===','){ e.preventDefault(); addExpTag(e.target.value); e.target.value=''; }
   else if(e.key==='Backspace' && !e.target.value && formExperiments.length){ removeExpTag(formExperiments.length-1); }
+}
+/* --- Campo de Condición(es) experimental(es) como etiquetas: mismo patrón que Experimento(s),
+   pero es un dato distinto — "Experimento(s)" agrupa las tarjetas (p. ej. "autofagia en cuerpo
+   graso"); "Condición(es)" es el tratamiento de esa tanda en particular (p. ej. "comida con CBD"). --- */
+let formConditions = [];
+function renderCondTags(){
+  const box = document.getElementById('condBox'); if(!box) return;
+  const input = document.getElementById('condInput');
+  [...box.querySelectorAll('.tag-chip')].forEach(c=>c.remove());
+  formConditions.forEach((t,i)=>{
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${esc(t)} <button type="button" onclick="removeCondTag(${i})" aria-label="quitar">✕</button>`;
+    box.insertBefore(chip, input);
+  });
+}
+function addCondTag(text){
+  text = String(text||'').trim();
+  if(text && !formConditions.some(e=>e.toLowerCase()===text.toLowerCase())) formConditions.push(text);
+  renderCondTags();
+}
+function removeCondTag(i){ formConditions.splice(i,1); renderCondTags(); }
+function condInputKey(e){
+  if(e.key==='Enter' || e.key===','){ e.preventDefault(); addCondTag(e.target.value); e.target.value=''; }
+  else if(e.key==='Backspace' && !e.target.value && formConditions.length){ removeCondTag(formConditions.length-1); }
 }
 
 /* ============================================================
@@ -3457,6 +3511,7 @@ function openForm(id){
     document.getElementById('modalTitle').textContent=t('form.editTitle');
     document.getElementById('editId').value=c.id;
     formExperiments = (c.experiments||[]).slice();
+    formConditions = (c.conditions||[]).slice();
     document.getElementById('genotype').value=c.genotype;
     document.getElementById('objective').value=c.objective||'';
     document.getElementById('dissectStage').value=c.dissectStage||'l3';
@@ -3474,6 +3529,7 @@ function openForm(id){
     document.getElementById('modalTitle').textContent=t('form.newTitle');
     document.getElementById('editId').value='';
     formExperiments = [];
+    formConditions = [];
     const _now = new Date();
     document.getElementById('crossDate').value = toLocalInput(_now).slice(0,10);
     document.getElementById('crossPeriod').value = periodFromHour(_now.getHours());
@@ -3481,6 +3537,7 @@ function openForm(id){
     document.querySelector('#presets button[data-t="25"]').classList.add('on');
   }
   document.getElementById('expInput').value=''; renderExpTags();
+  document.getElementById('condInput').value=''; renderCondTags();
   onObjectiveChange();
   ov.classList.add('open');
 }
@@ -3532,9 +3589,11 @@ function saveCross(e){
   const id = document.getElementById('editId').value;
   const objective = document.getElementById('objective').value;
   addExpTag(document.getElementById('expInput').value); document.getElementById('expInput').value=''; // capturar texto sin Enter
+  addCondTag(document.getElementById('condInput').value); document.getElementById('condInput').value='';
   const numOr = v => { v = String(v).trim(); if(v==='') return null; const n = parseInt(v,10); return (isNaN(n) || n<0) ? null : n; };
   const data = {
     experiments: [...formExperiments],
+    conditions: [...formConditions],
     genotype: document.getElementById('genotype').value.trim(),
     objective,
     dissectStage: objective==='dissect' ? document.getElementById('dissectStage').value : null,
