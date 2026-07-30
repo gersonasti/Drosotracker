@@ -419,6 +419,8 @@
     width:100%;max-width:460px;padding:26px;animation:pop .25s ease;
     max-height:92vh;overflow:auto;
   }
+  /* En desktop, más aire — sobre todo para la cruza con dos genotipos lado a lado */
+  @media (min-width:700px){ .modal{max-width:640px} }
   .modal h2{font-size:1.3rem;margin-bottom:4px}
   .modal .sub{color:var(--ink-soft);font-size:.86rem;margin-bottom:20px}
   .field{margin-bottom:16px}
@@ -514,6 +516,8 @@
   #confirmOverlay{z-index:100}
   .confirm-modal{max-width:380px}
   .confirm-msg{font-size:.95rem;color:var(--ink);line-height:1.45;margin-bottom:20px}
+  .confirm-dontask{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--ink-soft);cursor:pointer;margin:-8px 0 20px}
+  .confirm-dontask input{width:16px;height:16px;flex:none;accent-color:var(--lav)}
   /* Calibración */
   .calib-head{display:flex;align-items:center;gap:9px;margin-bottom:4px}
   .calib-head h2{margin:0}
@@ -533,8 +537,13 @@
   .calib-row .cx:hover{background:var(--peach-soft);color:var(--coral)}
   .t50-opts{display:flex;flex-direction:column;gap:9px}
   .t50-opts .btn{width:100%;justify-content:center}
-  .calib-labref{display:flex;align-items:flex-start;gap:9px;font-size:.83rem;color:var(--ink-soft);line-height:1.4;margin:2px 0 4px;cursor:pointer}
-  .calib-labref input{width:16px;height:16px;flex:none;margin-top:1px;accent-color:var(--lav)}
+  /* Referencia wild-type del lab: es la decisión más importante de la calibración (define el
+     modelo base para TODOS los genotipos), así que va primero y se destaca del resto del form. */
+  .calib-labref-banner{display:flex;align-items:center;gap:12px;font-size:.92rem;font-weight:700;color:var(--ink);
+    line-height:1.4;margin:0 0 18px;padding:14px 16px;border-radius:14px;cursor:pointer;
+    background:var(--lav-soft);border:1.5px solid var(--lav)}
+  .calib-labref-banner input{width:20px;height:20px;flex:none;accent-color:var(--lav)}
+  .calib-labref-banner:hover{filter:brightness(.98)}
   .calib-row.is-labref{background:var(--lav-soft)}
   .calib-row .cx.lab-toggle{color:var(--line)}
   .calib-row .cx.lab-toggle:hover{background:var(--lav-soft);color:var(--lav)}
@@ -703,7 +712,10 @@
         <div class="cross-pair-grid">
           <div class="cross-pair-half">
             <div class="lbl-row"><label for="genotypeA" data-i18n="cross.genoA">Genotype A *</label></div>
-            <input id="genotypeA" list="genoListPair" autocomplete="off" placeholder="e.g. w[1118]" required maxlength="120" />
+            <div class="ac-wrap">
+              <input id="genotypeA" autocomplete="off" placeholder="e.g. w[1118]" required maxlength="120" />
+              <div class="ac-pop" id="genoACA"></div>
+            </div>
             <select id="sexRoleA" style="margin-top:6px">
               <option value="female" data-i18n="cross.roleFemale">♀ provides females (virgins)</option>
               <option value="male" data-i18n="cross.roleMale">♂ provides males</option>
@@ -731,7 +743,10 @@
           </div>
           <div class="cross-pair-half">
             <div class="lbl-row"><label for="genotypeB" data-i18n="cross.genoB">Genotype B *</label></div>
-            <input id="genotypeB" list="genoListPair" autocomplete="off" placeholder="e.g. UAS-GFP / CyO" required maxlength="120" />
+            <div class="ac-wrap">
+              <input id="genotypeB" autocomplete="off" placeholder="e.g. UAS-GFP / CyO" required maxlength="120" />
+              <div class="ac-pop" id="genoACB"></div>
+            </div>
             <select id="sexRoleB" style="margin-top:6px">
               <option value="male" data-i18n="cross.roleMale">♂ provides males</option>
               <option value="female" data-i18n="cross.roleFemale">♀ provides females (virgins)</option>
@@ -758,7 +773,6 @@
             </div>
           </div>
         </div>
-        <datalist id="genoListPair"></datalist>
         <button type="button" class="link-btn" onclick="setCrossPairMode(false)" data-i18n="cross.removeSecond">✕ Remove the second genotype</button>
       </div>
       <div class="field">
@@ -940,6 +954,7 @@
     <div class="sub" data-i18n="calib.sub">Fine-tune the development model for a specific genotype using a real observation.</div>
     <div class="calib-help" id="calibHelp" data-i18n-html="calib.help"></div>
     <form id="calibForm" onsubmit="startCalib(event)">
+      <label class="calib-labref-banner"><input type="checkbox" id="calibLabRef" /><span data-i18n="calib.labRefOpt">Use as my lab's wild-type reference (calibrates the base model for all genotypes)</span></label>
       <div class="field">
         <label for="calibGeno" data-i18n="form.genotype">Genotype *</label>
         <input id="calibGeno" list="calibGenoList" autocomplete="off" placeholder="e.g. w[1118] ; UAS-GFP / CyO" required maxlength="120" oninput="renderCalibStatus()" />
@@ -957,17 +972,16 @@
       <div class="field">
         <label for="calibT0" id="calibT0Label" data-i18n="calib.t0">Egg-lay start (t₀) *</label>
         <input id="calibT0" type="datetime-local" required />
-        <div class="hint" id="calibT0Hint" data-i18n="calib.t0HintBounded">Keep the egg-lay window short (3–6 h): remove the parents afterwards so all eggs are ~the same age. That short window is what gives a good calibration.</div>
+        <div class="hint" id="calibT0Hint" data-i18n="calib.t0HintBounded">Keep the egg-lay window short (1–3 h): remove the parents afterwards so all eggs are ~the same age. That short window is what gives a good calibration.</div>
       </div>
       <div class="field" id="calibWindowField">
         <label for="calibWindowH" data-i18n="calib.windowH">Egg-lay window (hours)</label>
-        <input id="calibWindowH" type="number" min="0.5" max="48" step="0.5" value="6" />
+        <input id="calibWindowH" type="number" min="1" max="48" step="0.5" value="3" />
       </div>
       <div class="field">
         <label for="calibTemp" data-i18n="calib.temp">Incubation temperature (°C) *</label>
         <input id="calibTemp" type="number" min="12" max="30" step="0.5" value="25" required />
       </div>
-      <label class="calib-labref"><input type="checkbox" id="calibLabRef" /><span data-i18n="calib.labRefOpt">Use as my lab's wild-type reference (calibrates the base model for all genotypes)</span></label>
       <div class="modal-actions">
         <button type="button" class="btn ghost" onclick="closeCalib()" data-i18n="form.cancel">Cancel</button>
         <button type="submit" class="btn" data-i18n="calib.start">Start calibration</button>
@@ -1090,6 +1104,10 @@
 <div class="overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm()">
   <div class="modal confirm-modal">
     <div class="confirm-msg" id="confirmMsg"></div>
+    <label class="confirm-dontask" id="confirmDontAskRow" style="display:none">
+      <input type="checkbox" id="confirmDontAsk" />
+      <span data-i18n="confirm.dontAskAgain">Don't show this again</span>
+    </label>
     <div class="modal-actions">
       <button type="button" class="btn ghost" onclick="closeConfirm()" data-i18n="form.cancel">Cancel</button>
       <button type="button" class="btn danger" id="confirmOkBtn" onclick="doConfirm()" data-i18n="confirm.delete">Delete</button>
@@ -1191,11 +1209,11 @@ const I18N = {
     'tpl.bal2.name':'Balance over CyO (chr 2)','tpl.bal2.desc':'Keep a 2nd-chromosome allele over the CyO balancer (Curly-wing marker). P0: allele/+ x balancer stock; select balanced F1.','tpl.bal2.notes':'Balance a 2nd-chr allele over CyO. Select Curly (CyO-bearing) F1 that carry the allele, then sib-cross to establish an allele/CyO stock. Lethal alleles stay balanced automatically.',
     'tpl.bal3.name':'Balance over TM3 / TM6B (chr 3)','tpl.bal3.desc':'Keep a 3rd-chromosome allele over a TM3 (Sb) or TM6B (Hu, Tb) balancer. P0: allele/+ x balancer stock; select balanced F1.','tpl.bal3.notes':'Balance a 3rd-chr allele over TM3 (Stubble) or TM6B (Humeral, Tubby). Select the balancer-marked F1 carrying the allele, then sib-cross to establish the stock.',
     'tpl.wt.name':'Wild-type control','tpl.wt.desc':'A reference wild-type line to run alongside experimental genotypes.','tpl.wt.notes':'Wild-type reference control (e.g. w[1118] or Canton-S). Rear under the same conditions as the experimental cohorts.',
-    'calib.title':'Calibrate a genotype','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
-    'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (3–6 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and updates the genotype\'s correction. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half; the count method is more precise. Each observation is weighted by how precisely it was recorded and blended with the published model, shrinking toward it while data is thin — so one rough observation barely moves the prediction. The correction is shown with its uncertainty (±), reads as fully <b>Calibrated</b> at <b>≥3 independent batches</b>, and is flagged <b>Inconsistent</b> if batches disagree more than their error allows (usually a data-entry slip or a batch effect).',
+    'calib.title':'Calibration','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
+    'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (1–3 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and updates the genotype\'s correction. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half; the count method is more precise. Each observation is weighted by how precisely it was recorded and blended with the published model, shrinking toward it while data is thin — so one rough observation barely moves the prediction. The correction is shown with its uncertainty (±), reads as fully <b>Calibrated</b> at <b>≥3 independent batches</b>, and is flagged <b>Inconsistent</b> if batches disagree more than their error allows (usually a data-entry slip or a batch effect).',
     'calib.t0':'Egg-lay start (t₀) *','calib.t0Cross':'Cross set-up day *','calib.t0Rough':'Approximate t₀ *',
     'calib.t0Mode':'How well do you know the egg-lay start (t₀)?','calib.t0ModeBounded':'Bounded egg-lay window (best)','calib.t0ModeCross':'Cross set-up day only','calib.t0ModeUnknown':'Rough / unknown','calib.windowH':'Egg-lay window (hours)',
-    'calib.t0HintBounded':'Keep the egg-lay window short (3–6 h): remove the parents afterwards so every egg is about the same age. That short window is what gives a good calibration.',
+    'calib.t0HintBounded':'Keep the egg-lay window short (1–3 h): remove the parents afterwards so every egg is about the same age. That short window is what gives a good calibration.',
     'calib.t0HintCross':'You know the day you put the parents together but not the exact egg-lay — this observation will carry more uncertainty and pull the estimate less.',
     'calib.t0HintUnknown':'t₀ is only approximate — this observation will weigh very little. Prefer a bounded egg-lay window when you can.',
     'calib.temp':'Incubation temperature (°C) *','calib.start':'Start calibration','calib.existing':'Calibrated genotypes','calib.none':'No calibrations yet.',
@@ -1234,7 +1252,7 @@ const I18N = {
     'al.cohortN':'Enter a valid initial N of adults.','cf.importReplace':'Importing will replace the {n} current records with {m}. Continue?','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
-    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
+    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','confirm.dontAskAgain':'Don\'t show this again','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
   },
   es: {
     'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
@@ -1309,11 +1327,11 @@ const I18N = {
     'tpl.bal2.name':'Balancear sobre CyO (crom. 2)','tpl.bal2.desc':'Mantené un alelo del cromosoma 2 sobre el balanceador CyO (marcador de alas rizadas, Curly). P0: alelo/+ x stock balanceador; seleccioná la F1 balanceada.','tpl.bal2.notes':'Balanceá un alelo del crom. 2 sobre CyO. Seleccioná la F1 Curly (que lleva CyO) que también lleve el alelo, después cruzá hermanos para establecer un stock alelo/CyO. Los alelos letales quedan balanceados solos.',
     'tpl.bal3.name':'Balancear sobre TM3 / TM6B (crom. 3)','tpl.bal3.desc':'Mantené un alelo del cromosoma 3 sobre un balanceador TM3 (Sb) o TM6B (Hu, Tb). P0: alelo/+ x stock balanceador; seleccioná la F1 balanceada.','tpl.bal3.notes':'Balanceá un alelo del crom. 3 sobre TM3 (Stubble) o TM6B (Humeral, Tubby). Seleccioná la F1 con el marcador del balanceador que lleve el alelo, después cruzá hermanos para establecer el stock.',
     'tpl.wt.name':'Control wild-type','tpl.wt.desc':'Una línea wild-type de referencia para correr junto a los genotipos experimentales.','tpl.wt.notes':'Control wild-type de referencia (p. ej. w[1118] o Canton-S). Crialo en las mismas condiciones que las cohortes experimentales.',
-    'calib.title':'Calibrar un genotipo','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
-    'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (3–6 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y actualiza la corrección del genotipo. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta; el conteo es más preciso. Cada observación se pesa según su precisión y se combina con el modelo publicado, encogiendo hacia él mientras hay pocos datos — así una observación tosca casi no mueve la predicción. La corrección se muestra con su incertidumbre (±), pasa a <b>Calibrado</b> con <b>≥3 tandas independientes</b>, y se marca <b>Inconsistente</b> si las tandas discrepan más de lo que su error permite (en general un error de carga o un efecto de tanda).',
+    'calib.title':'Calibración','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
+    'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (1–3 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y actualiza la corrección del genotipo. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta; el conteo es más preciso. Cada observación se pesa según su precisión y se combina con el modelo publicado, encogiendo hacia él mientras hay pocos datos — así una observación tosca casi no mueve la predicción. La corrección se muestra con su incertidumbre (±), pasa a <b>Calibrado</b> con <b>≥3 tandas independientes</b>, y se marca <b>Inconsistente</b> si las tandas discrepan más de lo que su error permite (en general un error de carga o un efecto de tanda).',
     'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Cross':'Día de armado de la cruza *','calib.t0Rough':'t₀ aproximado *',
     'calib.t0Mode':'¿Qué tan bien sabés el inicio de la puesta (t₀)?','calib.t0ModeBounded':'Puesta acotada (lo mejor)','calib.t0ModeCross':'Solo el día de armado de la cruza','calib.t0ModeUnknown':'Aproximado / desconocido','calib.windowH':'Ventana de puesta (horas)',
-    'calib.t0HintBounded':'Ventana de puesta corta (3–6 h): retirá los parentales después, para que todos los huevos tengan ~la misma edad. Esa ventana corta es lo que da una buena calibración.',
+    'calib.t0HintBounded':'Ventana de puesta corta (1–3 h): retirá los parentales después, para que todos los huevos tengan ~la misma edad. Esa ventana corta es lo que da una buena calibración.',
     'calib.t0HintCross':'Sabés el día que juntaste los parentales pero no la puesta exacta — esta observación va a arrastrar más incertidumbre y pesar menos.',
     'calib.t0HintUnknown':'El t₀ es solo aproximado — esta observación va a pesar muy poco. Cuando puedas, preferí una puesta acotada.',
     'calib.temp':'Temperatura de incubación (°C) *','calib.start':'Iniciar calibración','calib.existing':'Genotipos calibrados','calib.none':'Todavía no hay calibraciones.',
@@ -1348,7 +1366,7 @@ const I18N = {
     'al.cohortN':'Ingresá un N inicial válido de adultos.','cf.importReplace':'Importar reemplazará los {n} registros actuales por {m}. ¿Continuar?','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
-    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
+    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','confirm.dontAskAgain':'No volver a mostrar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
   },
 };
 function t(key, vars){
@@ -1406,15 +1424,27 @@ document.addEventListener('click', e=>{
   document.querySelectorAll('.menu-pop.open').forEach(p=>{ if(!menu || !menu.contains(p)) p.classList.remove('open'); });
 });
 /* Diálogo de confirmación propio (reemplaza el confirm() del navegador; estilizado + traducido) */
-let _confirmCb = null;
-function askConfirm(message, onYes, okKey){
+/* "No volver a mostrar": el llamador pasa una dontAskKey; si el usuario tilda el check,
+   queda guardado en localStorage y las próximas veces se salta el diálogo directamente. */
+function isConfirmSkipped(key){ try{ return localStorage.getItem('drosotrack.skipConfirm.'+key)==='1'; }catch(e){ return false; } }
+function setConfirmSkipped(key){ try{ localStorage.setItem('drosotrack.skipConfirm.'+key, '1'); }catch(e){} }
+let _confirmCb = null, _confirmDontAskKey = null;
+function askConfirm(message, onYes, okKey, dontAskKey){
   _confirmCb = onYes;
+  _confirmDontAskKey = dontAskKey || null;
   document.getElementById('confirmMsg').textContent = message;
   document.getElementById('confirmOkBtn').textContent = t(okKey || 'confirm.delete');
+  document.getElementById('confirmDontAskRow').style.display = dontAskKey ? 'flex' : 'none';
+  document.getElementById('confirmDontAsk').checked = false;
   document.getElementById('confirmOverlay').classList.add('open');
 }
-function closeConfirm(){ document.getElementById('confirmOverlay').classList.remove('open'); _confirmCb = null; }
-function doConfirm(){ const cb = _confirmCb; closeConfirm(); if(cb) cb(); }
+function closeConfirm(){ document.getElementById('confirmOverlay').classList.remove('open'); _confirmCb = null; _confirmDontAskKey = null; }
+function doConfirm(){
+  const cb = _confirmCb;
+  if(_confirmDontAskKey && document.getElementById('confirmDontAsk').checked) setConfirmSkipped(_confirmDontAskKey);
+  closeConfirm();
+  if(cb) cb();
+}
 
 /* ---- Calibración por genotipo: modal, estado y flujo de T50 ---- */
 function calibStateWord(state){ return t('calib.state.'+state); }
@@ -1441,7 +1471,7 @@ function openCalib(){
   document.getElementById('calibT0').value = toLocalInput(new Date());
   document.getElementById('calibTemp').value = 25;
   document.getElementById('calibT0Mode').value = 'bounded';
-  document.getElementById('calibWindowH').value = 6;
+  document.getElementById('calibWindowH').value = 3;
   updateCalibT0Mode();
   const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype), ...loadHistorySet(GENO_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
   document.getElementById('calibGenoList').innerHTML = genos.map(v=>`<option value="${esc(v)}"></option>`).join('');
@@ -1831,7 +1861,7 @@ function stageBounds(temp, factor=1){
 /* ============================================================
    Calibración por genotipo (v2): estimador de encogimiento (shrinkage)
    hacia el modelo base de literatura. Cada observación aporta:
-     t0  = inicio de la puesta (ventana corta 3–6 h)
+     t0  = inicio de la puesta (ventana corta 1–3 h)
      t50 = momento en que eclosionó ~la mitad de las moscas
    factor observado f_i = tiempo real (t50−t0) / tiempo del modelo base a esa T.
 
@@ -2201,10 +2231,10 @@ function art(key){
       <!-- alas -->
       <ellipse cx="25" cy="44" rx="20" ry="10" fill="#eef3fb" stroke="#cfdcec" stroke-width="1.4" opacity=".92" transform="rotate(-23 25 44)"/>
       <ellipse cx="55" cy="44" rx="20" ry="10" fill="#eef3fb" stroke="#cfdcec" stroke-width="1.4" opacity=".92" transform="rotate(23 55 44)"/>
-      <!-- patas -->
+      <!-- patas: los 3 pares salen del tórax (cx 40 cy 31 rx 9 ry 8), no del abdomen -->
       <g stroke="#9c7550" stroke-width="1.6" stroke-linecap="round" fill="none">
-        <path d="M35 37 l-12 -5 -4 4"/><path d="M35 44 l-13 1 -3 5"/><path d="M35 51 l-11 7 -2 5"/>
-        <path d="M45 37 l12 -5 4 4"/><path d="M45 44 l13 1 3 5"/><path d="M45 51 l11 7 2 5"/>
+        <path d="M34 27 l-10 -7 -4 3"/><path d="M33 32 l-13 0 -3 5"/><path d="M34 37 l-10 6 -2 5"/>
+        <path d="M46 27 l10 -7 4 3"/><path d="M47 32 l13 0 3 5"/><path d="M46 37 l10 6 2 5"/>
       </g>
       <!-- abdomen con bandas -->
       <path d="M40 35 C49 35 51 46 48 56 C46 62 42 66 40 66 C38 66 34 62 32 56 C29 46 31 35 40 35 Z"
@@ -2873,11 +2903,13 @@ function deleteTask(id){ askConfirm(t('cf.dismissTask'), ()=>{ const d=loadTaskD
 /* ✕ en una tarea pendiente: la descarta (se oculta, no cuenta como "hecha"); reaparece a las 24 h si sigue vigente */
 function dismissTask(id){
   const m = _taskMap[id];
-  askConfirm(t('cf.dismissTask'), ()=>{
+  const doIt = () => {
     const done = loadTaskDone();
     done[id] = { doneAt: Date.now(), dismissed:true, text:m?m.text:'', c:m?m.c:'', genotype:m?m.genotype:'', crossId:m?m.crossId:id.split(':')[0] };
     saveTaskDone(done); renderTasks(); gcalMaybeAutoSync();
-  }, 'task.remove');
+  };
+  if(isConfirmSkipped('dismissTask')){ doIt(); return; }
+  askConfirm(t('cf.dismissTask'), doIt, 'task.remove', 'dismissTask');
 }
 
 function renderTasks(){
@@ -3460,9 +3492,6 @@ function populateDatalists(){
   const conds = [...new Set([...crosses.flatMap(c=>c.conditions||[]), ...loadHistorySet(COND_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
   const cdl = document.getElementById('condList');
   if(cdl) cdl.innerHTML = conds.map(v=>`<option value="${esc(v)}"></option>`).join('');
-  const genos = [...new Set([...(labDB&&labDB.list||[]), ...crosses.map(c=>c.genotype), ...loadHistorySet(GENO_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
-  const gdl = document.getElementById('genoListPair');
-  if(gdl) gdl.innerHTML = genos.map(v=>`<option value="${esc(v)}"></option>`).join('');
 }
 /* --- Campo de Experimento(s) como etiquetas --- */
 let formExperiments = [];
@@ -3643,7 +3672,10 @@ function genoCurToken(input){
   const token = m ? m[0] : '';
   return { token, start: cur - token.length, cur };
 }
-const genoAC = { items: [], active: -1 };
+/* Autocompletado inteligente de genotipo: genérico por (inputId, popId) para poder usarlo tanto
+   en el campo único como en Genotipo A/B de una cruza — misma fuente de sugerencias (_acFull/
+   _acComps), un solo popup activo a la vez (identificado por genoAC.inputId/popId). */
+const genoAC = { items: [], active: -1, inputId: 'genotype', popId: 'genoAC' };
 function buildGenoSuggestions(input){
   const val = input.value.trim(), lc = val.toLowerCase();
   const { token } = genoCurToken(input), tlc = token.toLowerCase();
@@ -3658,21 +3690,22 @@ function buildGenoSuggestions(input){
   const comps=[...pref,...sub].slice(0, 10-stocks.length).map(c=>({label:c,value:c,type:'comp',action:'token'}));
   return [...stocks, ...comps];
 }
-function showGenoAC(){
-  const input = document.getElementById('genotype'), pop = document.getElementById('genoAC');
+function showGenoACFor(inputId, popId){
+  const input = document.getElementById(inputId), pop = document.getElementById(popId);
   if(!input || !pop) return;
   const items = buildGenoSuggestions(input);
-  genoAC.items = items; genoAC.active = -1;
+  genoAC.items = items; genoAC.active = -1; genoAC.inputId = inputId; genoAC.popId = popId;
   if(!items.length){ pop.classList.remove('open'); pop.innerHTML=''; return; }
   pop.innerHTML = items.map((it,i)=>`<div class="ac-item" data-i="${i}" onmousedown="selectGenoAC(event,${i})">
     <span class="ac-label">${esc(it.label)}</span><span class="ac-tag ${it.type}">${it.type==='comp'?t('ac.comp'):t('ac.stock')}</span></div>`).join('');
   pop.classList.add('open');
 }
-function hideGenoAC(){ const pop=document.getElementById('genoAC'); if(pop) pop.classList.remove('open'); }
+function showGenoAC(){ showGenoACFor('genotype', 'genoAC'); }
+function hideGenoAC(){ const pop=document.getElementById(genoAC.popId); if(pop) pop.classList.remove('open'); }
 function selectGenoAC(e, i){
   if(e) e.preventDefault();
   const it = genoAC.items[i]; if(!it) return;
-  const input = document.getElementById('genotype');
+  const input = document.getElementById(genoAC.inputId);
   if(it.action==='full'){
     input.value = it.value;
     try{ input.setSelectionRange(input.value.length, input.value.length); }catch(_){}
@@ -3685,7 +3718,7 @@ function selectGenoAC(e, i){
   hideGenoAC(); input.focus();
 }
 function genoKeydown(e){
-  const pop = document.getElementById('genoAC');
+  const pop = document.getElementById(genoAC.popId);
   if(!pop || !pop.classList.contains('open')) return;
   const n = genoAC.items.length; if(!n) return;
   if(e.key==='ArrowDown'){ e.preventDefault(); genoAC.active=(genoAC.active+1)%n; paintGenoActive(); }
@@ -3694,17 +3727,20 @@ function genoKeydown(e){
   else if(e.key==='Escape'){ e.stopPropagation(); hideGenoAC(); }
 }
 function paintGenoActive(){
-  const pop=document.getElementById('genoAC'); if(!pop) return;
+  const pop=document.getElementById(genoAC.popId); if(!pop) return;
   [...pop.children].forEach((el,i)=> el.classList.toggle('active', i===genoAC.active));
   const a=pop.children[genoAC.active]; if(a) a.scrollIntoView({block:'nearest'});
 }
-(function attachGenoAC(){
-  const input = document.getElementById('genotype'); if(!input) return;
-  input.addEventListener('input', showGenoAC);
+function attachGenoAC(inputId, popId){
+  const input = document.getElementById(inputId); if(!input) return;
+  input.addEventListener('input', ()=>showGenoACFor(inputId, popId));
   input.addEventListener('keydown', genoKeydown);
-  input.addEventListener('focus', showGenoAC);
+  input.addEventListener('focus', ()=>showGenoACFor(inputId, popId));
   input.addEventListener('blur', ()=> setTimeout(hideGenoAC, 120));
-})();
+}
+attachGenoAC('genotype', 'genoAC');
+attachGenoAC('genotypeA', 'genoACA');
+attachGenoAC('genotypeB', 'genoACB');
 
 /* --- Acciones --- */
 function openForm(id){
@@ -3786,16 +3822,19 @@ function useTemplate(id){
 function onObjectiveChange(){
   const obj = document.getElementById('objective').value;
   document.getElementById('dissectRow').style.display = obj==='dissect' ? 'block' : 'none';
-  document.getElementById('crossPairBtn').style.display = obj==='cross' ? 'block' : 'none';
-  if(obj!=='cross') setCrossPairMode(false);
+  // Elegir "Cruza genética" despliega directamente los dos genotipos (♀/♂); "✕ Quitar el
+  // segundo genotipo" es la salida manual a modo simple si de verdad hace falta.
+  setCrossPairMode(obj==='cross');
 }
 /* Cruza con dos genotipos: ♀ vírgenes de uno, ♂ del otro. Cada uno queda como un registro
    normal e independiente (propia fecha/temperatura/adultos), unidos por un pairId compartido
    hasta que se confirma "Montar la cruza" (ver mountCross). */
 function setCrossPairMode(on){
+  const obj = document.getElementById('objective').value;
   document.getElementById('genoSingleBlock').style.display = on ? 'none' : 'block';
   document.getElementById('crossPairBlock').style.display = on ? 'block' : 'none';
   document.getElementById('singleLogisticsBlock').style.display = on ? 'none' : 'block';
+  document.getElementById('crossPairBtn').style.display = (!on && obj==='cross') ? 'block' : 'none';
   document.getElementById('genotype').required = !on;
   document.getElementById('crossDate').required = !on;
   document.getElementById('temp').required = !on;
