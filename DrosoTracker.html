@@ -420,9 +420,9 @@
     max-height:92vh;overflow:auto;
   }
   /* En desktop, más aire — sobre todo para la cruza con dos genotipos lado a lado */
-  @media (min-width:700px){ .modal{max-width:640px} }
-  .modal h2{font-size:1.3rem;margin-bottom:4px}
-  .modal .sub{color:var(--ink-soft);font-size:.86rem;margin-bottom:20px}
+  @media (min-width:700px){ .modal{max-width:760px} }
+  .modal h2{font-size:1.3rem;margin-bottom:4px;text-align:center}
+  .modal .sub{color:var(--ink-soft);font-size:.86rem;margin-bottom:20px;text-align:center}
   .field{margin-bottom:16px}
   .field label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--ink)}
   .field input{
@@ -450,7 +450,10 @@
     cursor:pointer;font-family:'Nunito';font-weight:700;font-size:.82rem;color:var(--ink-soft);transition:all .12s;
   }
   .temp-presets button.on,.temp-presets button:hover{border-color:var(--lav);background:var(--lav-soft);color:var(--lav)}
-  .modal-actions{display:flex;gap:10px;margin-top:24px}
+  /* pie fijo: en formularios largos, Cancelar/Guardar quedan siempre a la vista sin
+     tener que llegar scrolleando hasta el final */
+  .modal-actions{display:flex;gap:10px;margin-top:24px;position:sticky;bottom:-26px;
+    background:var(--card);padding:14px 0 26px;border-top:1px solid var(--line)}
   .modal-actions .btn{flex:1;justify-content:center}
 
   /* Cruza con dos genotipos (♀ de uno, ♂ de otro) */
@@ -519,7 +522,11 @@
   .confirm-dontask{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--ink-soft);cursor:pointer;margin:-8px 0 20px}
   .confirm-dontask input{width:16px;height:16px;flex:none;accent-color:var(--lav)}
   /* Calibración */
-  .calib-head{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  /* el título va centrado como en el resto de las ventanas; el "?" se saca del flujo
+     (position:absolute) para no correrlo del centro */
+  .calib-head{position:relative;margin-bottom:4px}
+  .calib-head h2{margin:0}
+  .calib-head .help-q{position:absolute;right:0;top:50%;transform:translateY(-50%)}
   .calib-head h2{margin:0}
   .help-q{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--lav);background:var(--lav-soft);color:var(--lav);font-weight:800;font-size:.85rem;cursor:pointer;line-height:1;font-family:'Nunito'}
   .help-q:hover{background:var(--lav);color:#fff}
@@ -2899,7 +2906,13 @@ function mountCross(pairId){
   }, 'cross.mountConfirmBtn');
 }
 function unmarkTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); gcalMaybeAutoSync(); }
-function deleteTask(id){ askConfirm(t('cf.dismissTask'), ()=>{ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); }, 'task.remove'); }
+function deleteTask(id){
+  const doIt = () => { const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); };
+  // misma acción que dismissTask (quitar una fila de tareas) → misma dontAskKey, así
+  // "no volver a mostrar" vale para el ✕ tanto en pendientes como en hechas
+  if(isConfirmSkipped('dismissTask')){ doIt(); return; }
+  askConfirm(t('cf.dismissTask'), doIt, 'task.remove', 'dismissTask');
+}
 /* ✕ en una tarea pendiente: la descarta (se oculta, no cuenta como "hecha"); reaparece a las 24 h si sigue vigente */
 function dismissTask(id){
   const m = _taskMap[id];
