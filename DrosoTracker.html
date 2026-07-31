@@ -635,8 +635,6 @@
           <div class="menu-fmt" data-i18n="menu.fmt">.csv · .tab · .tsv</div>
           <div id="labStatus"></div>
           <div class="menu-sep"></div>
-          <button onclick="openFeedbackForm()" data-i18n="menu.feedback" data-tip-key="tip.feedback">Report a bug / suggest an improvement</button>
-          <div class="menu-sep"></div>
           <button class="menu-danger" onclick="clearAllRecords()" data-i18n="menu.clearAll" data-tip-key="tip.clearAll">Clear all records</button>
         </div>
       </div>
@@ -653,6 +651,8 @@
             <button data-mode="light" onclick="setMode('light')"><span class="set-tick">✓</span><span data-i18n="set.light">Light</span></button>
             <button data-mode="dark" onclick="setMode('dark')"><span class="set-tick">✓</span><span data-i18n="set.dark">Dark</span></button>
           </div>
+          <div class="menu-sep"></div>
+          <button onclick="openFeedbackForm()" data-i18n="menu.feedback" data-tip-key="tip.feedback">📝 Report a bug / suggest an improvement</button>
         </div>
       </div>
       </div>
@@ -1258,7 +1258,7 @@ const I18N = {
     'ac.comp':'common','ac.stock':'stock',
     // alertas / confirmaciones / notificaciones
     'al.crossSameSex':'Pick one genotype as females (♀) and the other as males (♂) — a cross needs both.',
-    'menu.feedback':'Report a bug / suggest an improvement','tip.feedback':'Opens a short form (no account, no email required) — goes straight to the developer.',
+    'menu.feedback':'📝 Report a bug / suggest an improvement','tip.feedback':'Opens a short form (no account, no email required) — goes straight to the developer.',
     'al.feedbackNotReady':'This isn\'t wired up yet — coming soon.',
     'al.cohortN':'Enter a valid initial N of adults.','cf.importReplace':'Importing will replace the {n} current records with {m}. Continue?','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
@@ -1374,7 +1374,7 @@ const I18N = {
     'lab.sub':'{file} · {n} filas. Elegí la columna del genotipo y confirmá.','lab.noCol':'La columna elegida no tiene genotipos.','lab.loaded':'Base del lab: {n} genotipos','lab.clear':'Borrar','lab.colN':'Columna {n}','err.labFormat':'Se espera una fila de títulos + al menos una fila de datos.',
     'ac.comp':'común','ac.stock':'stock',
     'al.crossSameSex':'Elegí un genotipo como hembras (♀) y el otro como machos (♂) — una cruza necesita los dos.',
-    'menu.feedback':'Reportar un error / sugerir una mejora','tip.feedback':'Abre un formulario corto (sin cuenta, sin pedir tu mail) — llega directo al desarrollador.',
+    'menu.feedback':'📝 Reportar un error / sugerir una mejora','tip.feedback':'Abre un formulario corto (sin cuenta, sin pedir tu mail) — llega directo al desarrollador.',
     'al.feedbackNotReady':'Todavía no está conectado — pronto va a estar.',
     'al.cohortN':'Ingresá un N inicial válido de adultos.','cf.importReplace':'Importar reemplazará los {n} registros actuales por {m}. ¿Continuar?','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
