@@ -613,6 +613,10 @@
   html[data-theme="dark"] #tourDim{box-shadow:0 0 0 9999px rgba(10,8,16,.72)}
   #tourFrame{position:fixed;inset:6px;z-index:9002;border:4px solid var(--pink);border-radius:20px;pointer-events:none;
     box-shadow:0 0 26px rgba(243,182,205,.5)}
+  /* eleva por encima del oscurecido al elemento real que el paso está señalando (menú
+     desplegable, modal) — así queda garantizado que se ve nítido, sin depender de que el
+     "agujero" del oscurecido coincida exactamente con su geometría en cualquier navegador. */
+  .tour-lift{z-index:9003 !important}
   #tourCursor{position:fixed;z-index:9004;width:58px;height:58px;pointer-events:none;
     transition:left .35s cubic-bezier(.32,.9,.4,1),top .35s cubic-bezier(.32,.9,.4,1),opacity .2s ease;
     filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
@@ -620,7 +624,8 @@
   #tourCursor path{stroke:#111;stroke-width:1.4;stroke-linejoin:round}
   html[data-theme="dark"] #tourCursor path{stroke:#fff}
   #tourCallout{position:fixed;z-index:9005;width:300px;max-width:calc(100vw - 24px);background:var(--card);
-    border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);
+    border:2px solid var(--pink);border-radius:16px;padding:16px 18px;
+    box-shadow:0 18px 46px -10px rgba(20,16,30,.55),0 0 0 5px rgba(243,182,205,.16);
     transition:left .35s ease,top .35s ease}
   #tourCallout .tour-step{font-size:.72rem;font-weight:700;letter-spacing:.02em;color:var(--ink-soft);margin-bottom:4px}
   #tourCallout h3{font-family:'Poppins',sans-serif;font-size:1.02rem;margin-bottom:6px;color:var(--ink)}
@@ -679,6 +684,8 @@
       <div class="menu">
         <button class="btn ghost" onclick="toggleSettings()" data-tip-key="tip.settings" style="padding:12px 14px">⚙️</button>
         <div class="menu-pop" id="settingsPop">
+          <button onclick="openTutorial()" data-i18n="menu.tutorial" data-tip-key="tip.tutorial">Tutorial</button>
+          <div class="menu-sep"></div>
           <button class="set-group" onclick="toggleSetGroup(this)">🌐 <span data-i18n="set.language">Language</span><span class="set-caret">▾</span></button>
           <div class="set-sub">
             <button data-lang="en" onclick="setLang('en')"><span class="set-tick">✓</span><span data-i18n="set.english">English</span></button>
@@ -689,8 +696,6 @@
             <button data-mode="light" onclick="setMode('light')"><span class="set-tick">✓</span><span data-i18n="set.light">Light</span></button>
             <button data-mode="dark" onclick="setMode('dark')"><span class="set-tick">✓</span><span data-i18n="set.dark">Dark</span></button>
           </div>
-          <div class="menu-sep"></div>
-          <button onclick="openTutorial()" data-i18n="menu.tutorial" data-tip-key="tip.tutorial">Tutorial</button>
           <div class="menu-sep"></div>
           <button onclick="openFeedbackForm()" data-i18n="menu.feedback" data-tip-key="tip.feedback">📝 Report a bug / suggest an improvement</button>
         </div>
@@ -1339,16 +1344,17 @@ const I18N = {
     // tutorial guiado
     'menu.tutorial':'Tutorial','tip.tutorial':'An interactive guided tour of the app: creating a new record (genetic cross example), planning an experiment backward, and comparing cohorts (Kaplan-Meier).',
     'tour.back':'Back','tour.next':'Continue','tour.done':'Got it','tour.skip':'Exit tutorial','tour.count':'Step {i} of {n}',
-    'tour.t0':'Welcome to DrosoTracker','tour.b0':'Quick tour: creating a record (genetic cross example), planning an experiment backward, and comparing cohorts with survival curves. Hit <b>Continue</b> to start.',
-    'tour.t1':'New record','tour.b1':'This is where you create a record: genotype, set-up date and incubation temperature.',
-    'tour.t2':'Objective','tour.b2':'Choose what you\'re doing. Let\'s try <b>Genetic cross</b>.',
-    'tour.t3':'Genotype A and B','tour.b3':'Choosing Genetic cross reveals two genotypes: one provides virgin females (♀), the other the males (♂) — each with its own date and temperature.',
-    'tour.t4':'Save','tour.b4':'Once saved, DrosoTracker tracks each line separately and reminds you to <b>Collect virgins</b>, then to <b>Mount the cross</b>, which merges them into one record.',
-    'tour.t5':'Plan','tour.b5':'This is where you plan an experiment backward, working out when to set everything up.',
-    'tour.t6':'Plan backward','tour.b6':'Pick the stage you want to reach and the target date, and it tells you when to set it up.',
-    'tour.t7':'Compare cohorts (KM)','tour.b7':'This overlays survival curves between aging cohorts.',
-    'tour.t8':'Kaplan–Meier + log-rank','tour.b8':'These two cohorts are just an example: this is how overlaid curves and the log-rank test (χ², p-value) look. A real cohort is defined from a record with adults (initial N, sex, vials).',
-    'tour.t9':'That\'s it','tour.b9':'You can reopen this tour anytime from <b>⚙️ Settings → Tutorial</b>.',
+    'tour.t0':'Welcome to DrosoTracker','tour.b0':'Quick tour: creating a record (genetic cross example), planning an experiment backward, and comparing cohorts with survival curves. You can go back anytime or exit whenever you like. Hit <b>Continue</b> to start.',
+    'tour.t1':'New record','tour.b1':'This is where you create a record: genotype, set-up date and incubation temperature. It works for genetic crosses as well as stock maintenance, line amplification or larval dissection — the objective you pick changes which fields show up.',
+    'tour.t2':'Objective','tour.b2':'Choose what you\'re doing: genetic cross, stock maintenance, amplification, aging cohort or larval dissection. Each objective adjusts the form and the tasks it\'ll later remind you about. Let\'s try <b>Genetic cross</b>.',
+    'tour.t3':'Genotype A and B','tour.b3':'Choosing Genetic cross reveals two genotypes: one provides virgin females (♀), the other the males (♂). Each keeps its own set-up date and temperature — DrosoTracker tracks both separately until you confirm the cross.',
+    'tour.t4':'Save','tour.b4':'Once saved, DrosoTracker tracks each parental line separately and reminds you to <b>Collect virgins</b> as it nears eclosion, then to <b>Mount the cross</b>, which merges both records into one whose clock restarts at the egg.',
+    'tour.t5':'Plan','tour.b5':'This is where you plan an experiment backward: tell it which stage and date you want to reach, and it works out when to set everything up — handy for timing virgin collections or dissections.',
+    'tour.t6':'Plan backward','tour.b6':'Pick the objective, the stage you want to reach (egg, L1-L3, pupa or adults) and the target date. DrosoTracker runs the temperature-dependent model backward and gives you the exact day and time to set it up.',
+    'tour.t7':'Compare cohorts (KM)','tour.b7':'This overlays survival curves between aging cohorts and runs a log-rank test to see if they differ. Let\'s see how it looks with data loaded.',
+    'tour.t8':'Loaded cohorts','tour.b8':'This is how 2 example cohorts look once loaded on the main dashboard, with their initial N, sex and vial count — from here you log flips to fresh food, deaths and censoring at each check. If you haven\'t logged any cohort yet, "Compare cohorts" will tell you at least one is needed; with 2 or more, you can overlay them.',
+    'tour.t9':'Kaplan–Meier + log-rank','tour.b9':'With 2 or more cohorts ticked, DrosoTracker overlays their Kaplan–Meier curves and runs the log-rank test (χ², p-value) to tell you whether the survival difference is significant. These two are just an example — a real cohort is loaded from a record with adults, like you saw in the previous step.',
+    'tour.t10':'That\'s it','tour.b10':'That\'s it — you\'re ready. Reopen this tour anytime from <b>⚙️ Settings → Tutorial</b>, and check out the cross templates and per-genotype calibration in the <b>"More ▾"</b> menu.',
     'tour.demoA':'Canton-S — Condition 1 (example)','tour.demoB':'Canton-S — Condition 2 (example)',
   },
   es: {
@@ -1469,16 +1475,17 @@ const I18N = {
     // tutorial guiado
     'menu.tutorial':'Tutorial','tip.tutorial':'Un recorrido interactivo por la app: crear un registro nuevo (con el ejemplo de una cruza genética), planificar un experimento hacia atrás, y comparar cohortes (Kaplan-Meier).',
     'tour.back':'Atrás','tour.next':'Continuar','tour.done':'Entendido','tour.skip':'Salir del tutorial','tour.count':'Paso {i} de {n}',
-    'tour.t0':'Bienvenido a DrosoTracker','tour.b0':'Te muestro rápido cómo crear un registro (ejemplo de cruza genética), planificar un experimento hacia atrás, y comparar cohortes con curvas de supervivencia. Tocá <b>Continuar</b> para arrancar.',
-    'tour.t1':'Nuevo registro','tour.b1':'Acá creás un registro: genotipo, fecha de montaje y temperatura de incubación.',
-    'tour.t2':'Objetivo','tour.b2':'Elegí qué estás haciendo. Vamos a probar con <b>Cruza genética</b>.',
-    'tour.t3':'Genotipo A y B','tour.b3':'Al elegir Cruza genética aparecen dos genotipos: uno aporta las hembras vírgenes (♀), el otro los machos (♂) — cada uno con su propia fecha y temperatura.',
-    'tour.t4':'Guardar','tour.b4':'Al guardar, DrosoTracker sigue cada línea por separado y te avisa <b>Recolectar vírgenes</b> y después <b>Montar la cruza</b>, que las fusiona en un solo registro.',
-    'tour.t5':'Planificar','tour.b5':'Desde acá planificás un experimento hacia atrás, calculando cuándo armar todo.',
-    'tour.t6':'Planificar hacia atrás','tour.b6':'Elegís a qué estadio querés llegar y en qué fecha, y te dice cuándo montarlo.',
-    'tour.t7':'Comparar cohortes (KM)','tour.b7':'Acá superponés curvas de supervivencia entre cohortes de envejecimiento.',
-    'tour.t8':'Kaplan–Meier + log-rank','tour.b8':'Estas dos cohortes son de ejemplo: así se ven las curvas superpuestas y el test de log-rank (χ², p-valor). La cohorte real se define desde un registro con adultos (N inicial, sexo, viales).',
-    'tour.t9':'Listo','tour.b9':'Podés reabrir este recorrido cuando quieras desde <b>⚙️ Ajustes → Tutorial</b>.',
+    'tour.t0':'Bienvenido a DrosoTracker','tour.b0':'Te muestro rápido cómo crear un registro (ejemplo de cruza genética), planificar un experimento hacia atrás, y comparar cohortes con curvas de supervivencia. Podés volver atrás cuando quieras o salir en cualquier momento. Tocá <b>Continuar</b> para arrancar.',
+    'tour.t1':'Nuevo registro','tour.b1':'Acá creás un registro: genotipo, fecha de montaje y temperatura de incubación. Sirve tanto para cruzas genéticas como para mantenimiento de stock, amplificación de línea o disección larval — el objetivo que elijas cambia qué campos aparecen.',
+    'tour.t2':'Objetivo','tour.b2':'Elegí qué estás haciendo: cruza genética, mantenimiento de stock, amplificación, cohorte de envejecimiento o disección larval. Cada objetivo ajusta el formulario y las tareas que después te va a recordar. Vamos a probar con <b>Cruza genética</b>.',
+    'tour.t3':'Genotipo A y B','tour.b3':'Al elegir Cruza genética aparecen dos genotipos: uno aporta las hembras vírgenes (♀), el otro los machos (♂). Cada uno conserva su propia fecha de montaje y temperatura — DrosoTracker sigue a los dos por separado hasta que confirmes la cruza.',
+    'tour.t4':'Guardar','tour.b4':'Al guardar, DrosoTracker sigue cada línea parental por separado y te avisa <b>Recolectar vírgenes</b> cuando esté por eclosionar, y después <b>Montar la cruza</b>, que fusiona los dos registros en uno solo cuyo reloj arranca de nuevo en el huevo.',
+    'tour.t5':'Planificar','tour.b5':'Desde acá planificás un experimento hacia atrás: le decís a qué estadio y fecha querés llegar, y calcula cuándo armar todo para lograrlo — útil para coordinar colectas de vírgenes o disecciones a horario.',
+    'tour.t6':'Planificar hacia atrás','tour.b6':'Elegís el objetivo, a qué estadio querés llegar (huevo, L1-L3, pupa o adultos) y en qué fecha. DrosoTracker corre el modelo dependiente de la temperatura hacia atrás y te dice el día y hora exactos para montarlo.',
+    'tour.t7':'Comparar cohortes (KM)','tour.b7':'Acá superponés curvas de supervivencia entre cohortes de envejecimiento y corrés un test de log-rank para ver si difieren. Sigamos para ver cómo se ve con datos cargados.',
+    'tour.t8':'Cohortes cargadas','tour.b8':'Así se ven 2 cohortes de ejemplo ya cargadas en la pantalla principal, con su N inicial, sexo y cantidad de viales — desde acá vas registrando los pases a comida fresca, las muertes y las censuras en cada control. Si todavía no cargaste ninguna cohorte, "Comparar cohortes" te va a avisar que hace falta al menos una; con 2 o más, las podés superponer.',
+    'tour.t9':'Kaplan–Meier + log-rank','tour.b9':'Con 2 o más cohortes tildadas, DrosoTracker superpone sus curvas de Kaplan–Meier y corre el test de log-rank (χ², p-valor) para decirte si la diferencia en supervivencia es significativa. Estas dos son de ejemplo — la cohorte real se carga desde un registro con adultos, como viste en el paso anterior.',
+    'tour.t10':'Listo','tour.b10':'Listo — ya podés arrancar. Reabrí este recorrido cuando quieras desde <b>⚙️ Ajustes → Tutorial</b>, y mirá las plantillas de cruza y la calibración por genotipo en el menú <b>"Más ▾"</b>.',
     'tour.demoA':'Canton-S — Condición 1 (ejemplo)','tour.demoB':'Canton-S — Condición 2 (ejemplo)',
   },
 };
@@ -1511,12 +1518,13 @@ function toggleSettings(){ const open = document.getElementById('settingsPop').c
    siempre queda accesible desde ⚙️ Ajustes → Tutorial. ============================================================ */
 const TUTORIAL_KEY = 'drosotrack.tutorial.v1';
 let _tourStep = 0;
+let _tourLifted = null;   // elemento actualmente elevado por encima del oscurecido (.tour-lift)
 
 /* Construye 2 cohortes "cross-like" enteramente en memoria (nunca se insertan en
-   `crosses` ni pasan por save()) para ilustrar Comparar cohortes (KM) con datos
-   reales de ejemplo, no una explicación abstracta. ensureAging/computeState son
-   funciones puras (sólo leen/mutan el objeto recibido), así que un objeto
-   sintético bien formado pasa sin problema por kmCurve/cohortSeries/logRankTest. */
+   `crosses` de forma permanente ni pasan por save()) para ilustrar Comparar cohortes
+   (KM) con datos reales de ejemplo, no una explicación abstracta. ensureAging/
+   computeState son funciones puras (sólo leen/mutan el objeto recibido), así que un
+   objeto sintético bien formado pasa sin problema por kmCurve/cohortSeries/logRankTest. */
 function buildDemoCohorts(){
   const crossDateISO = new Date(Date.now() - 70*86400000).toISOString();
   function mk(id, genoKey, startN, deathSchedule){
@@ -1532,6 +1540,15 @@ function buildDemoCohorts(){
     mk('tour-demo-b', 'tour.demoB', 40, [[10,3],[15,6],[20,9],[25,10],[30,7],[35,3],[40,2]]),
   ];
 }
+/* rect "sintético" que abarca dos elementos a la vez (para señalar ambas tarjetas de
+   ejemplo juntas) — cualquier objeto con getBoundingClientRect() sirve como target. */
+function unionRect(a, b){
+  if(!a || !b) return null;
+  const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+  const left=Math.min(ra.left,rb.left), top=Math.min(ra.top,rb.top);
+  const right=Math.max(ra.right,rb.right), bottom=Math.max(ra.bottom,rb.bottom);
+  return { getBoundingClientRect:()=>({ left, top, right, bottom, width:right-left, height:bottom-top }) };
+}
 
 const TOUR_STEPS = [
   { target:()=>null, titleKey:'tour.t0', bodyKey:'tour.b0' },
@@ -1546,29 +1563,46 @@ const TOUR_STEPS = [
   { setup:()=>{ openPlan(); }, target:()=>document.getElementById('planForm'), titleKey:'tour.t6', bodyKey:'tour.b6' },
   { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
     target:()=>document.querySelector('#dataMenu button[onclick="openCompare()"]'), titleKey:'tour.t7', bodyKey:'tour.b7' },
+  /* Paso nuevo: muestra las 2 cohortes de ejemplo YA CARGADAS como tarjetas reales en la
+     pantalla principal (no sólo el resultado de la comparación) — así se ve qué aspecto
+     tiene una cohorte definida, y el texto aclara qué pasa si todavía no tenés ninguna. */
+  { setup:()=>{ document.getElementById('dataMenu').classList.remove('open'); crosses.push(...buildDemoCohorts()); render(); },
+    target:()=>unionRect(document.getElementById('card-tour-demo-a'), document.getElementById('card-tour-demo-b')),
+    titleKey:'tour.t8', bodyKey:'tour.b8' },
   { setup:()=>{ _cmpDemoOverride = buildDemoCohorts(); openCompare(); },
-    target:()=>document.getElementById('compareResult'), titleKey:'tour.t8', bodyKey:'tour.b8' },
-  { target:()=>null, titleKey:'tour.t9', bodyKey:'tour.b9' },
+    target:()=>document.getElementById('compareResult'), titleKey:'tour.t9', bodyKey:'tour.b9' },
+  { target:()=>null, titleKey:'tour.t10', bodyKey:'tour.b10' },
 ];
 
 /* Vuelve a un estado conocido antes de cada paso (en cualquier dirección): cierra
-   todo lo que el tour pudo haber abierto. Cada paso reconstruye desde acá lo que
+   todo lo que el tour pudo haber abierto y saca las cohortes de ejemplo de `crosses`
+   si el paso anterior las había insertado. Cada paso reconstruye desde acá lo que
    necesita — más simple y robusto que diffear el estado entre pasos. */
 function tourResetToBaseline(){
+  if(crosses.some(c=>c.id==='tour-demo-a'||c.id==='tour-demo-b')){
+    crosses = crosses.filter(c=>c.id!=='tour-demo-a' && c.id!=='tour-demo-b');
+    render();
+  }
   closeForm();
   document.getElementById('dataMenu').classList.remove('open');
   document.getElementById('settingsPop').classList.remove('open');
   closePlan();
   closeCompare();
   _cmpDemoOverride = null;
+  if(_tourLifted){ _tourLifted.classList.remove('tour-lift'); _tourLifted = null; }
 }
 function tourApplyPosition(){
   if(document.getElementById('tourBlock').style.display === 'none') return;
   const step = TOUR_STEPS[_tourStep];
-  const target = step.target ? step.target() : null;
+  let target = step.target ? step.target() : null;
   const cursor = document.getElementById('tourCursor');
   const dim = document.getElementById('tourDim');
   const callout = document.getElementById('tourCallout');
+  /* defensivo: un target "encontrado" pero de tamaño cero (p. ej. todavía no
+     renderizado) se trata como si no hubiera target, en vez de mal-posicionar
+     el cursor en la esquina superior izquierda de la pantalla. */
+  if(target){ const rr = target.getBoundingClientRect(); if(!rr.width && !rr.height) target = null; }
+  if(_tourLifted){ _tourLifted.classList.remove('tour-lift'); _tourLifted = null; }
   if(!target){
     dim.style.opacity = '0';
     cursor.style.opacity = '0';
@@ -1576,6 +1610,13 @@ function tourApplyPosition(){
     callout.style.left = Math.round((window.innerWidth-cw)/2) + 'px';
     callout.style.top = Math.round((window.innerHeight-ch)/2) + 'px';
     return;
+  }
+  /* eleva por encima del oscurecido el contenedor real (menú desplegable o modal) que
+     incluye al target, para garantizar que se vea nítido sin depender de que el
+     "agujero" del oscurecido coincida al pixel con su geometría. */
+  if(target instanceof Element){
+    _tourLifted = target.closest('.menu-pop, .modal') || target;
+    _tourLifted.classList.add('tour-lift');
   }
   const r = target.getBoundingClientRect();
   const pad = 8;
@@ -1588,11 +1629,11 @@ function tourApplyPosition(){
   cursor.style.left = Math.round(r.left - 14) + 'px';
   cursor.style.top = Math.round(r.top - 10) + 'px';
   if(window.innerWidth >= 700){
-    const cw = 300, chGuess = callout.offsetHeight || 200;
+    const cw = 300, chGuess = callout.offsetHeight || 200, margin = 16;
     let left = r.right + 26;
-    if(left + cw + 12 > window.innerWidth) left = r.left - cw - 26;
-    left = Math.max(12, Math.min(left, window.innerWidth - cw - 12));
-    let top = Math.max(12, Math.min(r.top, window.innerHeight - chGuess - 12));
+    if(left + cw + margin > window.innerWidth) left = r.left - cw - 26;
+    left = Math.max(margin, Math.min(left, window.innerWidth - cw - margin));
+    let top = Math.max(margin, Math.min(r.top, window.innerHeight - chGuess - margin));
     callout.style.left = Math.round(left) + 'px';
     callout.style.top = Math.round(top) + 'px';
   }
