@@ -1222,7 +1222,7 @@ const I18N = {
     'gcal.title':'Google Calendar','gcal.desc':'Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively — even with the app closed.',
     'gcal.connect':'Connect Google Calendar','gcal.syncNow':'Sync now','gcal.disconnect':'Disconnect','gcal.auto':'Keep it in sync automatically',
     'gcal.stOn':'Connected','gcal.stOff':'Not connected','gcal.lastSync':'Last synced: {d}','gcal.note':'Two-way: marking a task done in the app removes its event; deleting the event in Google Calendar marks the task done here (on the next sync). Disconnecting stops syncing but keeps the events already created.',
-    'gcal.notConfigured':'Not set up yet: a Google Client ID is needed (see the setup guide).','gcal.noClient':'Google Calendar sync is not configured yet (missing Client ID).','gcal.authFail':'Could not connect to Google. Please try again.',
+    'gcal.notConfigured':'Not set up yet: a Google Client ID is needed (see the setup guide).','gcal.noClient':'Google Calendar sync is not configured yet (missing Client ID).','gcal.authFail':'This isn\'t available for your account yet — the app is still in Google\'s review/testing phase, so only pre-approved emails can connect. Want access? Send your email via "Report a bug / suggest an improvement" and I\'ll add you.',
     'gcal.synced':'Synced ✓  +{i} new · {u} updated · {d} removed','gcal.reflected':'{n} marked done (deleted in Calendar)','gcal.someErr':'({e} could not sync)','gcal.evEcl':'Estimated eclosion — {g}','gcal.evDesc':'Created by DrosoTracker.',
     'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'Light','set.dark':'Dark',
     'notice.model':'<b>Model update:</b> the development model was recalibrated from published data (Powsner 1935, 16–28 °C). Predicted times shifted a little — mainly, adult emergence is now ~1 day earlier at 20–28 °C, while pupation barely changes. Your saved records already show the updated dates.','notice.dismiss':'Got it',
@@ -1373,7 +1373,7 @@ const I18N = {
     'gcal.title':'Google Calendar','gcal.desc':'Empujá tus tareas y eclosiones estimadas a tu Google Calendar para que te avise de forma nativa — aun con la app cerrada.',
     'gcal.connect':'Conectar Google Calendar','gcal.syncNow':'Sincronizar ahora','gcal.disconnect':'Desconectar','gcal.auto':'Mantener sincronizado automáticamente',
     'gcal.stOn':'Conectado','gcal.stOff':'Sin conectar','gcal.lastSync':'Última sincronización: {d}','gcal.note':'Doble vía: marcar una tarea como hecha en la app borra su evento; borrar el evento en Google Calendar marca la tarea como hecha acá (en la próxima sincronización). Desconectar detiene la sincronización pero conserva los eventos ya creados.',
-    'gcal.notConfigured':'Todavía no configurado: falta el Client ID de Google (ver la guía de configuración).','gcal.noClient':'La sincronización con Google Calendar todavía no está configurada (falta el Client ID).','gcal.authFail':'No se pudo conectar con Google. Probá de nuevo.',
+    'gcal.notConfigured':'Todavía no configurado: falta el Client ID de Google (ver la guía de configuración).','gcal.noClient':'La sincronización con Google Calendar todavía no está configurada (falta el Client ID).','gcal.authFail':'Esto todavía no está disponible para tu cuenta: la app sigue en fase de revisión/prueba de Google, así que por ahora solo pueden conectarse mails aprobados de antemano. ¿Querés acceso? Mandame tu mail desde "Reportar un error / sugerir una mejora" y te agrego.',
     'gcal.synced':'Sincronizado ✓  +{i} nuevos · {u} actualizados · {d} quitados','gcal.reflected':'{n} marcadas hechas (borradas en Calendar)','gcal.someErr':'({e} no se pudieron sincronizar)','gcal.evEcl':'Eclosión estimada — {g}','gcal.evDesc':'Creado por DrosoTracker.',
     'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'Claro','set.dark':'Oscuro',
     'notice.model':'<b>Modelo actualizado:</b> el modelo de desarrollo se recalibró con datos publicados (Powsner 1935, 16–28 °C). Los tiempos estimados cambiaron un poco — sobre todo, la eclosión de adultos se adelanta ~1 día a 20–28 °C, mientras que la pupación casi no cambia. Tus registros guardados ya muestran las fechas actualizadas.','notice.dismiss':'Entendido',
@@ -2094,7 +2094,11 @@ async function gcalSync(interactive, pull){
   if(!gcalConfigured()){ if(interactive) alert(t('gcal.noClient')); return; }
   _gcalInteractive = !!interactive;   // gobierna si gcalApi puede escalar a login
   try{ await gcalGetToken(interactive); }
-  catch(e){ if(interactive) alert(t('gcal.authFail')); gcalUpdateUI(); return; }
+  catch(e){
+    // el usuario cerró la ventana de Google por su cuenta: no es un error, no hace falta avisar
+    if(interactive && !(e && e.message==='popup_closed_by_user')) alert(t('gcal.authFail'));
+    gcalUpdateUI(); return;
+  }
   const map=gcalGetMap();
   let reflected=0;
   if(pull){
