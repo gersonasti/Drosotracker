@@ -11,6 +11,7 @@ analysis/tablas/
 !icon-192.png
 !icon-512.png
 !apple-touch-icon.png
+!gcal-icon.png
 
 # Backups y exportaciones de datos del usuario (no van al repo)
 drosotracker-backup*.json

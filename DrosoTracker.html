@@ -83,9 +83,8 @@
   html[data-theme="dark"] .menu-pop button:hover{background:var(--line)}
   html[data-theme="dark"] .menu-pop button.menu-danger:hover{background:#3a2531}
   /* mismo problema (fondo pastel fijo + texto var(--ink) que sí cambia con el tema) en el
-     banner de referencia de lab de Calibrar y en el código de genotipo de las plantillas. */
+     banner de referencia de lab de Calibrar. */
   html[data-theme="dark"] .calib-labref-banner{background:rgba(201,189,240,.14)}
-  html[data-theme="dark"] .tpl-g{background:rgba(201,189,240,.14)}
 
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -361,7 +360,9 @@
   .menu-pop button{
     border:none;background:none;cursor:pointer;text-align:left;padding:10px 12px;border-radius:10px;
     font-family:'Nunito';font-weight:600;font-size:.88rem;color:var(--ink);transition:background .12s;
+    display:flex;align-items:center;gap:8px;
   }
+  .menu-ico{width:15px;height:15px;flex:none;border-radius:3px}
   .menu-pop button:hover{background:var(--lav-soft)}
   .menu-pop button.menu-danger{color:var(--coral)}
   .menu-pop button.menu-danger:hover{background:var(--peach-soft)}
@@ -603,12 +604,6 @@
   .stat-out .so{flex:1;background:var(--bg-1);border-radius:12px;padding:11px 6px;text-align:center}
   .stat-out .so b{display:block;font-size:1.35rem;color:var(--ink);line-height:1.1}
   .stat-out .so span{font-size:.72rem;color:var(--ink-soft)}
-  /* Plantillas de cruza */
-  .tpl-card{background:var(--bg-1);border-radius:14px;padding:13px 15px;margin-bottom:10px}
-  .tpl-h{font-weight:700;color:var(--ink);font-size:.92rem;margin-bottom:3px}
-  .tpl-d{font-size:.82rem;color:var(--ink-soft);line-height:1.45;margin-bottom:8px}
-  .tpl-g{display:inline-block;background:var(--lav-soft);color:var(--ink);border-radius:8px;padding:3px 8px;font-size:.8rem;margin-bottom:9px;word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace}
-  .tpl-card .mini-btn{width:100%}
   /* Google Calendar */
   .gcal-on{color:#3fae8c;font-weight:700}
   .gcal-off{color:var(--ink-soft);font-weight:700}
@@ -671,17 +666,15 @@
       <div class="menu">
         <button class="btn ghost" onclick="toggleMenu()" data-i18n="hdr.more" data-tip-key="tip.more">More ▾</button>
         <div class="menu-pop" id="dataMenu">
-          <button onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">🗓 Plan</button>
-          <button onclick="openTemplates()" data-i18n="tpl.menu" data-tip-key="tip.tpl">Cross templates</button>
+          <button onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">Plan</button>
           <button onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
           <button onclick="openCompare()" data-i18n="cmp.menu" data-tip-key="tip.cmp">Compare cohorts (KM)</button>
           <button onclick="openStatPlan()" data-i18n="stat.menu" data-tip-key="tip.stat">Sample size / power</button>
-          <button onclick="openGcal()" data-i18n="gcal.menu" data-tip-key="tip.gcal">📅 Google Calendar</button>
+          <button onclick="openGcal()" data-i18n-html="gcal.menu" data-tip-key="tip.gcal"><img src="gcal-icon.png" class="menu-ico" alt="">Google Calendar</button>
           <div class="menu-sep"></div>
           <button onclick="exportJSON()" data-i18n="menu.exportBackup" data-tip-key="tip.exportBackup">⬇ Export backup (JSON)</button>
           <button onclick="document.getElementById('importFile').click()" data-i18n="menu.importBackup" data-tip-key="tip.importBackup">⬆ Import backup</button>
-          <button onclick="exportSurvivalCSV()" data-i18n="menu.exportSurvival" data-tip-key="tip.exportSurvival">📊 Export survival (CSV)</button>
-          <button onclick="exportICS()" data-i18n="menu.exportIcs" data-tip-key="tip.exportIcs">Export calendar (.ics)</button>
+          <button onclick="exportSurvivalCSV()" data-i18n="menu.exportSurvival" data-tip-key="tip.exportSurvival">Export survival (CSV)</button>
           <div class="menu-sep"></div>
           <button onclick="document.getElementById('labFile').click()" data-i18n="menu.importLab" data-tip-key="tip.importLab">🧬 Import lab genotype database</button>
           <div class="menu-fmt" data-i18n="menu.fmt">.csv · .tab · .tsv</div>
@@ -1094,19 +1087,6 @@
   </div>
 </div>
 
-<!-- Plantillas de esquemas de cruza frecuentes: pre-llenan un registro nuevo (editable) -->
-<div class="overlay" id="tplOverlay" onclick="if(event.target===this)closeTemplates()">
-  <div class="modal">
-    <div class="calib-head"><h2 data-i18n="tpl.title">Cross templates</h2></div>
-    <div class="sub" data-i18n="tpl.sub">Common Drosophila cross schemes. Pick one to pre-fill a new record — everything stays editable.</div>
-    <div id="tplList"></div>
-    <div class="hint" data-i18n="tpl.note" style="margin-top:10px">Starting points only. Adjust the genotype, markers and chromosomes to your exact stocks.</div>
-    <div class="modal-actions">
-      <button type="button" class="btn ghost" onclick="closeTemplates()" data-i18n="cmp.close">Close</button>
-    </div>
-  </div>
-</div>
-
 <!-- Tutorial interactivo (spotlight): recorre la app real, paso a paso, con el resto de la
      pantalla congelado. Sólo estos 3 controles (Atrás/Continuar/Salir) quedan interactuables.
      #tourWrap NO tiene position/z-index propios (a propósito): así no crea su propio contexto
@@ -1232,12 +1212,12 @@ const MODE_KEY = 'drosotrack.mode.v1';
 let mode = localStorage.getItem(MODE_KEY) || 'light';   // apariencia: 'light' (por defecto) | 'dark'
 const I18N = {
   en: {
-    'hdr.plan':'🗓 Plan','hdr.data':'⇅ Data','hdr.more':'More ▾','hdr.newCross':'New record','hdr.settings':'Settings',
+    'hdr.plan':'Plan','hdr.data':'⇅ Data','hdr.more':'More ▾','hdr.newCross':'New record','hdr.settings':'Settings',
     'brand.sub':'We track the life cycle, not behaviour.','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
-    'menu.exportSurvival':'📊 Export survival (CSV)','menu.exportIcs':'Export calendar (.ics)','menu.importLab':'🧬 Import lab genotype database',
+    'menu.exportSurvival':'Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Clear all records','tip.clearAll':'Delete every record at once (keeps your lab database and calibrations).',
-    'gcal.menu':'📅 Google Calendar','tip.gcal':'Sync your tasks and eclosions to your Google Calendar so it reminds you natively, even with the app closed.',
+    'gcal.menu':'<img src="gcal-icon.png" class="menu-ico" alt=""> Google Calendar','tip.gcal':'Sync your tasks and eclosions to your Google Calendar so it reminds you natively, even with the app closed.',
     'gcal.title':'Google Calendar','gcal.desc':'Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively — even with the app closed.',
     'gcal.connect':'Connect Google Calendar','gcal.syncNow':'Sync now','gcal.disconnect':'Disconnect','gcal.auto':'Keep it in sync automatically',
     'gcal.stOn':'Connected','gcal.stOff':'Not connected','gcal.lastSync':'Last synced: {d}','gcal.note':'Two-way: marking a task done in the app removes its event; deleting the event in Google Calendar marks the task done here (on the next sync). Disconnecting stops syncing but keeps the events already created.',
@@ -1246,8 +1226,7 @@ const I18N = {
     'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'Light','set.dark':'Dark',
     'notice.model':'<b>Model update:</b> the development model was recalibrated from published data (Powsner 1935, 16–28 °C). Predicted times shifted a little — mainly, adult emergence is now ~1 day earlier at 20–28 °C, while pupation barely changes. Your saved records already show the updated dates.','notice.dismiss':'Got it',
     'tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
-    'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.exportIcs':'Download upcoming tasks and eclosions as a calendar file (.ics) — import into any calendar app, no account needed.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
-    'ics.empty':'No upcoming tasks or eclosions to export yet. Add a record first.',
+    'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
     'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
@@ -1304,12 +1283,6 @@ const I18N = {
     'stat.perGroup':'min. per group','stat.total':'min. total','stat.events':'deaths needed',
     'stat.hr':'Hazard ratio ≈ {hr}','stat.durLine':'Est. duration ≈ {d} d (~{w} wk, incl. development)','stat.perSex':'Per sex — analyse sexes separately, so double this to run both.',
     'stat.needDiff':'Enter two different median lifespans to size the experiment.','stat.okStd':'Minimum for this effect: ~{n} per group. That fits within the standard design (≥100 per condition = 10 flies × 10 vials) — run ~100 per group for a safety margin (attrition, uncertain effect size).','stat.bigN':'Minimum for this effect: ~{n} per group — above the standard ~100 per condition. Consider a larger effect, fewer conditions, or accepting less power.',
-    'tpl.menu':'Cross templates','tip.tpl':'Pre-fill a new record from a common cross scheme (GAL4/UAS, balancing).',
-    'tpl.title':'Cross templates','tpl.sub':'Common Drosophila cross schemes. Pick one to pre-fill a new record — everything stays editable.','tpl.use':'Use this template','tpl.note':'Starting points only. Adjust the genotype, markers and chromosomes to your exact stocks.',
-    'tpl.gal4uas.name':'GAL4 / UAS (targeted expression)','tpl.gal4uas.desc':'Express a UAS-transgene in the pattern of a GAL4 driver. P0: GAL4 driver × UAS-transgene; the F1 carrying both expresses the transgene.','tpl.gal4uas.notes':'GAL4/UAS binary expression. P0: GAL4 driver x UAS-transgene (either direction). Collect the F1 carrying both. Run a GAL4-only and a UAS-only sibling as controls. Driver and transgene are often on different chromosomes (";" separates them).',
-    'tpl.bal2.name':'Balance over CyO (chr 2)','tpl.bal2.desc':'Keep a 2nd-chromosome allele over the CyO balancer (Curly-wing marker). P0: allele/+ x balancer stock; select balanced F1.','tpl.bal2.notes':'Balance a 2nd-chr allele over CyO. Select Curly (CyO-bearing) F1 that carry the allele, then sib-cross to establish an allele/CyO stock. Lethal alleles stay balanced automatically.',
-    'tpl.bal3.name':'Balance over TM3 / TM6B (chr 3)','tpl.bal3.desc':'Keep a 3rd-chromosome allele over a TM3 (Sb) or TM6B (Hu, Tb) balancer. P0: allele/+ x balancer stock; select balanced F1.','tpl.bal3.notes':'Balance a 3rd-chr allele over TM3 (Stubble) or TM6B (Humeral, Tubby). Select the balancer-marked F1 carrying the allele, then sib-cross to establish the stock.',
-    'tpl.wt.name':'Wild-type control','tpl.wt.desc':'A reference wild-type line to run alongside experimental genotypes.','tpl.wt.notes':'Wild-type reference control (e.g. w[1118] or Canton-S). Rear under the same conditions as the experimental cohorts.',
     'calib.title':'Calibration','calib.helpTitle':'What is this?','calib.sub':'Fine-tune the development model for a specific genotype using a real observation.',
     'calib.help':'<b>What it does.</b> Each line develops a bit faster or slower than the base model. A calibration measures that offset for one genotype and adjusts all its future predictions.<ol><li>Put several ♀ and ♂ of the genotype in a vial and let them lay eggs for a <b>short window (1–3 h)</b>, then remove the parents — so every egg is about the same age.</li><li>Record the <b>egg-lay start (t₀)</b> below.</li><li>When about <b>half</b> the flies have eclosed, open "Log eclosion" on its card and tap "~ Half" (T₅₀). No maths — you just recognise the state.</li></ol>The app compares your real time with the base model and updates the genotype\'s correction. Two ways to record T₅₀: <b>~ Half</b> by eye (quick), or <b>by count</b> — log real numbers at 2+ time points and the app interpolates the exact half; the count method is more precise. Each observation is weighted by how precisely it was recorded and blended with the published model, shrinking toward it while data is thin — so one rough observation barely moves the prediction. The correction is shown with its uncertainty (±), reads as fully <b>Calibrated</b> at <b>≥3 independent batches</b>, and is flagged <b>Inconsistent</b> if batches disagree more than their error allows (usually a data-entry slip or a batch effect).',
     'calib.t0':'Egg-lay start (t₀) *','calib.t0Cross':'Cross set-up day *','calib.t0Rough':'Approximate t₀ *',
@@ -1357,7 +1330,7 @@ const I18N = {
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
     'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','confirm.dontAskAgain':'Don\'t show this again','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
     // tutorial guiado
-    'menu.tutorial':'Tutorial','tip.tutorial':'An interactive guided tour of the app: creating a new record (genetic cross example), planning an experiment backward, and comparing cohorts (Kaplan-Meier).',
+    'menu.tutorial':'Starter tutorial','tip.tutorial':'An interactive guided tour of the basics: creating a new record (genetic cross example), planning an experiment backward, and comparing cohorts (Kaplan-Meier).',
     'tour.back':'Back','tour.next':'Continue','tour.done':'Got it','tour.skip':'Exit tutorial','tour.count':'Step {i} of {n}',
     'tour.t0':'Welcome to DrosoTracker','tour.b0':'Quick tour: creating a record (genetic cross example), planning an experiment backward, and comparing cohorts with survival curves. You can go back anytime or exit whenever you like. Hit <b>Continue</b> to start.',
     'tour.t1':'Calibrate','tour.b1':'First things first: every line develops a bit faster or slower than the base model. Calibrating is what improves the accuracy of every date you see in the app the most.',
@@ -1378,12 +1351,12 @@ const I18N = {
     'tour.demoFemale':'w[1118] (example)','tour.demoMale':'UAS-GFP / CyO (example)',
   },
   es: {
-    'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
+    'hdr.plan':'Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
     'brand.sub':'Trackeamos el ciclo de vida, no comportamiento.','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
-    'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.exportIcs':'Exportar calendario (.ics)','menu.importLab':'🧬 Importar base de genotipos del lab',
+    'menu.exportSurvival':'Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Vaciar registros','tip.clearAll':'Borra todos los registros de una (conserva la base del lab y las calibraciones).',
-    'gcal.menu':'📅 Google Calendar','tip.gcal':'Sincronizá tus tareas y eclosiones con tu Google Calendar para que te avise de forma nativa, aun con la app cerrada.',
+    'gcal.menu':'<img src="gcal-icon.png" class="menu-ico" alt=""> Google Calendar','tip.gcal':'Sincronizá tus tareas y eclosiones con tu Google Calendar para que te avise de forma nativa, aun con la app cerrada.',
     'gcal.title':'Google Calendar','gcal.desc':'Empujá tus tareas y eclosiones estimadas a tu Google Calendar para que te avise de forma nativa — aun con la app cerrada.',
     'gcal.connect':'Conectar Google Calendar','gcal.syncNow':'Sincronizar ahora','gcal.disconnect':'Desconectar','gcal.auto':'Mantener sincronizado automáticamente',
     'gcal.stOn':'Conectado','gcal.stOff':'Sin conectar','gcal.lastSync':'Última sincronización: {d}','gcal.note':'Doble vía: marcar una tarea como hecha en la app borra su evento; borrar el evento en Google Calendar marca la tarea como hecha acá (en la próxima sincronización). Desconectar detiene la sincronización pero conserva los eventos ya creados.',
@@ -1392,8 +1365,7 @@ const I18N = {
     'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'Claro','set.dark':'Oscuro',
     'notice.model':'<b>Modelo actualizado:</b> el modelo de desarrollo se recalibró con datos publicados (Powsner 1935, 16–28 °C). Los tiempos estimados cambiaron un poco — sobre todo, la eclosión de adultos se adelanta ~1 día a 20–28 °C, mientras que la pupación casi no cambia. Tus registros guardados ya muestran las fechas actualizadas.','notice.dismiss':'Entendido',
     'tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
-    'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.exportIcs':'Descargá las tareas y eclosiones próximas como archivo de calendario (.ics) — importalo en cualquier app de calendario, sin cuenta.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
-    'ics.empty':'Todavía no hay tareas ni eclosiones próximas para exportar. Agregá un registro primero.',
+    'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
     'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
@@ -1444,12 +1416,6 @@ const I18N = {
     'stat.perGroup':'mín. por grupo','stat.total':'mín. total','stat.events':'muertes necesarias',
     'stat.hr':'Razón de hazards ≈ {hr}','stat.durLine':'Duración est. ≈ {d} d (~{w} sem, incl. desarrollo)','stat.perSex':'Por sexo — los sexos se analizan por separado, así que duplicá esto para correr ambos.',
     'stat.needDiff':'Ingresá dos medianas de vida distintas para dimensionar el experimento.','stat.okStd':'Mínimo para este efecto: ~{n} por grupo. Entra dentro del diseño estándar (≥100 por condición = 10 moscas × 10 viales) — corré ~100 por grupo para tener margen (atrición, efecto incierto).','stat.bigN':'Mínimo para este efecto: ~{n} por grupo — por encima del estándar de ~100 por condición. Considerá un efecto más grande, menos condiciones, o aceptar menos potencia.',
-    'tpl.menu':'Plantillas de cruza','tip.tpl':'Pre-llená un registro nuevo a partir de un esquema de cruza frecuente (GAL4/UAS, balanceo).',
-    'tpl.title':'Plantillas de cruza','tpl.sub':'Esquemas de cruza frecuentes en Drosophila. Elegí uno para pre-llenar un registro nuevo — todo queda editable.','tpl.use':'Usar esta plantilla','tpl.note':'Solo son puntos de partida. Ajustá el genotipo, los marcadores y los cromosomas a tus stocks exactos.',
-    'tpl.gal4uas.name':'GAL4 / UAS (expresión dirigida)','tpl.gal4uas.desc':'Expresá un transgén UAS en el patrón de un driver GAL4. P0: driver GAL4 × UAS-transgén; la F1 que lleva ambos expresa el transgén.','tpl.gal4uas.notes':'Expresión binaria GAL4/UAS. P0: driver GAL4 x UAS-transgén (en cualquier sentido). Recolectá la F1 que lleva ambos. Corré un hermano solo-GAL4 y otro solo-UAS como controles. El driver y el transgén suelen estar en cromosomas distintos (";" los separa).',
-    'tpl.bal2.name':'Balancear sobre CyO (crom. 2)','tpl.bal2.desc':'Mantené un alelo del cromosoma 2 sobre el balanceador CyO (marcador de alas rizadas, Curly). P0: alelo/+ x stock balanceador; seleccioná la F1 balanceada.','tpl.bal2.notes':'Balanceá un alelo del crom. 2 sobre CyO. Seleccioná la F1 Curly (que lleva CyO) que también lleve el alelo, después cruzá hermanos para establecer un stock alelo/CyO. Los alelos letales quedan balanceados solos.',
-    'tpl.bal3.name':'Balancear sobre TM3 / TM6B (crom. 3)','tpl.bal3.desc':'Mantené un alelo del cromosoma 3 sobre un balanceador TM3 (Sb) o TM6B (Hu, Tb). P0: alelo/+ x stock balanceador; seleccioná la F1 balanceada.','tpl.bal3.notes':'Balanceá un alelo del crom. 3 sobre TM3 (Stubble) o TM6B (Humeral, Tubby). Seleccioná la F1 con el marcador del balanceador que lleve el alelo, después cruzá hermanos para establecer el stock.',
-    'tpl.wt.name':'Control wild-type','tpl.wt.desc':'Una línea wild-type de referencia para correr junto a los genotipos experimentales.','tpl.wt.notes':'Control wild-type de referencia (p. ej. w[1118] o Canton-S). Crialo en las mismas condiciones que las cohortes experimentales.',
     'calib.title':'Calibración','calib.helpTitle':'¿Qué es esto?','calib.sub':'Ajustá el modelo de desarrollo de un genotipo con una observación real.',
     'calib.help':'<b>Qué hace.</b> Cada línea se desarrolla un poco más rápido o más lento que el modelo base. Una calibración mide esa desviación para un genotipo y ajusta todas sus predicciones futuras.<ol><li>Poné varias ♀ y ♂ del genotipo en un vial y dejalas poner huevos una <b>ventana corta (1–3 h)</b>, después retirá los parentales — así todos los huevos tienen ~la misma edad.</li><li>Anotá abajo el <b>inicio de la puesta (t₀)</b>.</li><li>Cuando haya eclosionado ~<b>la mitad</b> de las moscas, abrí "Registrar eclosión" en su tarjeta y tocá "~ La mitad" (T₅₀). Sin cuentas — solo reconocés el estado.</li></ol>La app compara tu tiempo real con el modelo base y actualiza la corrección del genotipo. Dos formas de registrar el T₅₀: <b>~ La mitad</b> a ojo (rápido), o <b>por conteo</b> — anotás números reales en 2+ momentos y la app interpola la mitad exacta; el conteo es más preciso. Cada observación se pesa según su precisión y se combina con el modelo publicado, encogiendo hacia él mientras hay pocos datos — así una observación tosca casi no mueve la predicción. La corrección se muestra con su incertidumbre (±), pasa a <b>Calibrado</b> con <b>≥3 tandas independientes</b>, y se marca <b>Inconsistente</b> si las tandas discrepan más de lo que su error permite (en general un error de carga o un efecto de tanda).',
     'calib.t0':'Inicio de la puesta (t₀) *','calib.t0Cross':'Día de armado de la cruza *','calib.t0Rough':'t₀ aproximado *',
@@ -1493,7 +1459,7 @@ const I18N = {
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
     'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','confirm.dontAskAgain':'No volver a mostrar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
     // tutorial guiado
-    'menu.tutorial':'Tutorial','tip.tutorial':'Un recorrido interactivo por la app: crear un registro nuevo (con el ejemplo de una cruza genética), planificar un experimento hacia atrás, y comparar cohortes (Kaplan-Meier).',
+    'menu.tutorial':'Tutorial inicial','tip.tutorial':'Un recorrido interactivo por lo básico: crear un registro nuevo (con el ejemplo de una cruza genética), planificar un experimento hacia atrás, y comparar cohortes (Kaplan-Meier).',
     'tour.back':'Atrás','tour.next':'Continuar','tour.done':'Entendido','tour.skip':'Salir del tutorial','tour.count':'Paso {i} de {n}',
     'tour.t0':'Bienvenido a DrosoTracker','tour.b0':'Te muestro rápido cómo crear un registro (ejemplo de cruza genética), planificar un experimento hacia atrás, y comparar cohortes con curvas de supervivencia. Podés volver atrás cuando quieras o salir en cualquier momento. Tocá <b>Continuar</b> para arrancar.',
     'tour.t1':'Calibrar','tour.b1':'Antes que nada: cada línea se desarrolla un poco más rápido o más lento que el modelo base. Calibrar es lo que más mejora la precisión de las fechas que ves en toda la app.',
@@ -3552,40 +3518,6 @@ function exportJSON(){
     `drosotracker-backup-${new Date().toISOString().slice(0,10)}.json`);
   closeMenu();
 }
-/* Exportar tareas + eclosiones como archivo de calendario (.ics): recordatorios
-   con la app cerrada SIN cuenta de Google. Reusa gcalDesired() (misma lista de
-   eventos día-completo que la sync de Calendar). RFC 5545: CRLF y plegado ≤75. */
-function icsEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/[;,]/g,m=>'\\'+m).replace(/\n/g,'\\n'); }
-function icsFold(line){
-  if(line.length<=74) return line;
-  let out=line.slice(0,74), rest=line.slice(74);
-  while(rest.length>73){ out+='\r\n '+rest.slice(0,73); rest=rest.slice(73); }
-  return out+'\r\n '+rest;
-}
-function exportICS(){
-  const now = new Date();
-  const events = gcalDesired(now);
-  if(!events.length){ alert(t('ics.empty')); closeMenu(); return; }
-  const stamp = now.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');   // UTC YYYYMMDDTHHMMSSZ
-  const day = d => `${d.getFullYear()}${gcalPad(d.getMonth()+1)}${gcalPad(d.getDate())}`;
-  const L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//DrosoTracker//DrosoTracker//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
-  events.forEach(ev=>{
-    const end = new Date(ev.when.getTime()+86400000);
-    L.push('BEGIN:VEVENT',
-      'UID:'+ev.uid+'@drosotracker',
-      'DTSTAMP:'+stamp,
-      'DTSTART;VALUE=DATE:'+day(ev.when),
-      'DTEND;VALUE=DATE:'+day(end),
-      icsFold('SUMMARY:'+icsEsc(ev.summary)),
-      icsFold('DESCRIPTION:'+icsEsc(t('gcal.evDesc'))),
-      'BEGIN:VALARM','ACTION:DISPLAY','TRIGGER:-PT9H',icsFold('DESCRIPTION:'+icsEsc(ev.summary)),'END:VALARM',
-      'END:VEVENT');
-  });
-  L.push('END:VCALENDAR');
-  downloadBlob(new Blob([L.join('\r\n')+'\r\n'],{type:'text/calendar;charset=utf-8'}),
-    `drosotracker-${now.toISOString().slice(0,10)}.ics`);
-  closeMenu();
-}
 function importJSON(e){
   const f = e.target.files[0]; if(!f) return;
   const r = new FileReader();
@@ -4146,33 +4078,6 @@ function openForm(id){
 }
 function closeForm(){ document.getElementById('overlay').classList.remove('open'); newGenSourceId = null; }
 
-/* ---- Plantillas de esquemas de cruza (GAL4/UAS, balanceo): pre-llenan el form ---- */
-const CROSS_TEMPLATES = [
-  { id:'gal4uas', geno:'GAL4-driver ; UAS-transgene', obj:'cross' },
-  { id:'bal2',    geno:'mutation / CyO',              obj:'stock' },
-  { id:'bal3',    geno:'mutation / TM6B',             obj:'stock' },
-  { id:'wt',      geno:'w[1118]',                     obj:'' },
-];
-function openTemplates(){ closeMenu(); renderTemplates(); document.getElementById('tplOverlay').classList.add('open'); }
-function closeTemplates(){ document.getElementById('tplOverlay').classList.remove('open'); }
-function renderTemplates(){
-  document.getElementById('tplList').innerHTML = CROSS_TEMPLATES.map(tp=>
-    `<div class="tpl-card"><div class="tpl-h">${esc(t('tpl.'+tp.id+'.name'))}</div>`
-    + `<div class="tpl-d">${esc(t('tpl.'+tp.id+'.desc'))}</div>`
-    + `<code class="tpl-g">${esc(tp.geno)}</code>`
-    + `<button class="mini-btn" onclick="useTemplate('${tp.id}')">${esc(t('tpl.use'))}</button></div>`
-  ).join('');
-}
-function useTemplate(id){
-  const tp = CROSS_TEMPLATES.find(x=>x.id===id); if(!tp) return;
-  closeTemplates();
-  openForm();                                   // form nuevo (resetea y pone defaults)
-  document.getElementById('genotype').value = tp.geno;
-  document.getElementById('objective').value = tp.obj;
-  document.getElementById('fNotes').value = t('tpl.'+tp.id+'.notes');
-  onObjectiveChange();
-  document.getElementById('genotype').focus();
-}
 /* Autocompleta "total" sumando ♀+♂ cuando se carga al menos uno de los dos; si ninguno
    tiene valor, no toca "total" (el usuario puede seguir cargándolo directo, sin desglose). */
 function syncAdultsTotal(totalId, femId, maleId){
