@@ -437,6 +437,11 @@
   .duo{display:flex;gap:8px}
   .duo select{flex:1}
   .duo input{width:82px;flex:none;text-align:center}
+  /* Los inputs numéricos (♀/♂/total, n°) muestran flechitas de incremento nativas que
+     empujan el placeholder hacia la izquierda pese a text-align:center — se ocultan. */
+  .trio input::-webkit-outer-spin-button,.trio input::-webkit-inner-spin-button,
+  .duo input::-webkit-outer-spin-button,.duo input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .trio input[type=number],.duo input[type=number]{-moz-appearance:textfield}
   .field .hint{font-size:.74rem;color:var(--ink-soft);margin-top:5px}
   /* etiqueta con un (?) que muestra la explicación en un tooltip (en vez de un párrafo fijo) */
   .lbl-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
@@ -465,6 +470,12 @@
     border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;color:var(--ink);background:var(--bg-2)}
   .cross-pair-half input:focus,.cross-pair-half select:focus{outline:none;border-color:var(--lav)}
   .cross-pair-half .trio,.cross-pair-half .duo{margin-top:0}
+  /* La regla ".cross-pair-half input,.cross-pair-half select{width:100%}" de arriba tiene la
+     misma especificidad que ".duo input{width:82px}" y, al venir después, la pisaba: el select
+     de recipiente quedaba reducido a la flechita y el input de n° se desbordaba a la derecha. */
+  .cross-pair-half .trio input{width:auto}
+  .cross-pair-half .duo select{width:auto}
+  .cross-pair-half .duo input{width:82px;flex:none}
   .cross-pair-sub{display:block;font-weight:700;font-size:.78rem;color:var(--ink-soft);margin:12px 0 6px}
 
   .footer-note{text-align:center;color:var(--ink-soft);font-size:.78rem;margin-top:40px}
