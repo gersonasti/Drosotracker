@@ -109,7 +109,6 @@
   .brand .logo svg{width:30px;height:30px}
   .brand-name{font-size:1.5rem;font-weight:700;line-height:1;color:var(--ink)}
   .brand-sub{font-size:.86rem;color:var(--ink-soft);margin-top:3px}
-  .brand-sub i{font-style:italic}
 
   .btn{
     border:none;cursor:pointer;font-weight:600;font-size:.95rem;
@@ -607,7 +606,7 @@
       </div>
       <div>
         <div class="brand-name">DrosoTracker</div>
-        <div class="brand-sub" data-i18n-html="brand.sub">Life cycle of <i>Drosophila melanogaster</i></div>
+        <div class="brand-sub" data-i18n="brand.sub">We track the life cycle, not behaviour.</div>
       </div>
     </div>
     <div class="header-actions">
@@ -1141,7 +1140,7 @@ let mode = localStorage.getItem(MODE_KEY) || 'light';   // apariencia: 'light' (
 const I18N = {
   en: {
     'hdr.plan':'🗓 Plan','hdr.data':'⇅ Data','hdr.more':'More ▾','hdr.newCross':'New record','hdr.settings':'Settings',
-    'brand.sub':'Life cycle of <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker',
+    'brand.sub':'We track the life cycle, not behaviour.','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
     'menu.exportSurvival':'📊 Export survival (CSV)','menu.exportIcs':'Export calendar (.ics)','menu.importLab':'🧬 Import lab genotype database',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Clear all records','tip.clearAll':'Delete every record at once (keeps your lab database and calibrations).',
@@ -1267,7 +1266,7 @@ const I18N = {
   },
   es: {
     'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
-    'brand.sub':'Ciclo de vida de <i>Drosophila melanogaster</i>','doc.title':'DrosoTracker',
+    'brand.sub':'Trackeamos el ciclo de vida, no comportamiento.','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
     'menu.exportSurvival':'📊 Exportar supervivencia (CSV)','menu.exportIcs':'Exportar calendario (.ics)','menu.importLab':'🧬 Importar base de genotipos del lab',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Vaciar registros','tip.clearAll':'Borra todos los registros de una (conserva la base del lab y las calibraciones).',
