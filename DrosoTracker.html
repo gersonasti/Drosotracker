@@ -687,6 +687,7 @@
         <button class="btn ghost" onclick="toggleSettings()" data-tip-key="tip.settings" style="padding:12px 14px">⚙️</button>
         <div class="menu-pop" id="settingsPop">
           <button onclick="openTutorial()" data-i18n="menu.tutorial" data-tip-key="tip.tutorial">Tutorial</button>
+          <button onclick="openAdvancedTutorial()" data-i18n="menu.tutorialAdvanced" data-tip-key="tip.tutorialAdvanced">Advanced tutorial</button>
           <div class="menu-sep"></div>
           <button class="set-group" onclick="toggleSetGroup(this)">🌐 <span data-i18n="set.language">Language</span><span class="set-caret">▾</span></button>
           <div class="set-sub">
@@ -1331,6 +1332,7 @@ const I18N = {
     'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','confirm.dontAskAgain':'Don\'t show this again','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
     // tutorial guiado
     'menu.tutorial':'Starter tutorial','tip.tutorial':'An interactive guided tour of the basics: creating a new record (genetic cross example), planning an experiment backward, and comparing cohorts (Kaplan-Meier).',
+    'menu.tutorialAdvanced':'Advanced tutorial','tip.tutorialAdvanced':'A guided tour of the less common features: importing/exporting data, Google Calendar sync, sample size, and reporting a bug.',
     'tour.back':'Back','tour.next':'Continue','tour.done':'Got it','tour.skip':'Exit tutorial','tour.count':'Step {i} of {n}',
     'tour.t0':'Welcome to DrosoTracker','tour.b0':'Quick tour: creating a record (genetic cross example), planning an experiment backward, and comparing cohorts with survival curves. You can go back anytime or exit whenever you like. Hit <b>Continue</b> to start.',
     'tour.t1':'Calibrate','tour.b1':'First things first: every line develops a bit faster or slower than the base model. Calibrating is what improves the accuracy of every date you see in the app the most.',
@@ -1346,9 +1348,20 @@ const I18N = {
     'tour.t11':'Compare cohorts (KM)','tour.b11':'This overlays survival curves between aging cohorts and runs a log-rank test to see if they differ. Let\'s see how it looks with data loaded.',
     'tour.t12':'Loaded cohorts','tour.b12':'This is how 2 example cohorts look once loaded on the main dashboard, with their initial N, sex and vial count. From here you log flips to fresh food, deaths and censoring at each check. If you haven\'t logged any cohort yet, "Compare cohorts" will tell you at least one is needed; with 2 or more, you can overlay them.',
     'tour.t13':'Kaplan–Meier + log-rank','tour.b13':'With 2 or more cohorts ticked, DrosoTracker overlays their Kaplan–Meier curves and runs the log-rank test (χ², p-value) to tell you whether the survival difference is significant. These two are just an example; a real cohort is loaded from a record with adults, like you saw in the previous step.',
-    'tour.t14':'That\'s it','tour.b14':'That\'s it. You\'re ready. Reopen this tour anytime from <b>⚙️ Settings → Tutorial</b>.',
+    'tour.t14':'That\'s it','tour.b14':'That\'s it. You\'re ready. Reopen this tour anytime from <b>⚙️ Settings → Tutorial</b>. When you\'re ready for the less common features, check out the <b>Advanced tutorial</b> right below it.',
     'tour.demoA':'Canton-S, Condition 1 (example)','tour.demoB':'Canton-S, Condition 2 (example)',
     'tour.demoFemale':'w[1118] (example)','tour.demoMale':'UAS-GFP / CyO (example)',
+    'tourA.t0':'Advanced tutorial','tourA.b0':'This tour covers less common but useful features: importing your lab\'s genotype database, syncing with Google Calendar, making backups, exporting survival data, planning sample size, and how to report a problem. Hit <b>Continue</b> to start.',
+    'tourA.t1':'Import lab genotype database','tourA.b1':'Upload a CSV/TSV with the genotypes your lab uses so they autocomplete when typing in any genotype field. You choose which column holds the genotype; the rest of the file is ignored.',
+    'tourA.t2':'Google Calendar','tourA.b2':'Sync your tasks and estimated eclosions to your Google Calendar, so you get native reminders even with the app closed.',
+    'tourA.t3':'Connect Google Calendar','tourA.b3':'Once connected, DrosoTracker creates one event per upcoming task/eclosion and keeps them updated; marking a task done here deletes its event (and vice versa). Disconnecting stops syncing but keeps the events already created.',
+    'tourA.t4':'Import backup','tourA.b4':'Load a JSON backup exported earlier (from this device or another one). Careful: it replaces all current records, it doesn\'t add to them.',
+    'tourA.t5':'Export backup','tourA.b5':'Download all your records as a JSON file. Use it to back up your data or move it to another computer or phone.',
+    'tourA.t6':'Export survival (CSV)','tourA.b6':'Download aging-cohort survival data (one row per fly: day, and whether it died or was censored) ready to open in GraphPad Prism, R or Excel.',
+    'tourA.t7':'Sample size / power','tourA.b7':'Before starting a survival experiment, this calculator tells you how many flies you need per group to detect a given difference, using a log-rank test.',
+    'tourA.t8':'How to use it','tourA.b8':'Enter the expected median survival for each group, the significance level and the desired power. The app calculates the minimum N per group and an estimated experiment duration.',
+    'tourA.t9':'Report a bug or suggestion','tourA.b9':'If something isn\'t working as expected or you\'ve got an idea, this button opens a short form (no account, no email required) that goes straight to the developer.',
+    'tourA.t10':'That\'s it','tourA.b10':'You now know DrosoTracker\'s advanced features. Reopen this tour anytime from <b>⚙️ Settings → Advanced tutorial</b>.',
   },
   es: {
     'hdr.plan':'Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
@@ -1460,6 +1473,7 @@ const I18N = {
     'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','confirm.dontAskAgain':'No volver a mostrar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
     // tutorial guiado
     'menu.tutorial':'Tutorial inicial','tip.tutorial':'Un recorrido interactivo por lo básico: crear un registro nuevo (con el ejemplo de una cruza genética), planificar un experimento hacia atrás, y comparar cohortes (Kaplan-Meier).',
+    'menu.tutorialAdvanced':'Tutorial avanzado','tip.tutorialAdvanced':'Un recorrido guiado por las funciones menos frecuentes: importar/exportar datos, sincronización con Google Calendar, tamaño muestral, y cómo reportar un error.',
     'tour.back':'Atrás','tour.next':'Continuar','tour.done':'Entendido','tour.skip':'Salir del tutorial','tour.count':'Paso {i} de {n}',
     'tour.t0':'Bienvenido a DrosoTracker','tour.b0':'Te muestro rápido cómo crear un registro (ejemplo de cruza genética), planificar un experimento hacia atrás, y comparar cohortes con curvas de supervivencia. Podés volver atrás cuando quieras o salir en cualquier momento. Tocá <b>Continuar</b> para arrancar.',
     'tour.t1':'Calibrar','tour.b1':'Antes que nada: cada línea se desarrolla un poco más rápido o más lento que el modelo base. Calibrar es lo que más mejora la precisión de las fechas que ves en toda la app.',
@@ -1475,9 +1489,20 @@ const I18N = {
     'tour.t11':'Comparar cohortes (KM)','tour.b11':'Acá superponés curvas de supervivencia entre cohortes de envejecimiento y corrés un test de log-rank para ver si difieren. Sigamos para ver cómo se ve con datos cargados.',
     'tour.t12':'Cohortes cargadas','tour.b12':'Así se ven 2 cohortes de ejemplo ya cargadas en la pantalla principal, con su N inicial, sexo y cantidad de viales. Desde acá vas registrando los pases a comida fresca, las muertes y las censuras en cada control. Si todavía no cargaste ninguna cohorte, "Comparar cohortes" te va a avisar que hace falta al menos una; con 2 o más, las podés superponer.',
     'tour.t13':'Kaplan–Meier + log-rank','tour.b13':'Con 2 o más cohortes tildadas, DrosoTracker superpone sus curvas de Kaplan–Meier y corre el test de log-rank (χ², p-valor) para decirte si la diferencia en supervivencia es significativa. Estas dos son de ejemplo; la cohorte real se carga desde un registro con adultos, como viste en el paso anterior.',
-    'tour.t14':'Listo','tour.b14':'Listo. Ya podés arrancar. Reabrí este recorrido cuando quieras desde <b>⚙️ Ajustes → Tutorial</b>.',
+    'tour.t14':'Listo','tour.b14':'Listo. Ya podés arrancar. Reabrí este recorrido cuando quieras desde <b>⚙️ Ajustes → Tutorial</b>. Cuando quieras conocer las funciones menos frecuentes, mirá el <b>Tutorial avanzado</b> justo debajo.',
     'tour.demoA':'Canton-S, Condición 1 (ejemplo)','tour.demoB':'Canton-S, Condición 2 (ejemplo)',
     'tour.demoFemale':'w[1118] (ejemplo)','tour.demoMale':'UAS-GFP / CyO (ejemplo)',
+    'tourA.t0':'Tutorial avanzado','tourA.b0':'Este recorrido cubre funciones menos frecuentes pero útiles: importar la base de genotipos del lab, sincronizar con Google Calendar, hacer backups, exportar datos de supervivencia, planificar el tamaño muestral y cómo reportar un problema. Tocá <b>Continuar</b> para arrancar.',
+    'tourA.t1':'Importar base de genotipos del lab','tourA.b1':'Subí un CSV/TSV con los genotipos que usa tu lab para que se autocompleten al escribir en cualquier campo de genotipo. Elegís qué columna tiene el genotipo; el resto del archivo se ignora.',
+    'tourA.t2':'Google Calendar','tourA.b2':'Sincronizá tus tareas y eclosiones estimadas con tu Google Calendar, para recibir avisos nativos aunque tengas la app cerrada.',
+    'tourA.t3':'Conectar Google Calendar','tourA.b3':'Al conectar, DrosoTracker crea un evento por cada tarea/eclosión próxima y los mantiene actualizados; si marcás una tarea como hecha acá, se borra el evento (y viceversa). Desconectar detiene la sincronización pero conserva los eventos ya creados.',
+    'tourA.t4':'Importar backup','tourA.b4':'Cargá un backup en JSON exportado antes (desde este dispositivo u otro). Ojo: reemplaza todos los registros actuales, no los suma.',
+    'tourA.t5':'Exportar backup','tourA.b5':'Descargá todos tus registros como un archivo JSON. Sirve para respaldar tus datos o pasarlos a otra computadora o celular.',
+    'tourA.t6':'Exportar supervivencia (CSV)','tourA.b6':'Descargá los datos de las cohortes de envejecimiento (una fila por mosca: día, y si murió o fue censurada) listos para abrir en GraphPad Prism, R o Excel.',
+    'tourA.t7':'Tamaño muestral / potencia','tourA.b7':'Antes de arrancar un experimento de supervivencia, esta calculadora te dice cuántas moscas necesitás por grupo para detectar una diferencia dada, con un test de log-rank.',
+    'tourA.t8':'Cómo usarla','tourA.b8':'Cargá la mediana de supervivencia esperada de cada grupo, el nivel de significancia y la potencia deseada. La app calcula el N mínimo por grupo y una duración estimada del experimento.',
+    'tourA.t9':'Reportar un error o sugerencia','tourA.b9':'Si algo no funciona como esperás o se te ocurre una mejora, este botón abre un formulario corto (sin cuenta, sin pedir tu mail) que llega directo al desarrollador.',
+    'tourA.t10':'Eso es todo','tourA.b10':'Ya conocés las funciones avanzadas de DrosoTracker. Reabrí este recorrido cuando quieras desde <b>⚙️ Ajustes → Tutorial avanzado</b>.',
   },
 };
 function t(key, vars){
@@ -1508,7 +1533,10 @@ function toggleSettings(){ const open = document.getElementById('settingsPop').c
    Se abre solo (auto) la primera vez que se usa la app sin registros todavía;
    siempre queda accesible desde ⚙️ Ajustes → Tutorial. ============================================================ */
 const TUTORIAL_KEY = 'drosotrack.tutorial.v1';
+const TUTORIAL_ADVANCED_KEY = 'drosotrack.tutorial-advanced.v1';
 let _tourStep = 0;
+let _tourSteps = null;   // TOUR_STEPS_BASIC o TOUR_STEPS_ADVANCED, según cuál se haya abierto
+let _tourKey = TUTORIAL_KEY;   // qué localStorage key marcar como "visto" al cerrar
 
 /* Construye 2 cohortes "cross-like" enteramente en memoria (nunca se insertan en
    `crosses` de forma permanente ni pasan por save()) para ilustrar Comparar cohortes
@@ -1556,7 +1584,7 @@ function unionRect(a, b){
   return { getBoundingClientRect:()=>({ left, top, right, bottom, width:right-left, height:bottom-top }) };
 }
 
-const TOUR_STEPS = [
+const TOUR_STEPS_BASIC = [
   { target:()=>null, titleKey:'tour.t0', bodyKey:'tour.b0' },
   /* Primero de todo: Calibrar, por su importancia (ver menú "Más ▾"). */
   { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
@@ -1593,6 +1621,34 @@ const TOUR_STEPS = [
   { target:()=>null, titleKey:'tour.t14', bodyKey:'tour.b14' },
 ];
 
+/* Tutorial avanzado: funciones menos frecuentes (importar/exportar datos, Google Calendar,
+   tamaño muestral, reportar un error) — solo accesible manualmente desde ⚙️ Ajustes, nunca
+   se abre solo. No dispara ninguna acción con efectos reales (no descarga archivos, no abre
+   selectores de archivo nativos, no conecta Google) — sólo señala los botones y, cuando es
+   seguro (Google Calendar, tamaño muestral), abre el modal real para mostrar sus campos. */
+const TOUR_STEPS_ADVANCED = [
+  { target:()=>null, titleKey:'tourA.t0', bodyKey:'tourA.b0' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
+    target:()=>document.querySelector('#dataMenu button[onclick*="labFile"]'), titleKey:'tourA.t1', bodyKey:'tourA.b1' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
+    target:()=>document.querySelector('#dataMenu button[onclick="openGcal()"]'), titleKey:'tourA.t2', bodyKey:'tourA.b2' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.remove('open'); openGcal(); },
+    target:()=>document.getElementById('gcalConnectBtn'), titleKey:'tourA.t3', bodyKey:'tourA.b3' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
+    target:()=>document.querySelector('#dataMenu button[onclick*="importFile"]'), titleKey:'tourA.t4', bodyKey:'tourA.b4' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
+    target:()=>document.querySelector('#dataMenu button[onclick="exportJSON()"]'), titleKey:'tourA.t5', bodyKey:'tourA.b5' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
+    target:()=>document.querySelector('#dataMenu button[onclick="exportSurvivalCSV()"]'), titleKey:'tourA.t6', bodyKey:'tourA.b6' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
+    target:()=>document.querySelector('#dataMenu button[onclick="openStatPlan()"]'), titleKey:'tourA.t7', bodyKey:'tourA.b7' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.remove('open'); openStatPlan(); },
+    target:()=>document.querySelector('#statOverlay .stat-grid'), titleKey:'tourA.t8', bodyKey:'tourA.b8' },
+  { setup:()=>{ document.getElementById('settingsPop').classList.add('open'); },
+    target:()=>document.querySelector('#settingsPop button[onclick="openFeedbackForm()"]'), titleKey:'tourA.t9', bodyKey:'tourA.b9' },
+  { target:()=>null, titleKey:'tourA.t10', bodyKey:'tourA.b10' },
+];
+
 /* Vuelve a un estado conocido antes de cada paso (en cualquier dirección): cierra
    todo lo que el tour pudo haber abierto y saca los registros de ejemplo de `crosses`
    si el paso anterior los había insertado. Cada paso reconstruye desde acá lo que
@@ -1608,11 +1664,13 @@ function tourResetToBaseline(){
   closePlan();
   closeCompare();
   closeCalib();
+  closeGcal();
+  closeStatPlan();
   _cmpDemoOverride = null;
 }
 function tourApplyPosition(){
   if(document.getElementById('tourWrap').style.display === 'none') return;
-  const step = TOUR_STEPS[_tourStep];
+  const step = _tourSteps[_tourStep];
   let target = step.target ? step.target() : null;
   const cursor = document.getElementById('tourCursor');
   const dim = document.getElementById('tourDim');
@@ -1650,7 +1708,7 @@ function tourApplyPosition(){
   }
 }
 function tourRender(){
-  const i = _tourStep, n = TOUR_STEPS.length, step = TOUR_STEPS[i];
+  const i = _tourStep, n = _tourSteps.length, step = _tourSteps[i];
   document.getElementById('tourStepCount').textContent = t('tour.count', {i:i+1, n});
   document.getElementById('tourTitle').textContent = t(step.titleKey);
   document.getElementById('tourBody').innerHTML = t(step.bodyKey);
@@ -1662,14 +1720,15 @@ function tourRender(){
 }
 function tourGoStep(i){
   tourResetToBaseline();
-  _tourStep = Math.max(0, Math.min(TOUR_STEPS.length-1, i));
-  const step = TOUR_STEPS[_tourStep];
+  _tourStep = Math.max(0, Math.min(_tourSteps.length-1, i));
+  const step = _tourSteps[_tourStep];
   if(step.setup) step.setup();
   tourRender();
 }
-function tourNext(){ if(_tourStep >= TOUR_STEPS.length-1){ closeTutorial(); return; } tourGoStep(_tourStep+1); }
+function tourNext(){ if(_tourStep >= _tourSteps.length-1){ closeTutorial(); return; } tourGoStep(_tourStep+1); }
 function tourPrev(){ tourGoStep(_tourStep-1); }
-function openTutorial(){
+function startTour(steps, key){
+  _tourSteps = steps; _tourKey = key;
   document.getElementById('settingsPop').classList.remove('open');
   closeMenu();
   document.getElementById('tourWrap').style.display = 'block';
@@ -1679,6 +1738,8 @@ function openTutorial(){
   window.addEventListener('scroll', tourApplyPosition, true);
   tourGoStep(0);
 }
+function openTutorial(){ startTour(TOUR_STEPS_BASIC, TUTORIAL_KEY); }
+function openAdvancedTutorial(){ startTour(TOUR_STEPS_ADVANCED, TUTORIAL_ADVANCED_KEY); }
 function closeTutorial(){
   const wrap = document.getElementById('tourWrap');
   if(wrap.style.display === 'none') return;
@@ -1686,7 +1747,7 @@ function closeTutorial(){
   wrap.style.display = 'none';
   window.removeEventListener('resize', tourApplyPosition);
   window.removeEventListener('scroll', tourApplyPosition, true);
-  localStorage.setItem(TUTORIAL_KEY, '1');
+  localStorage.setItem(_tourKey, '1');
 }
 /* grupos desplegables del menú de ajustes (acordeón: sólo uno abierto a la vez) */
 function toggleSetGroup(btn){
