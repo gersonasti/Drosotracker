@@ -605,6 +605,34 @@
   .gcal-off{color:var(--ink-soft);font-weight:700}
   .gcal-auto{display:flex;align-items:center;gap:9px;font-size:.9rem;color:var(--ink);cursor:pointer}
   .gcal-auto input{width:17px;height:17px;flex:none}
+  /* ---------- Tutorial interactivo (spotlight): cursor grande + comentario + oscurecido + marco ---------- */
+  #tourBlock{position:fixed;inset:0;z-index:9000;background:transparent}
+  #tourDim{position:fixed;z-index:9001;pointer-events:none;border-radius:16px;
+    box-shadow:0 0 0 9999px rgba(37,33,55,.58);
+    transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease,opacity .2s ease;}
+  html[data-theme="dark"] #tourDim{box-shadow:0 0 0 9999px rgba(10,8,16,.72)}
+  #tourFrame{position:fixed;inset:6px;z-index:9002;border:4px solid var(--pink);border-radius:20px;pointer-events:none;
+    box-shadow:0 0 26px rgba(243,182,205,.5)}
+  #tourCursor{position:fixed;z-index:9004;width:58px;height:58px;pointer-events:none;
+    transition:left .35s cubic-bezier(.32,.9,.4,1),top .35s cubic-bezier(.32,.9,.4,1),opacity .2s ease;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+  #tourCursor svg{width:100%;height:100%;overflow:visible;display:block}
+  #tourCursor path{stroke:#111;stroke-width:1.4;stroke-linejoin:round}
+  html[data-theme="dark"] #tourCursor path{stroke:#fff}
+  #tourCallout{position:fixed;z-index:9005;width:300px;max-width:calc(100vw - 24px);background:var(--card);
+    border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);
+    transition:left .35s ease,top .35s ease}
+  #tourCallout .tour-step{font-size:.72rem;font-weight:700;letter-spacing:.02em;color:var(--ink-soft);margin-bottom:4px}
+  #tourCallout h3{font-family:'Poppins',sans-serif;font-size:1.02rem;margin-bottom:6px;color:var(--ink)}
+  #tourCallout p{font-size:.86rem;line-height:1.5;color:var(--ink-soft);margin-bottom:14px}
+  #tourCallout p b{color:var(--ink)}
+  #tourCallout .tour-nav{display:flex;gap:8px}
+  #tourCallout .tour-nav .btn{flex:1;justify-content:center;padding:9px 10px;font-size:.86rem}
+  #tourSkip{display:block;width:100%;text-align:center;margin-top:10px;background:none;border:none;
+    color:var(--ink-soft);font-size:.78rem;text-decoration:underline;cursor:pointer;font-family:inherit}
+  @media (max-width:699px){
+    #tourCallout{left:10px !important;right:10px;bottom:10px;top:auto !important;width:auto;max-width:none}
+  }
 </style>
 </head>
 <body>
@@ -661,6 +689,8 @@
             <button data-mode="light" onclick="setMode('light')"><span class="set-tick">✓</span><span data-i18n="set.light">Light</span></button>
             <button data-mode="dark" onclick="setMode('dark')"><span class="set-tick">✓</span><span data-i18n="set.dark">Dark</span></button>
           </div>
+          <div class="menu-sep"></div>
+          <button onclick="openTutorial()" data-i18n="menu.tutorial" data-tip-key="tip.tutorial">Tutorial</button>
           <div class="menu-sep"></div>
           <button onclick="openFeedbackForm()" data-i18n="menu.feedback" data-tip-key="tip.feedback">📝 Report a bug / suggest an improvement</button>
         </div>
@@ -1063,6 +1093,38 @@
   </div>
 </div>
 
+<!-- Tutorial interactivo (spotlight): recorre la app real, paso a paso, con el resto de la
+     pantalla congelado. Sólo estos 3 controles (Atrás/Continuar/Salir) quedan interactuables. -->
+<div id="tourBlock" style="display:none">
+  <div id="tourDim"></div>
+  <div id="tourFrame"></div>
+  <div id="tourCursor">
+    <svg viewBox="0 0 24 24">
+      <defs>
+        <linearGradient id="tourCursorGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#f3b6cd"/>
+          <stop offset="20%" stop-color="#c9bdf0"/>
+          <stop offset="40%" stop-color="#a9cdf0"/>
+          <stop offset="60%" stop-color="#9fe0c9"/>
+          <stop offset="80%" stop-color="#f6e0a0"/>
+          <stop offset="100%" stop-color="#f7c5b4"/>
+        </linearGradient>
+      </defs>
+      <path fill="url(#tourCursorGrad)" d="M3 2 L3 16.5 L6.6 13.1 L9.3 19.9 L11.8 18.9 L9.1 12.1 L14.5 12.1 Z"/>
+    </svg>
+  </div>
+  <div id="tourCallout">
+    <div class="tour-step" id="tourStepCount"></div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourBody"></p>
+    <div class="tour-nav">
+      <button type="button" class="btn ghost" id="tourBackBtn" onclick="tourPrev()"></button>
+      <button type="button" class="btn" id="tourNextBtn" onclick="tourNext()"></button>
+    </div>
+    <button type="button" id="tourSkip" onclick="closeTutorial()"></button>
+  </div>
+</div>
+
 <!-- Registrar el T50 (eclosión de la mitad) sin pedir cálculos -->
 <div class="overlay" id="t50Overlay" onclick="if(event.target===this)closeT50()">
   <div class="modal confirm-modal">
@@ -1274,6 +1336,20 @@ const I18N = {
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
     'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','confirm.dontAskAgain':'Don\'t show this again','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
+    // tutorial guiado
+    'menu.tutorial':'Tutorial','tip.tutorial':'An interactive guided tour of the app: creating a new record (genetic cross example), planning an experiment backward, and comparing cohorts (Kaplan-Meier).',
+    'tour.back':'Back','tour.next':'Continue','tour.done':'Got it','tour.skip':'Exit tutorial','tour.count':'Step {i} of {n}',
+    'tour.t0':'Welcome to DrosoTracker','tour.b0':'Quick tour: creating a record (genetic cross example), planning an experiment backward, and comparing cohorts with survival curves. Hit <b>Continue</b> to start.',
+    'tour.t1':'New record','tour.b1':'This is where you create a record: genotype, set-up date and incubation temperature.',
+    'tour.t2':'Objective','tour.b2':'Choose what you\'re doing. Let\'s try <b>Genetic cross</b>.',
+    'tour.t3':'Genotype A and B','tour.b3':'Choosing Genetic cross reveals two genotypes: one provides virgin females (♀), the other the males (♂) — each with its own date and temperature.',
+    'tour.t4':'Save','tour.b4':'Once saved, DrosoTracker tracks each line separately and reminds you to <b>Collect virgins</b>, then to <b>Mount the cross</b>, which merges them into one record.',
+    'tour.t5':'Plan','tour.b5':'This is where you plan an experiment backward, working out when to set everything up.',
+    'tour.t6':'Plan backward','tour.b6':'Pick the stage you want to reach and the target date, and it tells you when to set it up.',
+    'tour.t7':'Compare cohorts (KM)','tour.b7':'This overlays survival curves between aging cohorts.',
+    'tour.t8':'Kaplan–Meier + log-rank','tour.b8':'These two cohorts are just an example: this is how overlaid curves and the log-rank test (χ², p-value) look. A real cohort is defined from a record with adults (initial N, sex, vials).',
+    'tour.t9':'That\'s it','tour.b9':'You can reopen this tour anytime from <b>⚙️ Settings → Tutorial</b>.',
+    'tour.demoA':'Canton-S — Condition 1 (example)','tour.demoB':'Canton-S — Condition 2 (example)',
   },
   es: {
     'hdr.plan':'🗓 Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
@@ -1390,6 +1466,20 @@ const I18N = {
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
     'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','confirm.dontAskAgain':'No volver a mostrar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
+    // tutorial guiado
+    'menu.tutorial':'Tutorial','tip.tutorial':'Un recorrido interactivo por la app: crear un registro nuevo (con el ejemplo de una cruza genética), planificar un experimento hacia atrás, y comparar cohortes (Kaplan-Meier).',
+    'tour.back':'Atrás','tour.next':'Continuar','tour.done':'Entendido','tour.skip':'Salir del tutorial','tour.count':'Paso {i} de {n}',
+    'tour.t0':'Bienvenido a DrosoTracker','tour.b0':'Te muestro rápido cómo crear un registro (ejemplo de cruza genética), planificar un experimento hacia atrás, y comparar cohortes con curvas de supervivencia. Tocá <b>Continuar</b> para arrancar.',
+    'tour.t1':'Nuevo registro','tour.b1':'Acá creás un registro: genotipo, fecha de montaje y temperatura de incubación.',
+    'tour.t2':'Objetivo','tour.b2':'Elegí qué estás haciendo. Vamos a probar con <b>Cruza genética</b>.',
+    'tour.t3':'Genotipo A y B','tour.b3':'Al elegir Cruza genética aparecen dos genotipos: uno aporta las hembras vírgenes (♀), el otro los machos (♂) — cada uno con su propia fecha y temperatura.',
+    'tour.t4':'Guardar','tour.b4':'Al guardar, DrosoTracker sigue cada línea por separado y te avisa <b>Recolectar vírgenes</b> y después <b>Montar la cruza</b>, que las fusiona en un solo registro.',
+    'tour.t5':'Planificar','tour.b5':'Desde acá planificás un experimento hacia atrás, calculando cuándo armar todo.',
+    'tour.t6':'Planificar hacia atrás','tour.b6':'Elegís a qué estadio querés llegar y en qué fecha, y te dice cuándo montarlo.',
+    'tour.t7':'Comparar cohortes (KM)','tour.b7':'Acá superponés curvas de supervivencia entre cohortes de envejecimiento.',
+    'tour.t8':'Kaplan–Meier + log-rank','tour.b8':'Estas dos cohortes son de ejemplo: así se ven las curvas superpuestas y el test de log-rank (χ², p-valor). La cohorte real se define desde un registro con adultos (N inicial, sexo, viales).',
+    'tour.t9':'Listo','tour.b9':'Podés reabrir este recorrido cuando quieras desde <b>⚙️ Ajustes → Tutorial</b>.',
+    'tour.demoA':'Canton-S — Condición 1 (ejemplo)','tour.demoB':'Canton-S — Condición 2 (ejemplo)',
   },
 };
 function t(key, vars){
@@ -1411,6 +1501,137 @@ function applyStaticI18n(){
   document.title = t('doc.title');
 }
 function toggleSettings(){ const open = document.getElementById('settingsPop').classList.toggle('open'); if(open) updateSettingsUI(); }
+
+/* ============================================================
+   Tutorial interactivo (spotlight): un cursor grande recorre la app REAL —
+   abre/cierra los modales y menús que hacen falta en cada paso — mientras el
+   resto de la pantalla queda congelado (bloqueado por #tourBlock). El usuario
+   solo puede tocar Atrás / Continuar / Salir del tutorial.
+   Se abre solo (auto) la primera vez que se usa la app sin registros todavía;
+   siempre queda accesible desde ⚙️ Ajustes → Tutorial. ============================================================ */
+const TUTORIAL_KEY = 'drosotrack.tutorial.v1';
+let _tourStep = 0;
+
+/* Construye 2 cohortes "cross-like" enteramente en memoria (nunca se insertan en
+   `crosses` ni pasan por save()) para ilustrar Comparar cohortes (KM) con datos
+   reales de ejemplo, no una explicación abstracta. ensureAging/computeState son
+   funciones puras (sólo leen/mutan el objeto recibido), así que un objeto
+   sintético bien formado pasa sin problema por kmCurve/cohortSeries/logRankTest. */
+function buildDemoCohorts(){
+  const crossDateISO = new Date(Date.now() - 70*86400000).toISOString();
+  function mk(id, genoKey, startN, deathSchedule){
+    const cross = { id, genotype:t(genoKey), objective:'aging', experiments:[], conditions:[],
+      crossDate:crossDateISO, temp:25, notes:'', aging:{ startN, sex:'F', vials:2, events:[] } };
+    const ecl = computeState(cross).eclosionDate.getTime();
+    cross.aging.events = deathSchedule.map(([day,deaths])=>
+      ({ date:new Date(ecl + day*86400000).toISOString(), deaths, censored:0 }));
+    return cross;
+  }
+  return [
+    mk('tour-demo-a', 'tour.demoA', 40, [[20,2],[25,3],[30,5],[35,8],[40,10],[45,7],[50,5]]),
+    mk('tour-demo-b', 'tour.demoB', 40, [[10,3],[15,6],[20,9],[25,10],[30,7],[35,3],[40,2]]),
+  ];
+}
+
+const TOUR_STEPS = [
+  { target:()=>null, titleKey:'tour.t0', bodyKey:'tour.b0' },
+  { target:()=>document.querySelector('.header-actions .btn.hero'), titleKey:'tour.t1', bodyKey:'tour.b1' },
+  { setup:()=>{ openForm(); }, target:()=>document.getElementById('objective'), titleKey:'tour.t2', bodyKey:'tour.b2' },
+  { setup:()=>{ openForm(); document.getElementById('objective').value='cross'; onObjectiveChange(); },
+    target:()=>document.getElementById('crossPairBlock'), titleKey:'tour.t3', bodyKey:'tour.b3' },
+  { setup:()=>{ openForm(); document.getElementById('objective').value='cross'; onObjectiveChange(); },
+    target:()=>document.querySelector('#overlay button[type="submit"]'), titleKey:'tour.t4', bodyKey:'tour.b4' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
+    target:()=>document.querySelector('#dataMenu button[onclick="openPlan()"]'), titleKey:'tour.t5', bodyKey:'tour.b5' },
+  { setup:()=>{ openPlan(); }, target:()=>document.getElementById('planForm'), titleKey:'tour.t6', bodyKey:'tour.b6' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
+    target:()=>document.querySelector('#dataMenu button[onclick="openCompare()"]'), titleKey:'tour.t7', bodyKey:'tour.b7' },
+  { setup:()=>{ _cmpDemoOverride = buildDemoCohorts(); openCompare(); },
+    target:()=>document.getElementById('compareResult'), titleKey:'tour.t8', bodyKey:'tour.b8' },
+  { target:()=>null, titleKey:'tour.t9', bodyKey:'tour.b9' },
+];
+
+/* Vuelve a un estado conocido antes de cada paso (en cualquier dirección): cierra
+   todo lo que el tour pudo haber abierto. Cada paso reconstruye desde acá lo que
+   necesita — más simple y robusto que diffear el estado entre pasos. */
+function tourResetToBaseline(){
+  closeForm();
+  document.getElementById('dataMenu').classList.remove('open');
+  document.getElementById('settingsPop').classList.remove('open');
+  closePlan();
+  closeCompare();
+  _cmpDemoOverride = null;
+}
+function tourApplyPosition(){
+  if(document.getElementById('tourBlock').style.display === 'none') return;
+  const step = TOUR_STEPS[_tourStep];
+  const target = step.target ? step.target() : null;
+  const cursor = document.getElementById('tourCursor');
+  const dim = document.getElementById('tourDim');
+  const callout = document.getElementById('tourCallout');
+  if(!target){
+    dim.style.opacity = '0';
+    cursor.style.opacity = '0';
+    const cw = callout.offsetWidth || 300, ch = callout.offsetHeight || 200;
+    callout.style.left = Math.round((window.innerWidth-cw)/2) + 'px';
+    callout.style.top = Math.round((window.innerHeight-ch)/2) + 'px';
+    return;
+  }
+  const r = target.getBoundingClientRect();
+  const pad = 8;
+  dim.style.opacity = '1';
+  dim.style.left = Math.round(r.left-pad) + 'px';
+  dim.style.top = Math.round(r.top-pad) + 'px';
+  dim.style.width = Math.round(r.width+pad*2) + 'px';
+  dim.style.height = Math.round(r.height+pad*2) + 'px';
+  cursor.style.opacity = '1';
+  cursor.style.left = Math.round(r.left - 14) + 'px';
+  cursor.style.top = Math.round(r.top - 10) + 'px';
+  if(window.innerWidth >= 700){
+    const cw = 300, chGuess = callout.offsetHeight || 200;
+    let left = r.right + 26;
+    if(left + cw + 12 > window.innerWidth) left = r.left - cw - 26;
+    left = Math.max(12, Math.min(left, window.innerWidth - cw - 12));
+    let top = Math.max(12, Math.min(r.top, window.innerHeight - chGuess - 12));
+    callout.style.left = Math.round(left) + 'px';
+    callout.style.top = Math.round(top) + 'px';
+  }
+}
+function tourRender(){
+  const i = _tourStep, n = TOUR_STEPS.length, step = TOUR_STEPS[i];
+  document.getElementById('tourStepCount').textContent = t('tour.count', {i:i+1, n});
+  document.getElementById('tourTitle').textContent = t(step.titleKey);
+  document.getElementById('tourBody').innerHTML = t(step.bodyKey);
+  document.getElementById('tourBackBtn').textContent = t('tour.back');
+  document.getElementById('tourBackBtn').style.visibility = i===0 ? 'hidden' : 'visible';
+  document.getElementById('tourNextBtn').textContent = i===n-1 ? t('tour.done') : t('tour.next');
+  document.getElementById('tourSkip').textContent = t('tour.skip');
+  tourApplyPosition();
+}
+function tourGoStep(i){
+  tourResetToBaseline();
+  _tourStep = Math.max(0, Math.min(TOUR_STEPS.length-1, i));
+  const step = TOUR_STEPS[_tourStep];
+  if(step.setup) step.setup();
+  tourRender();
+}
+function tourNext(){ if(_tourStep >= TOUR_STEPS.length-1){ closeTutorial(); return; } tourGoStep(_tourStep+1); }
+function tourPrev(){ tourGoStep(_tourStep-1); }
+function openTutorial(){
+  document.getElementById('settingsPop').classList.remove('open');
+  closeMenu();
+  document.getElementById('tourBlock').style.display = 'block';
+  window.addEventListener('resize', tourApplyPosition);
+  tourGoStep(0);
+}
+function closeTutorial(){
+  const block = document.getElementById('tourBlock');
+  if(block.style.display === 'none') return;
+  tourResetToBaseline();
+  block.style.display = 'none';
+  window.removeEventListener('resize', tourApplyPosition);
+  localStorage.setItem(TUTORIAL_KEY, '1');
+}
 /* grupos desplegables del menú de ajustes (acordeón: sólo uno abierto a la vez) */
 function toggleSetGroup(btn){
   const was = btn.classList.contains('open');
@@ -1440,6 +1661,7 @@ function setLang(l){
   render();
   renderModelNotice();
   updateSettingsUI();
+  if(document.getElementById('tourBlock').style.display !== 'none') tourRender();
 }
 /* Cerrar los menús desplegables (Datos, ⚙️) al tocar fuera; al abrir uno se cierra el otro */
 document.addEventListener('click', e=>{
@@ -2716,7 +2938,11 @@ function timeToMortality(median, q){
 
 /* ---- UI de comparación de cohortes (modal): checklist + overlay KM + log-rank ---- */
 const CMP_COLORS = ['#d96fa0','#5b8fc7','#3fae8c','#c79a2e','#9b6fd9','#d98162'];
-function agingCohorts(){ return crosses.filter(c=> !c.calib && c.aging && c.aging.startN!=null); }
+/* _cmpDemoOverride: cuando el tutorial interactivo pasa por "Comparar cohortes (KM)",
+   pisa temporalmente la lista con 2 cohortes de ejemplo (ver buildDemoCohorts) sin
+   tocar `crosses`/localStorage; se limpia al salir de ese paso (tourResetToBaseline). */
+let _cmpDemoOverride = null;
+function agingCohorts(){ return _cmpDemoOverride || crosses.filter(c=> !c.calib && c.aging && c.aging.startN!=null); }
 let _cmpChecked = new Set();
 function openCompare(){
   closeMenu();
@@ -4007,7 +4233,7 @@ document.getElementById('planOverlay').addEventListener('click',e=>{
 document.getElementById('labOverlay').addEventListener('click',e=>{
   if(e.target.id==='labOverlay') closeLabModal();
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); } });
 /* cerrar el menú de datos al click fuera */
 document.addEventListener('click',e=>{ if(!e.target.closest('.menu')) closeMenu(); });
 
@@ -4040,6 +4266,7 @@ updateLabStatus();
 rebuildAutocompleteCache();
 render();
 renderModelNotice();
+if(!localStorage.getItem(TUTORIAL_KEY) && !crosses.length) openTutorial();
 setInterval(autoRender, 60000);
 
 /* ---- Tooltips propios: hover (desktop) o mantener apretado (touch) ----
