@@ -77,6 +77,11 @@
   html[data-theme="dark"] .obj-chip{background:var(--line);color:var(--ink-soft)}
   html[data-theme="dark"] .plan-result{background:rgba(159,224,201,.14)}
   html[data-theme="dark"] .tasks.alert{background:#3a2531;border-color:#5b3543}
+  /* .menu-pop button:hover usa var(--lav-soft)/var(--peach-soft) para el fondo, pero esos
+     pasteles no cambian en modo oscuro (siguen claros) mientras el texto sí se aclara para
+     ese tema — el resultado era texto casi invisible sobre un fondo pastel claro. */
+  html[data-theme="dark"] .menu-pop button:hover{background:var(--line)}
+  html[data-theme="dark"] .menu-pop button.menu-danger:hover{background:#3a2531}
 
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -623,8 +628,7 @@
     transition:left .35s cubic-bezier(.32,.9,.4,1),top .35s cubic-bezier(.32,.9,.4,1),opacity .2s ease;
     filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
   #tourCursor svg{width:100%;height:100%;overflow:visible;display:block}
-  #tourCursor path{stroke:#111;stroke-width:1.4;stroke-linejoin:round}
-  html[data-theme="dark"] #tourCursor path{stroke:#fff}
+  #tourCursor path{stroke:var(--ink);stroke-width:1.4;stroke-linejoin:round}
   #tourCallout{position:fixed;z-index:9005;width:300px;max-width:calc(100vw - 24px);background:var(--card);
     border:2px solid var(--pink);border-radius:16px;padding:16px 18px;
     box-shadow:0 18px 46px -10px rgba(20,16,30,.55),0 0 0 5px rgba(243,182,205,.16);
@@ -1746,8 +1750,10 @@ function setLang(l){
   updateSettingsUI();
   if(document.getElementById('tourWrap').style.display !== 'none') tourRender();
 }
-/* Cerrar los menús desplegables (Datos, ⚙️) al tocar fuera; al abrir uno se cierra el otro */
+/* Cerrar los menús desplegables (Datos, ⚙️) al tocar fuera; al abrir uno se cierra el otro.
+   Guarda de tour: ver el mismo comentario en el otro listener de click más abajo. */
 document.addEventListener('click', e=>{
+  if(document.getElementById('tourWrap').style.display !== 'none') return;
   const menu = e.target.closest('.menu');
   document.querySelectorAll('.menu-pop.open').forEach(p=>{ if(!menu || !menu.contains(p)) p.classList.remove('open'); });
 });
@@ -4317,8 +4323,15 @@ document.getElementById('labOverlay').addEventListener('click',e=>{
   if(e.target.id==='labOverlay') closeLabModal();
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); } });
-/* cerrar el menú de datos al click fuera */
-document.addEventListener('click',e=>{ if(!e.target.closest('.menu')) closeMenu(); });
+/* cerrar el menú de datos al click fuera. Mientras el tutorial está activo, el propio motor
+   del tour controla cuándo el menú "Más ▾" se abre y se cierra (ver tourResetToBaseline) —
+   sin esta guarda, el click en "Continuar"/"Atrás" del tour burbujea hasta acá y cierra el
+   menú al instante siguiente de que el paso lo abrió, dejando el resaltado apuntando a un
+   menú ya cerrado. */
+document.addEventListener('click',e=>{
+  if(document.getElementById('tourWrap').style.display !== 'none') return;
+  if(!e.target.closest('.menu')) closeMenu();
+});
 
 /* Aviso único de recalibración del modelo: sólo si el usuario ya tenía registros
    guardados (a esos les cambian las fechas). Descartable; no vuelve a aparecer. */
