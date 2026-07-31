@@ -605,18 +605,20 @@
   .gcal-off{color:var(--ink-soft);font-weight:700}
   .gcal-auto{display:flex;align-items:center;gap:9px;font-size:.9rem;color:var(--ink);cursor:pointer}
   .gcal-auto input{width:17px;height:17px;flex:none}
-  /* ---------- Tutorial interactivo (spotlight): cursor grande + comentario + oscurecido + marco ---------- */
-  #tourBlock{position:fixed;inset:0;z-index:9000;background:transparent}
-  #tourDim{position:fixed;z-index:9001;pointer-events:none;border-radius:16px;
+  /* ---------- Tutorial interactivo (spotlight): cursor grande + comentario + oscurecido + marco ----------
+     IMPORTANTE: #tourWrap (el contenedor) NO tiene position/z-index — no crea contexto de
+     apilamiento propio, así que cada hijo compite por z-index DIRECTAMENTE contra el resto de
+     la página. #tourDim queda en z-index bajo (20) — muy por debajo del menú "Más ▾" (40), los
+     modales (.overlay, 50), el autocompletado (.ac-pop, 60) y las confirmaciones (100) — para
+     que jamás los tape, sin importar dónde caiga el "agujero" del oscurecido. El resto
+     (bloqueo de clicks, cursor, comentario) va con z-index muy alto para estar siempre encima. */
+  #tourDim{position:fixed;z-index:20;pointer-events:none;border-radius:16px;
     box-shadow:0 0 0 9999px rgba(37,33,55,.58);
     transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease,opacity .2s ease;}
   html[data-theme="dark"] #tourDim{box-shadow:0 0 0 9999px rgba(10,8,16,.72)}
   #tourFrame{position:fixed;inset:6px;z-index:9002;border:4px solid var(--pink);border-radius:20px;pointer-events:none;
     box-shadow:0 0 26px rgba(243,182,205,.5)}
-  /* eleva por encima del oscurecido al elemento real que el paso está señalando (menú
-     desplegable, modal) — así queda garantizado que se ve nítido, sin depender de que el
-     "agujero" del oscurecido coincida exactamente con su geometría en cualquier navegador. */
-  .tour-lift{z-index:9003 !important}
+  #tourBlock{position:fixed;inset:0;z-index:9003;background:transparent}
   #tourCursor{position:fixed;z-index:9004;width:58px;height:58px;pointer-events:none;
     transition:left .35s cubic-bezier(.32,.9,.4,1),top .35s cubic-bezier(.32,.9,.4,1),opacity .2s ease;
     filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
@@ -1099,10 +1101,16 @@
 </div>
 
 <!-- Tutorial interactivo (spotlight): recorre la app real, paso a paso, con el resto de la
-     pantalla congelado. Sólo estos 3 controles (Atrás/Continuar/Salir) quedan interactuables. -->
-<div id="tourBlock" style="display:none">
+     pantalla congelado. Sólo estos 3 controles (Atrás/Continuar/Salir) quedan interactuables.
+     #tourWrap NO tiene position/z-index propios (a propósito): así no crea su propio contexto
+     de apilamiento y cada hijo compite por z-index directamente contra el resto de la página
+     (el menú "Más ▾" y los modales, en z-index 40-100) — #tourDim queda deliberadamente MUY
+     por debajo de ellos para nunca taparlos, mientras #tourBlock/#tourCursor/#tourCallout
+     quedan muy por arriba de todo (bloqueo de clicks + visibilidad garantizada). -->
+<div id="tourWrap" style="display:none">
   <div id="tourDim"></div>
   <div id="tourFrame"></div>
+  <div id="tourBlock"></div>
   <div id="tourCursor">
     <svg viewBox="0 0 24 24">
       <defs>
@@ -1518,7 +1526,6 @@ function toggleSettings(){ const open = document.getElementById('settingsPop').c
    siempre queda accesible desde ⚙️ Ajustes → Tutorial. ============================================================ */
 const TUTORIAL_KEY = 'drosotrack.tutorial.v1';
 let _tourStep = 0;
-let _tourLifted = null;   // elemento actualmente elevado por encima del oscurecido (.tour-lift)
 
 /* Construye 2 cohortes "cross-like" enteramente en memoria (nunca se insertan en
    `crosses` de forma permanente ni pasan por save()) para ilustrar Comparar cohortes
@@ -1589,10 +1596,9 @@ function tourResetToBaseline(){
   closePlan();
   closeCompare();
   _cmpDemoOverride = null;
-  if(_tourLifted){ _tourLifted.classList.remove('tour-lift'); _tourLifted = null; }
 }
 function tourApplyPosition(){
-  if(document.getElementById('tourBlock').style.display === 'none') return;
+  if(document.getElementById('tourWrap').style.display === 'none') return;
   const step = TOUR_STEPS[_tourStep];
   let target = step.target ? step.target() : null;
   const cursor = document.getElementById('tourCursor');
@@ -1602,7 +1608,6 @@ function tourApplyPosition(){
      renderizado) se trata como si no hubiera target, en vez de mal-posicionar
      el cursor en la esquina superior izquierda de la pantalla. */
   if(target){ const rr = target.getBoundingClientRect(); if(!rr.width && !rr.height) target = null; }
-  if(_tourLifted){ _tourLifted.classList.remove('tour-lift'); _tourLifted = null; }
   if(!target){
     dim.style.opacity = '0';
     cursor.style.opacity = '0';
@@ -1611,23 +1616,16 @@ function tourApplyPosition(){
     callout.style.top = Math.round((window.innerHeight-ch)/2) + 'px';
     return;
   }
-  /* eleva por encima del oscurecido el contenedor real (menú desplegable o modal) que
-     incluye al target, para garantizar que se vea nítido sin depender de que el
-     "agujero" del oscurecido coincida al pixel con su geometría. */
-  if(target instanceof Element){
-    _tourLifted = target.closest('.menu-pop, .modal') || target;
-    _tourLifted.classList.add('tour-lift');
-  }
   const r = target.getBoundingClientRect();
-  const pad = 8;
+  const pad = 8, edge = 12;   // edge: nunca pegar el cursor al borde del marco decorativo
   dim.style.opacity = '1';
   dim.style.left = Math.round(r.left-pad) + 'px';
   dim.style.top = Math.round(r.top-pad) + 'px';
   dim.style.width = Math.round(r.width+pad*2) + 'px';
   dim.style.height = Math.round(r.height+pad*2) + 'px';
   cursor.style.opacity = '1';
-  cursor.style.left = Math.round(r.left - 14) + 'px';
-  cursor.style.top = Math.round(r.top - 10) + 'px';
+  cursor.style.left = Math.round(Math.max(edge, Math.min(r.left-14, window.innerWidth-58-edge))) + 'px';
+  cursor.style.top = Math.round(Math.max(edge, Math.min(r.top-10, window.innerHeight-58-edge))) + 'px';
   if(window.innerWidth >= 700){
     const cw = 300, chGuess = callout.offsetHeight || 200, margin = 16;
     let left = r.right + 26;
@@ -1661,16 +1659,20 @@ function tourPrev(){ tourGoStep(_tourStep-1); }
 function openTutorial(){
   document.getElementById('settingsPop').classList.remove('open');
   closeMenu();
-  document.getElementById('tourBlock').style.display = 'block';
+  document.getElementById('tourWrap').style.display = 'block';
   window.addEventListener('resize', tourApplyPosition);
+  /* capture:true — el scroll DENTRO de un modal (.modal{overflow:auto}) no burbujea,
+     así que hay que escucharlo en fase de captura para no perder el reposicionamiento. */
+  window.addEventListener('scroll', tourApplyPosition, true);
   tourGoStep(0);
 }
 function closeTutorial(){
-  const block = document.getElementById('tourBlock');
-  if(block.style.display === 'none') return;
+  const wrap = document.getElementById('tourWrap');
+  if(wrap.style.display === 'none') return;
   tourResetToBaseline();
-  block.style.display = 'none';
+  wrap.style.display = 'none';
   window.removeEventListener('resize', tourApplyPosition);
+  window.removeEventListener('scroll', tourApplyPosition, true);
   localStorage.setItem(TUTORIAL_KEY, '1');
 }
 /* grupos desplegables del menú de ajustes (acordeón: sólo uno abierto a la vez) */
@@ -1702,7 +1704,7 @@ function setLang(l){
   render();
   renderModelNotice();
   updateSettingsUI();
-  if(document.getElementById('tourBlock').style.display !== 'none') tourRender();
+  if(document.getElementById('tourWrap').style.display !== 'none') tourRender();
 }
 /* Cerrar los menús desplegables (Datos, ⚙️) al tocar fuera; al abrir uno se cierra el otro */
 document.addEventListener('click', e=>{
