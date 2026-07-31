@@ -422,9 +422,9 @@
   /* En desktop, más aire — sobre todo para la cruza con dos genotipos lado a lado */
   @media (min-width:700px){ .modal{max-width:760px} }
   .modal h2{font-size:1.3rem;margin-bottom:4px;text-align:center}
-  .modal .sub{color:var(--ink-soft);font-size:.86rem;margin-bottom:20px;text-align:center}
+  .modal .sub{color:var(--ink-soft);font-size:.86rem;margin-bottom:20px}
   .field{margin-bottom:16px}
-  .field label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--ink);text-align:center}
+  .field label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--ink)}
   .field input{
     width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);
     font-family:'Nunito';font-size:.95rem;color:var(--ink);background:var(--bg-2);transition:border .12s;
@@ -440,7 +440,7 @@
   .duo input{width:82px;flex:none;text-align:center}
   .field .hint{font-size:.74rem;color:var(--ink-soft);margin-top:5px}
   /* etiqueta con un (?) que muestra la explicación en un tooltip (en vez de un párrafo fijo) */
-  .lbl-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px}
+  .lbl-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
   .lbl-row label{margin-bottom:0}
   .qh{flex:none;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;
     border:1.4px solid var(--lav);color:var(--lav);background:var(--lav-soft);font-size:.68rem;font-weight:800;cursor:help;font-family:'Nunito'}
@@ -466,7 +466,7 @@
     border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;color:var(--ink);background:var(--bg-2)}
   .cross-pair-half input:focus,.cross-pair-half select:focus{outline:none;border-color:var(--lav)}
   .cross-pair-half .trio,.cross-pair-half .duo{margin-top:0}
-  .cross-pair-sub{display:block;font-weight:700;font-size:.78rem;color:var(--ink-soft);margin:12px 0 6px;text-align:center}
+  .cross-pair-sub{display:block;font-weight:700;font-size:.78rem;color:var(--ink-soft);margin:12px 0 6px}
 
   .footer-note{text-align:center;color:var(--ink-soft);font-size:.78rem;margin-top:40px}
   .footer-note b{color:var(--ink)}
@@ -536,7 +536,7 @@
   .calib-help ol{margin:8px 0 0 18px;display:flex;flex-direction:column;gap:6px}
   .calib-status{font-size:.78rem;margin-top:6px;color:var(--ink-soft);line-height:1.4}
   .calib-status b{color:var(--ink)}
-  .calib-list-title{font-size:1rem;margin:20px 0 8px;text-align:center}
+  .calib-list-title{font-size:1rem;margin:20px 0 8px}
   .calib-row{display:flex;align-items:baseline;gap:10px;padding:9px 12px;background:var(--bg-1);border-radius:11px;margin-bottom:6px;font-size:.83rem}
   .calib-row .cg{font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .calib-row .cd{color:var(--ink-soft);flex:none;white-space:nowrap}
@@ -844,9 +844,9 @@
   <div class="modal">
     <h2 id="planTitle">Planning</h2>
     <div class="sub" data-i18n="plan.sub">Upcoming events and reverse scheduling.</div>
-    <h3 style="font-size:1rem;margin:6px 0 10px;text-align:center" data-i18n="plan.upcoming">📆 Upcoming events</h3>
+    <h3 style="font-size:1rem;margin:6px 0 10px" data-i18n="plan.upcoming">📆 Upcoming events</h3>
     <div id="agendaBox"></div>
-    <h3 style="font-size:1rem;margin:18px 0 6px;text-align:center" data-i18n="plan.backward">⏪ Plan backward</h3>
+    <h3 style="font-size:1rem;margin:18px 0 6px" data-i18n="plan.backward">⏪ Plan backward</h3>
     <div class="sub" style="margin-bottom:14px" data-i18n="plan.backwardSub">When to set it up to reach a stage by a target date?</div>
     <form id="planForm" onsubmit="computePlan(event)">
       <div class="field">
@@ -3392,7 +3392,7 @@ function toggleMenu(){ updateLabStatus(); document.getElementById('dataMenu').cl
 function closeMenu(){ document.getElementById('dataMenu').classList.remove('open'); }
 /* Reportar un error / sugerencia: Google Form (sin backend, no pide el mail de quien
    reporta). FEEDBACK_FORM_URL se completa cuando esté armado el formulario. */
-const FEEDBACK_FORM_URL = '';
+const FEEDBACK_FORM_URL = 'https://forms.gle/4QmR48pJbSf778Jm8';
 function openFeedbackForm(){
   closeMenu();
   if(!FEEDBACK_FORM_URL){ alert(t('al.feedbackNotReady')); return; }
