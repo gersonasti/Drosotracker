@@ -51,11 +51,10 @@ const code = [
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('ensureAging'), grabFn('kmCurve'), grabFn('computeT50FromCounts'),
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
   grabFn('loadLabRef'), grabFn('saveLabRef'), grabFn('isLabRef'), grabFn('labFactorValue'), grabFn('calibInfoFor'),
-  grabFn('icsEsc'), grabFn('icsFold'),
   grabFn('lgamma'), grabFn('gammincQ'), grabFn('chiSqUpper'), grabFn('quadFormSolve'), grabFn('logRankTest'),
   grabConst('SURV_SHAPE'), grabFn('normInv'), grabFn('logRankPlan'), grabFn('timeToMortality'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, icsEsc, icsFold, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -306,23 +305,6 @@ group('Calibración a dos niveles — laboratorio (wild-type) + genotipo', () =>
   // sin wild-type de referencia ⇒ comportamiento de un nivel (backward compatible)
   M.saveLabRef('');
   ok(M.labFactorValue() === 1 && M.calibFactorValue('nunca-visto') === 1, 'sin referencia de lab ⇒ factor 1 (solo literatura)');
-});
-
-/* ============================ 5) EXPORT .ics (RFC 5545) ============================ */
-group('Export .ics — escapado y plegado de líneas', () => {
-  // TEXT escaping: barra invertida, punto y coma, coma y salto de línea (NO la barra normal)
-  ok(M.icsEsc('w[1118] ; UAS-GFP / CyO') === 'w[1118] \\; UAS-GFP / CyO', 'escapa ; y deja / intacta');
-  ok(M.icsEsc('a,b') === 'a\\,b', 'escapa la coma');
-  ok(M.icsEsc('a\\b') === 'a\\\\b', 'escapa la barra invertida');
-  ok(M.icsEsc('a\nb') === 'a\\nb', 'escapa el salto de línea');
-  // folding: líneas ≤74 quedan igual; largas se pliegan con CRLF + espacio, sin perder contenido
-  const short = 'SUMMARY:hola';
-  ok(M.icsFold(short) === short, 'línea corta no se pliega');
-  const long = 'SUMMARY:' + 'x'.repeat(200);
-  const folded = M.icsFold(long);
-  ok(folded.includes('\r\n '), 'línea larga se pliega con CRLF + espacio');
-  ok(folded.split('\r\n').every(l => l.length <= 75), 'ningún segmento plegado supera 75 octetos');
-  ok(folded.replace(/\r\n /g, '') === long, 'desplegar reconstruye la línea original (sin pérdida)');
 });
 
 /* ============================ 6) LOG-RANK Y χ² (comparar cohortes) ============================ */
