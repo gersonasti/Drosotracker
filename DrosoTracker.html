@@ -672,22 +672,20 @@
         <button class="btn ghost" onclick="toggleMenu()" data-i18n="hdr.more" data-tip-key="tip.more">More ▾</button>
         <div class="menu-pop" id="dataMenu">
           <button onclick="openPlan()" data-i18n="hdr.plan" data-tip-key="tip.plan">Plan</button>
-          <button onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
           <button onclick="openCompare()" data-i18n="cmp.menu" data-tip-key="tip.cmp">Compare cohorts (KM)</button>
           <button onclick="openStatPlan()" data-i18n="stat.menu" data-tip-key="tip.stat">Sample size / power</button>
-          <button onclick="openGcal()" data-i18n-html="gcal.menu" data-tip-key="tip.gcal"><img src="gcal-icon.png" class="menu-ico" alt="">Google Calendar</button>
+          <button onclick="openCalib()" data-i18n="calib.btn" data-tip-key="tip.calib">Calibrate</button>
+          <button onclick="openRecTaskList()" data-i18n="menu.recTasks" data-tip-key="tip.recTasks">Create task</button>
+          <div id="recTaskStatus"></div>
           <div class="menu-sep"></div>
-          <button onclick="exportJSON()" data-i18n="menu.exportBackup" data-tip-key="tip.exportBackup">⬇ Export backup (JSON)</button>
+          <button onclick="exportJSON()" data-i18n="menu.exportBackup" data-tip-key="tip.exportBackup">⬇ Export backup</button>
           <button onclick="document.getElementById('importFile').click()" data-i18n="menu.importBackup" data-tip-key="tip.importBackup">⬆ Import backup</button>
           <button onclick="exportSurvivalCSV()" data-i18n="menu.exportSurvival" data-tip-key="tip.exportSurvival">Export survival (CSV)</button>
-          <div class="menu-sep"></div>
           <button onclick="document.getElementById('labFile').click()" data-i18n="menu.importLab" data-tip-key="tip.importLab">🧬 Import lab genotype database</button>
           <div class="menu-fmt" data-i18n="menu.fmt">.csv · .tab · .tsv</div>
           <div id="labStatus"></div>
           <div class="menu-sep"></div>
-          <button onclick="openRecTaskList()" data-i18n="menu.recTasks" data-tip-key="tip.recTasks">🔁 Recurring tasks</button>
-          <div id="recTaskStatus"></div>
-          <div class="menu-sep"></div>
+          <button onclick="openGcal()" data-i18n-html="gcal.menu" data-tip-key="tip.gcal"><img src="gcal-icon.png" class="menu-ico" alt="">Google Calendar</button>
           <button class="menu-danger" onclick="clearAllRecords()" data-i18n="menu.clearAll" data-tip-key="tip.clearAll">Clear all records</button>
         </div>
       </div>
@@ -1345,8 +1343,8 @@ const I18N = {
   en: {
     'hdr.plan':'Plan','hdr.data':'⇅ Data','hdr.more':'More ▾','hdr.newCross':'New record','hdr.settings':'Settings',
     'brand.sub':'We track the life cycle, not behaviour.','doc.title':'DrosoTracker',
-    'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
-    'menu.exportSurvival':'Export survival (CSV)','menu.importLab':'🧬 Import lab database','menu.recTasks':'🔁 Create task',
+    'menu.exportBackup':'⬇ Export backup','menu.importBackup':'⬆ Import backup',
+    'menu.exportSurvival':'Export survival (CSV)','menu.importLab':'🧬 Import lab database','menu.recTasks':'Create task',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Clear all records','tip.clearAll':'Delete every record at once (keeps your lab database and calibrations).',
     'gcal.menu':'<img src="gcal-icon.png" class="menu-ico" alt=""> Google Calendar','tip.gcal':'Sync your tasks and eclosions to your Google Calendar so it reminds you natively, even with the app closed.',
     'gcal.title':'Google Calendar','gcal.desc':'Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively — even with the app closed.',
@@ -1515,8 +1513,8 @@ const I18N = {
   es: {
     'hdr.plan':'Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
     'brand.sub':'Trackeamos el ciclo de vida, no comportamiento.','doc.title':'DrosoTracker',
-    'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
-    'menu.exportSurvival':'Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base del lab','menu.recTasks':'🔁 Crear tarea',
+    'menu.exportBackup':'⬇ Exportar backup','menu.importBackup':'⬆ Importar backup',
+    'menu.exportSurvival':'Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base del lab','menu.recTasks':'Crear tarea',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Vaciar registros','tip.clearAll':'Borra todos los registros de una (conserva la base del lab y las calibraciones).',
     'gcal.menu':'<img src="gcal-icon.png" class="menu-ico" alt=""> Google Calendar','tip.gcal':'Sincronizá tus tareas y eclosiones con tu Google Calendar para que te avise de forma nativa, aun con la app cerrada.',
     'gcal.title':'Google Calendar','gcal.desc':'Empujá tus tareas y eclosiones estimadas a tu Google Calendar para que te avise de forma nativa — aun con la app cerrada.',
