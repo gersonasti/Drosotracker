@@ -1372,7 +1372,7 @@ const I18N = {
     'install.autoBody':'Your browser can install it directly. Tap <b>Install now</b>.',
     'install.body.ios':'On iPhone/iPad (Safari): tap the <b>Share</b> icon (the square with an arrow, at the bottom of the screen) and choose <b>"Add to Home Screen"</b>.',
     'install.body.android':'On Android: tap your browser\'s <b>⋮</b> menu (top right) and choose <b>"Install app"</b> or <b>"Add to Home screen"</b>.',
-    'install.body.desktop':'On desktop (Chrome / Edge): look for the install icon in the address bar, or open the browser menu and choose <b>"Install DrosoTracker…"</b>. On Safari (Mac): <b>File → Add to Dock</b>.',
+    'install.body.desktop':'On desktop (Chrome / Edge): look at the right end of the address bar for a small icon of a monitor with a down arrow, next to the star — click it and choose <b>Install</b>. Don\'t see it? Open the <b>⋮</b> menu and choose <b>"Install DrosoTracker…"</b>. On Safari (Mac): <b>File → Add to Dock</b>.',
     'install.later':'Not now','install.now':'Install now',
     'tour.back':'Back','tour.next':'Continue','tour.done':'Got it','tour.skip':'Exit tutorial','tour.count':'Step {i} of {n}',
     'tour.t0':'Welcome to DrosoTracker','tour.b0':'Quick tour: creating a record (genetic cross example), planning an experiment backward, and comparing cohorts with survival curves. You can go back anytime or exit whenever you like. Hit <b>Continue</b> to start.',
@@ -1520,7 +1520,7 @@ const I18N = {
     'install.autoBody':'Tu navegador ya te la puede instalar directo. Tocá <b>Instalar ahora</b>.',
     'install.body.ios':'En iPhone/iPad (Safari): tocá el ícono <b>Compartir</b> (el cuadrado con la flecha hacia arriba, abajo de la pantalla) y elegí <b>«Agregar a pantalla de inicio»</b>.',
     'install.body.android':'En Android: tocá el menú <b>⋮</b> de tu navegador (arriba a la derecha) y elegí <b>«Instalar app»</b> o <b>«Agregar a pantalla de inicio»</b>.',
-    'install.body.desktop':'En la computadora (Chrome / Edge): buscá el ícono de instalar en la barra de direcciones, o abrí el menú del navegador y elegí <b>«Instalar DrosoTracker…»</b>. En Safari (Mac): menú <b>Archivo → Agregar al Dock</b>.',
+    'install.body.desktop':'En la computadora (Chrome / Edge): mirá el extremo derecho de la barra de direcciones, buscá un ícono chico con forma de pantalla con una flecha hacia abajo, al lado de la estrella — hacé clic ahí y elegí <b>Instalar</b>. ¿No lo ves? Abrí el menú <b>⋮</b> y elegí <b>«Instalar DrosoTracker…»</b>. En Safari (Mac): menú <b>Archivo → Agregar al Dock</b>.',
     'install.later':'Ahora no','install.now':'Instalar ahora',
     'tour.back':'Atrás','tour.next':'Continuar','tour.done':'Entendido','tour.skip':'Salir del tutorial','tour.count':'Paso {i} de {n}',
     'tour.t0':'Bienvenido a DrosoTracker','tour.b0':'Te muestro rápido cómo crear un registro (ejemplo de cruza genética), planificar un experimento hacia atrás, y comparar cohortes con curvas de supervivencia. Podés volver atrás cuando quieras o salir en cualquier momento. Tocá <b>Continuar</b> para arrancar.',
@@ -1752,10 +1752,15 @@ function tourApplyPosition(){
     left = Math.max(margin, Math.min(left, window.innerWidth - cw - margin));
     top = Math.max(margin, Math.min(r.top, window.innerHeight - ch - margin));
   } else {
-    /* en celular casi nunca entra al lado del target: por defecto lo apoyamos abajo,
-       centrado — el usuario puede arrastrarlo (#tourDragHandle) si aun así tapa algo. */
+    /* en celular no entra al lado del target (poco ancho): probamos abajo del target
+       (como en escritorio, pero en vertical); si no entra, arriba; si tampoco entra
+       (el target ocupa casi toda la pantalla), como último recurso lo apoyamos abajo
+       de todo — ahí el usuario puede arrastrarlo (#tourDragHandle) si aun tapa algo. */
     left = Math.max(margin, Math.min((window.innerWidth-cw)/2, window.innerWidth - cw - margin));
-    top = Math.max(margin, window.innerHeight - ch - margin);
+    const gap = 14, below = r.bottom + gap, above = r.top - ch - gap;
+    if(below + ch + margin <= window.innerHeight) top = below;
+    else if(above >= margin) top = above;
+    else top = Math.max(margin, window.innerHeight - ch - margin);
   }
   callout.style.left = Math.round(left) + 'px';
   callout.style.top = Math.round(top) + 'px';
