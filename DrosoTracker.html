@@ -1457,6 +1457,8 @@ const I18N = {
     'rt.responsibles':'Responsible person(s)','rt.respHint':'Add one name, or several if they take turns.','rt.respPh':'e.g. Juan…','rt.respHintText':'Optional. If you add more than one, they take turns in that order each time the task is marked done.','rt.noResp':'No one assigned',
     'rt.freq':'Repeats every (days) *','rt.nextDue':'Next due date *','rt.save':'Save task','rt.rotates':'rotates among {n}',
     'rt.overdue':'Overdue {d} d','rt.dueToday':'Due today','rt.dueSoon':'In {h}',
+    'rt.select':'Select','rt.bulkLabel':'Assign responsible to the {n} selected','rt.bulkPh':'e.g. Juan, Maria','rt.bulkApply':'Assign','rt.bulkClear':'Clear selection',
+    'cf.bulkAssignResp':'Set "{names}" as the responsible for the {n} selected tasks? This replaces whatever they had before.',
     'rti.colTitle':'Which column is the tray or task name?','rti.colResp':'Which column is the responsible person? (optional)','rti.colRespHint':'If a cell has more than one name (comma-separated), they\'ll take turns.',
     'rti.colFreq':'Which column has the frequency, in days? (optional)','rti.defaultFreq':'Default frequency for rows without one (days)','rti.colDue':'Which column has the next due date? (optional)','rti.colDueHint':'Rows without a usable date start counting from today.','rti.none':'— None',
     'cf.deleteRecTask':'Delete this recurring task? This can\'t be undone.','al.stockFromLab':'Also saved {n} stock task(s) (flip schedule, etc.).',
@@ -1618,6 +1620,8 @@ const I18N = {
     'rt.responsibles':'Responsable(s)','rt.respHint':'Agregá un nombre, o varios si se turnan.','rt.respPh':'ej. Juan…','rt.respHintText':'Opcional. Si agregás más de uno, se turnan en ese orden cada vez que se marca la tarea como hecha.','rt.noResp':'Sin asignar',
     'rt.freq':'Se repite cada (días) *','rt.nextDue':'Próxima fecha *','rt.save':'Guardar tarea','rt.rotates':'rota entre {n}',
     'rt.overdue':'Atrasado {d} d','rt.dueToday':'Hoy','rt.dueSoon':'En {h}',
+    'rt.select':'Seleccionar','rt.bulkLabel':'Asignar responsable a las {n} seleccionadas','rt.bulkPh':'ej. Juan, Maria','rt.bulkApply':'Asignar','rt.bulkClear':'Cancelar selección',
+    'cf.bulkAssignResp':'¿Asignar "{names}" como responsable de las {n} tareas seleccionadas? Esto reemplaza lo que tuvieran antes.',
     'rti.colTitle':'¿Qué columna es el nombre de la bandeja o tarea?','rti.colResp':'¿Qué columna es el responsable? (opcional)','rti.colRespHint':'Si una celda tiene más de un nombre (separados por coma), se van a turnar.',
     'rti.colFreq':'¿Qué columna tiene la frecuencia, en días? (opcional)','rti.defaultFreq':'Frecuencia por defecto para filas sin ese dato (días)','rti.colDue':'¿Qué columna tiene la próxima fecha? (opcional)','rti.colDueHint':'Las filas sin una fecha utilizable arrancan a contar desde hoy.','rti.none':'— Ninguna',
     'cf.deleteRecTask':'¿Eliminar esta tarea recurrente? Esta acción no se puede deshacer.','al.stockFromLab':'También se guardaron {n} tarea(s) de stock (repique, etc.).',
@@ -4353,6 +4357,7 @@ function completeRecTask(id){
 function deleteRecTask(id){
   askConfirm(t('cf.deleteRecTask'), ()=>{
     recTasks = recTasks.filter(r=>r.id!==id);
+    _rtSelected.delete(id);
     saveRecTasks(recTasks);
     closeRecTaskForm();
     renderRecTaskList(); updateRecTaskStatus(); renderTasks();
@@ -4364,25 +4369,62 @@ function updateRecTaskStatus(){
 }
 function openRecTaskList(){
   document.getElementById('dataMenu').classList.remove('open');
+  _rtSelected.clear();
+  rebuildRespAC();
   renderRecTaskList();
   document.getElementById('recTaskListOverlay').classList.add('open');
 }
-function closeRecTaskList(){ document.getElementById('recTaskListOverlay').classList.remove('open'); }
+function closeRecTaskList(){ document.getElementById('recTaskListOverlay').classList.remove('open'); _rtSelected.clear(); }
+/* --- Selección múltiple: asignar el mismo responsable a varias tareas de una --- */
+let _rtSelected = new Set();
+function toggleRtSelect(id, checked){
+  if(checked) _rtSelected.add(id); else _rtSelected.delete(id);
+  renderRecTaskList();
+}
+function clearRtSelection(){ _rtSelected.clear(); renderRecTaskList(); }
+function applyBulkResp(){
+  const raw = document.getElementById('rtBulkResp').value;
+  const names = [...new Set(raw.split(/[,;\/]+/).map(s=>s.trim()).filter(Boolean))];
+  if(!names.length || !_rtSelected.size) return;
+  askConfirm(t('cf.bulkAssignResp',{n:_rtSelected.size, names:names.join(', ')}), ()=>{
+    const hist = loadHistorySet(RESP_HISTORY_KEY);
+    recTasks.forEach(rt=>{ if(_rtSelected.has(rt.id)){ rt.responsibles = names.slice(); rt.turn = 0; } });
+    names.forEach(n=>hist.add(n));
+    saveHistorySet(RESP_HISTORY_KEY, hist);
+    saveRecTasks(recTasks);
+    _rtSelected.clear();
+    renderRecTaskList();
+    updateRecTaskStatus();
+    renderTasks();
+  }, 'rt.bulkApply');
+}
 function renderRecTaskList(){
   const box = document.getElementById('recTaskListBox'); if(!box) return;
   if(!recTasks.length){ box.innerHTML = `<div class="hint" style="padding:6px 2px">${t('rt.empty')}</div>`; return; }
-  const T_REMOVE = t('task.remove');
+  const T_REMOVE = t('task.remove'), T_SELECT = t('rt.select');
   const sorted = [...recTasks].sort((a,b)=> recTaskNextDueDate(a)-recTaskNextDueDate(b));
-  box.innerHTML = sorted.map(rt=>{
+  const rowsHtml = sorted.map(rt=>{
     const respLabel = recTaskResponsible(rt);
     let resp = respLabel ? esc(respLabel) : `<span style="opacity:.65">${t('rt.noResp')}</span>`;
     if(rt.responsibles.length>1) resp += ` <span class="hint" style="display:inline">(${t('rt.rotates',{n:rt.responsibles.length})})</span>`;
+    const checked = _rtSelected.has(rt.id) ? 'checked' : '';
     return `<div class="task" onclick="openRecTaskForm('${rt.id}')">
+      <input type="checkbox" class="task-check" ${checked} title="${T_SELECT}" onclick="event.stopPropagation();toggleRtSelect('${rt.id}',this.checked)" />
       <span class="tmain"><span class="tname" title="${esc(rt.title)}">${esc(rt.title)}</span><span class="texp">${t('rt.every',{n:rt.freqDays})} · ${fmtDate(recTaskNextDueDate(rt))}</span></span>
       <span class="chip info">${resp}</span>
       <button type="button" class="task-del" title="${T_REMOVE}" onclick="event.stopPropagation();deleteRecTask('${rt.id}')">✕</button>
     </div>`;
   }).join('');
+  const bulkBarHtml = _rtSelected.size ? `
+    <div class="field" style="margin-top:12px">
+      <label>${t('rt.bulkLabel',{n:_rtSelected.size})}</label>
+      <div style="display:flex;gap:8px">
+        <input id="rtBulkResp" list="respList" autocomplete="off" placeholder="${esc(t('rt.bulkPh'))}" style="flex:1" />
+        <button type="button" class="btn" onclick="applyBulkResp()" style="flex:none">${t('rt.bulkApply')}</button>
+      </div>
+      <button type="button" class="link-btn" onclick="clearRtSelection()">${t('rt.bulkClear')}</button>
+    </div>` : '';
+  box.innerHTML = rowsHtml + bulkBarHtml;
 }
 
 /* --- Campo de Responsable(s) como etiquetas: mismo patrón que Experimento(s)/Condición(es),
