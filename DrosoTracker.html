@@ -1002,37 +1002,9 @@
       <div class="lab-preview" id="labPreview"></div>
     </div>
     <div class="menu-sep"></div>
-    <div class="field">
-      <label style="display:flex;align-items:center;gap:9px;font-weight:700;cursor:pointer">
-        <input type="checkbox" id="labStockToggle" onchange="toggleLabStockFields()" style="width:auto" />
-        <span data-i18n="lab.stockToggle">This sheet also has stock trays to flip</span>
-      </label>
-      <div class="hint" data-i18n="lab.stockHint">Creates or updates recurring flip tasks (responsible + schedule) from the same file — matched by tray name, so re-importing later updates them instead of duplicating.</div>
-    </div>
-    <div id="labStockFields" style="display:none">
-      <div class="field">
-        <label for="labColTray" data-i18n="rti.colTitle">Which column is the tray or task name?</label>
-        <select id="labColTray"></select>
-      </div>
-      <div class="field">
-        <label for="labColResp" data-i18n="rti.colResp">Which column is the responsible person? (optional)</label>
-        <select id="labColResp"></select>
-        <div class="hint" data-i18n="rti.colRespHint">If a cell has more than one name (comma-separated), they'll take turns.</div>
-      </div>
-      <div class="field">
-        <label for="labColFreq" data-i18n="rti.colFreq">Which column has the frequency, in days? (optional)</label>
-        <select id="labColFreq" onchange="onLabColFreqChange()"></select>
-        <div class="field" id="labDefaultFreqRow" style="margin-top:8px">
-          <label for="labDefaultFreq" data-i18n="rti.defaultFreq">Default frequency for rows without one (days)</label>
-          <input id="labDefaultFreq" type="number" min="1" step="1" value="21" />
-        </div>
-      </div>
-      <div class="field">
-        <label for="labColDue" data-i18n="rti.colDue">Which column has the next due date? (optional)</label>
-        <select id="labColDue"></select>
-        <div class="hint" data-i18n="rti.colDueHint">Rows without a usable date start counting from today.</div>
-      </div>
-    </div>
+    <div id="labExtraCols"></div>
+    <button type="button" class="link-btn" id="labAddColBtn" onclick="addLabColumnRow()" data-i18n="rti.addColumn">+ Add column</button>
+    <div class="hint" data-i18n="lab.stockHint">Add a column with the tray/task name to also create (or update) recurring tasks from this same file — you can add responsible, frequency and next-due too. Matched by task name, so re-importing later updates them instead of duplicating.</div>
     <div class="modal-actions">
       <button type="button" class="btn ghost" onclick="closeLabModal()" data-i18n="lab.cancel">Cancel</button>
       <button type="button" class="btn" onclick="confirmLabImport()" data-i18n="lab.import">Import</button>
@@ -1449,7 +1421,7 @@ const I18N = {
     // importar base del lab
     'lab.title':'Import lab database','lab.col':'Which column has the genotype?','lab.colHint':'The first row is assumed to be the column headers.','lab.preview':'Preview','lab.cancel':'Cancel','lab.import':'Import',
     'lab.sub':'{file} · {n} rows. Pick the genotype column below.','lab.noCol':'The selected column has no genotypes.','lab.loaded':'Lab database: {n} genotypes','lab.clear':'Clear','lab.colN':'Column {n}','err.labFormat':'Expected a header row + at least one data row.',
-    'lab.stockToggle':'This sheet also has recurring tasks to create','lab.stockHint':'Creates or updates recurring tasks (responsible + schedule) from the same file — matched by task name, so re-importing later updates them instead of duplicating.',
+    'lab.stockHint':'Add a column with the tray/task name to also create (or update) recurring tasks from this same file — you can add responsible, frequency and next-due too. Matched by task name, so re-importing later updates them instead of duplicating.',
     // tareas recurrentes (repiques, etc.)
     'rt.listTitle':'Create task','rt.listSub':'Chores that repeat on a schedule (stock flips, cleaning…), each with its own responsible person(s). Create one by hand, or import a whole sheet from "Import lab database".','rt.empty':'No recurring tasks yet.','rt.newBtn':'+ New task','rt.close':'Close','rt.every':'Every {n} d','rt.count':'{n} recurring task(s)',
     'rt.newTitle':'New recurring task','rt.editTitle':'Edit recurring task','rt.formSub':'E.g. stock flips, cleaning… anything that repeats on a schedule.',
@@ -1459,8 +1431,8 @@ const I18N = {
     'rt.overdue':'Overdue {d} d','rt.dueToday':'Due today','rt.dueSoon':'In {h}',
     'rt.select':'Select','rt.bulkLabel':'Assign responsible to the {n} selected','rt.bulkPh':'e.g. Juan, Maria','rt.bulkApply':'Assign','rt.bulkClear':'Clear selection',
     'cf.bulkAssignResp':'Set "{names}" as the responsible for the {n} selected tasks? This replaces whatever they had before.',
-    'rti.colTitle':'Which column is the tray or task name?','rti.colResp':'Which column is the responsible person? (optional)','rti.colRespHint':'If a cell has more than one name (comma-separated), they\'ll take turns.',
-    'rti.colFreq':'Which column has the frequency, in days? (optional)','rti.defaultFreq':'Default frequency for rows without one (days)','rti.colDue':'Which column has the next due date? (optional)','rti.colDueHint':'Rows without a usable date start counting from today.','rti.none':'— None',
+    'rti.addColumn':'+ Add column','rti.roleTray':'Tray or task name','rti.roleResp':'Responsible','rti.roleFreq':'Frequency (days)','rti.roleDue':'Next due date',
+    'rti.colRespHint':'If a cell has more than one name (comma-separated), they\'ll take turns.','rti.defaultFreqInline':'Default if a row has none (days)','rti.colDueHint':'Rows without a usable date start counting from today.',
     'cf.deleteRecTask':'Delete this recurring task? This can\'t be undone.','al.stockFromLab':'Also saved {n} stock task(s) (flip schedule, etc.).',
     'ac.comp':'common','ac.stock':'stock',
     // alertas / confirmaciones / notificaciones
@@ -1500,7 +1472,7 @@ const I18N = {
     'tour.demoA':'Canton-S, Condition 1 (example)','tour.demoB':'Canton-S, Condition 2 (example)',
     'tour.demoFemale':'w[1118] (example)','tour.demoMale':'UAS-GFP / CyO (example)',
     'tourA.t0':'Advanced tutorial','tourA.b0':'This tour covers less common but useful features: importing your lab\'s genotype database, syncing with Google Calendar, making backups, exporting survival data, planning sample size, and how to report a problem. Hit <b>Continue</b> to start.',
-    'tourA.t1':'Import lab database','tourA.b1':'Upload the CSV/TSV with your lab\'s database: the genotypes are used to autocomplete any genotype field, and the rest of the columns — if it has them — to create recurring tasks (task name, responsible, how often it repeats). You choose which column holds the genotype and, if it applies, tick "This sheet also has recurring tasks to create" to build those too.',
+    'tourA.t1':'Import lab database','tourA.b1':'Upload the CSV/TSV with your lab\'s database: the genotypes are used to autocomplete any genotype field. You choose which column holds the genotype — that\'s it by default. If the sheet also has other useful columns (tray/task name, responsible, how often it repeats…), tap "+ Add column" to bring in one at a time and build recurring tasks from them too.',
     'tourA.t1b':'Create task','tourA.b1b':'"Create task" opens the recurring-tasks list: you\'ll see the ones created from the database you just imported, and you can also add a new one by hand — with a title, one or more responsible people (they take turns if there\'s more than one), and how often it repeats.',
     'tourA.t2':'Google Calendar','tourA.b2':'Sync your tasks and estimated eclosions to your Google Calendar, so you get native reminders even with the app closed.',
     'tourA.t3':'Connect Google Calendar','tourA.b3':'Once connected, DrosoTracker creates one event per upcoming task/eclosion and keeps them updated; marking a task done here deletes its event (and vice versa). Disconnecting stops syncing but keeps the events already created.',
@@ -1612,7 +1584,7 @@ const I18N = {
     'agm.censoredHint':'Se descuentan del grupo en riesgo sin contar como muerte (Kaplan-Meier).','agm.flip':'Pasé la cohorte a comida fresca','agm.note':'Nota (opcional)','agm.notePh':'ej. hembras, 2 viales','agm.sub':'{geno} · día {d} de cohorte',
     'lab.title':'Importar base del lab','lab.col':'¿Qué columna tiene el genotipo?','lab.colHint':'Se asume que la primera fila son los títulos de las columnas.','lab.preview':'Vista previa','lab.cancel':'Cancelar','lab.import':'Importar',
     'lab.sub':'{file} · {n} filas. Elegí la columna del genotipo abajo.','lab.noCol':'La columna elegida no tiene genotipos.','lab.loaded':'Base del lab: {n} genotipos','lab.clear':'Borrar','lab.colN':'Columna {n}','err.labFormat':'Se espera una fila de títulos + al menos una fila de datos.',
-    'lab.stockToggle':'Esta planilla también tiene tareas recurrentes para crear','lab.stockHint':'Crea o actualiza tareas recurrentes (responsable + frecuencia) desde el mismo archivo — se emparejan por nombre de tarea, así que reimportar más adelante las actualiza en vez de duplicarlas.',
+    'lab.stockHint':'Agregá una columna con el nombre de la bandeja/tarea para también crear (o actualizar) tareas recurrentes desde esta misma planilla — podés sumar también responsable, frecuencia y próxima fecha. Se emparejan por nombre de tarea, así que reimportar más adelante las actualiza en vez de duplicarlas.',
     // tareas recurrentes (repiques, etc.)
     'rt.listTitle':'Crear tarea','rt.listSub':'Tareas que se repiten con una frecuencia (repique de stock, limpieza…), cada una con su/s responsable/s. Creá una a mano, o importá toda una planilla desde "Importar base del lab".','rt.empty':'Todavía no hay tareas recurrentes.','rt.newBtn':'+ Nueva tarea','rt.close':'Cerrar','rt.every':'Cada {n} d','rt.count':'{n} tarea(s) recurrente(s)',
     'rt.newTitle':'Nueva tarea recurrente','rt.editTitle':'Editar tarea recurrente','rt.formSub':'Ej. repique de stock, limpieza… cualquier cosa que se repita con una frecuencia.',
@@ -1622,8 +1594,8 @@ const I18N = {
     'rt.overdue':'Atrasado {d} d','rt.dueToday':'Hoy','rt.dueSoon':'En {h}',
     'rt.select':'Seleccionar','rt.bulkLabel':'Asignar responsable a las {n} seleccionadas','rt.bulkPh':'ej. Juan, Maria','rt.bulkApply':'Asignar','rt.bulkClear':'Cancelar selección',
     'cf.bulkAssignResp':'¿Asignar "{names}" como responsable de las {n} tareas seleccionadas? Esto reemplaza lo que tuvieran antes.',
-    'rti.colTitle':'¿Qué columna es el nombre de la bandeja o tarea?','rti.colResp':'¿Qué columna es el responsable? (opcional)','rti.colRespHint':'Si una celda tiene más de un nombre (separados por coma), se van a turnar.',
-    'rti.colFreq':'¿Qué columna tiene la frecuencia, en días? (opcional)','rti.defaultFreq':'Frecuencia por defecto para filas sin ese dato (días)','rti.colDue':'¿Qué columna tiene la próxima fecha? (opcional)','rti.colDueHint':'Las filas sin una fecha utilizable arrancan a contar desde hoy.','rti.none':'— Ninguna',
+    'rti.addColumn':'+ Agregar columna','rti.roleTray':'Nombre de bandeja o tarea','rti.roleResp':'Responsable','rti.roleFreq':'Frecuencia (días)','rti.roleDue':'Próxima fecha',
+    'rti.colRespHint':'Si una celda tiene más de un nombre (separados por coma), se van a turnar.','rti.defaultFreqInline':'Si una fila no tiene dato, usar (días)','rti.colDueHint':'Las filas sin una fecha utilizable arrancan a contar desde hoy.',
     'cf.deleteRecTask':'¿Eliminar esta tarea recurrente? Esta acción no se puede deshacer.','al.stockFromLab':'También se guardaron {n} tarea(s) de stock (repique, etc.).',
     'ac.comp':'común','ac.stock':'stock',
     'al.crossSameSex':'Elegí un genotipo como hembras (♀) y el otro como machos (♂) — una cruza necesita los dos.',
@@ -1662,7 +1634,7 @@ const I18N = {
     'tour.demoA':'Canton-S, Condición 1 (ejemplo)','tour.demoB':'Canton-S, Condición 2 (ejemplo)',
     'tour.demoFemale':'w[1118] (ejemplo)','tour.demoMale':'UAS-GFP / CyO (ejemplo)',
     'tourA.t0':'Tutorial avanzado','tourA.b0':'Este recorrido cubre funciones menos frecuentes pero útiles: importar la base de genotipos del lab, sincronizar con Google Calendar, hacer backups, exportar datos de supervivencia, planificar el tamaño muestral y cómo reportar un problema. Tocá <b>Continuar</b> para arrancar.',
-    'tourA.t1':'Importar base del lab','tourA.b1':'Subí el CSV/TSV con la base de datos de tu lab: los genotipos sirven para autocompletar en cualquier campo de genotipo, y el resto de las columnas — si las tiene — para crear tareas recurrentes (nombre de la tarea, responsable, cada cuánto se repite). Elegís qué columna tiene el genotipo y, si corresponde, tildás "Esta planilla también tiene tareas recurrentes para crear" para armarlas también.',
+    'tourA.t1':'Importar base del lab','tourA.b1':'Subí el CSV/TSV con la base de datos de tu lab: los genotipos sirven para autocompletar en cualquier campo de genotipo. Elegís qué columna tiene el genotipo — por defecto, nada más. Si la planilla tiene otras columnas útiles (nombre de bandeja/tarea, responsable, cada cuánto se repite…), tocá "+ Agregar columna" para sumarlas de a una y armar tareas recurrentes con ellas también.',
     'tourA.t1b':'Crear tarea','tourA.b1b':'"Crear tarea" abre el listado de tareas recurrentes: ahí vas a ver las que se crearon a partir de la base que acabás de importar, y también podés agregar una nueva a mano — con título, uno o más responsables (se turnan si hay más de uno) y cada cuánto se repite.',
     'tourA.t2':'Google Calendar','tourA.b2':'Sincronizá tus tareas y eclosiones estimadas con tu Google Calendar, para recibir avisos nativos aunque tengas la app cerrada.',
     'tourA.t3':'Conectar Google Calendar','tourA.b3':'Al conectar, DrosoTracker crea un evento por cada tarea/eclosión próxima y los mantiene actualizados; si marcás una tarea como hecha acá, se borra el evento (y viceversa). Desconectar detiene la sincronización pero conserva los eventos ya creados.',
@@ -4223,37 +4195,65 @@ function importLabDB(e){
 function openLabModal(gi){
   const headers = labImportData.headers;
   const opts = headers.map((h,i)=>`<option value="${i}">${esc(h||t('lab.colN',{n:i+1}))}</option>`).join('');
-  const optsNone = `<option value="-1">${t('rti.none')}</option>` + opts;
   const sel = document.getElementById('labCol');
   sel.innerHTML = opts;
   sel.value = gi>=0 ? String(gi) : '0';
   document.getElementById('labSub').textContent =
     t('lab.sub',{file:labImportData.file, n:labImportData.dataRows.length});
   renderLabPreview();
-  // columnas de stock (bandeja/responsable/frecuencia/próxima fecha): se pre-completan si se
-  // detectan por nombre; el checkbox arranca tildado sólo si encontramos una columna de bandeja.
-  const trayI = guessCol(headers, /bandeja|tray|repica/i);
-  const respI = guessCol(headers, /responsab|encargad|integrante|qui[eé]n|who/i);
-  const freqI = guessCol(headers, /frecuen|frequency|cada.*d[ií]a|days/i);
-  const dueI = guessCol(headers, /pr[oó]xim|next|due|fecha/i);
-  document.getElementById('labColTray').innerHTML = opts;
-  document.getElementById('labColResp').innerHTML = optsNone;
-  document.getElementById('labColFreq').innerHTML = optsNone;
-  document.getElementById('labColDue').innerHTML = optsNone;
-  document.getElementById('labColTray').value = String(trayI>=0 ? trayI : 0);
-  document.getElementById('labColResp').value = String(respI);
-  document.getElementById('labColFreq').value = String(freqI);
-  document.getElementById('labColDue').value = String(dueI);
-  document.getElementById('labStockToggle').checked = trayI>=0;
-  toggleLabStockFields();
+  // sin columnas extra por defecto: sólo se agregan si el usuario toca "+ Agregar columna"
+  _labExtraCols = [];
+  renderLabExtraCols();
   document.getElementById('labOverlay').classList.add('open');
 }
-function toggleLabStockFields(){
-  document.getElementById('labStockFields').style.display = document.getElementById('labStockToggle').checked ? '' : 'none';
-  onLabColFreqChange();
+/* --- Columnas extra (opcionales) para crear tareas recurrentes desde la misma planilla:
+   se agregan de a una con "+ Agregar columna", cada una eligiendo qué rol cumple (bandeja/
+   tarea, responsable, frecuencia, próxima fecha — siempre en ese orden, así "bandeja" queda
+   primera) y qué columna del archivo la alimenta. --- */
+const RT_COL_ROLES = ['tray','resp','freq','due'];
+let _labExtraCols = [];
+function labRoleLabel(role){ return { tray:t('rti.roleTray'), resp:t('rti.roleResp'), freq:t('rti.roleFreq'), due:t('rti.roleDue') }[role]; }
+function labRoleGuessRe(role){
+  return { tray:/bandeja|tray|t[ií]tulo|title|tarea|nombre/i, resp:/responsab|encargad|integrante|qui[eé]n|who/i,
+    freq:/frecuen|frequency|cada.*d[ií]a|days/i, due:/pr[oó]xim|next|due|fecha/i }[role];
 }
-function onLabColFreqChange(){
-  document.getElementById('labDefaultFreqRow').style.display = (+document.getElementById('labColFreq').value < 0) ? '' : 'none';
+function addLabColumnRow(){
+  const used = _labExtraCols.map(r=>r.role);
+  const role = RT_COL_ROLES.find(r=>!used.includes(r));
+  if(!role) return;
+  const headers = labImportData.headers;
+  let col = guessCol(headers, labRoleGuessRe(role));
+  if(col<0) col = 0;
+  _labExtraCols.push({ role, col, defaultFreq: 21 });
+  renderLabExtraCols();
+}
+function removeLabColumnRow(i){ _labExtraCols.splice(i,1); renderLabExtraCols(); }
+function setLabExtraColRole(i, role){ _labExtraCols[i].role = role; renderLabExtraCols(); }
+function setLabExtraColSrc(i, col){ _labExtraCols[i].col = +col; }
+function setLabExtraColFreq(i, v){ _labExtraCols[i].defaultFreq = Math.max(1, +v||21); }
+function renderLabExtraCols(){
+  const box = document.getElementById('labExtraCols'); if(!box) return;
+  const headers = labImportData.headers;
+  box.innerHTML = _labExtraCols.map((row,i)=>{
+    const used = _labExtraCols.map(r=>r.role);
+    const roleOpts = RT_COL_ROLES.filter(r=> r===row.role || !used.includes(r))
+      .map(r=>`<option value="${r}" ${r===row.role?'selected':''}>${esc(labRoleLabel(r))}</option>`).join('');
+    const colOpts = headers.map((h,ci)=>`<option value="${ci}" ${ci===row.col?'selected':''}>${esc(h||t('lab.colN',{n:ci+1}))}</option>`).join('');
+    let extra = '';
+    if(row.role==='resp') extra = `<div class="hint" style="margin-top:6px">${t('rti.colRespHint')}</div>`;
+    if(row.role==='freq') extra = `<div class="hint" style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span>${t('rti.defaultFreqInline')}</span><input type="number" min="1" step="1" value="${row.defaultFreq}" style="width:70px" onchange="setLabExtraColFreq(${i}, this.value)" /></div>`;
+    if(row.role==='due') extra = `<div class="hint" style="margin-top:6px">${t('rti.colDueHint')}</div>`;
+    return `<div class="field">
+      <div style="display:flex;gap:8px">
+        <select style="flex:none;width:auto" onchange="setLabExtraColRole(${i}, this.value)">${roleOpts}</select>
+        <select style="flex:1" onchange="setLabExtraColSrc(${i}, this.value)">${colOpts}</select>
+        <button type="button" class="task-del" title="${esc(t('task.remove'))}" onclick="removeLabColumnRow(${i})">✕</button>
+      </div>
+      ${extra}
+    </div>`;
+  }).join('');
+  const addBtn = document.getElementById('labAddColBtn');
+  if(addBtn) addBtn.style.display = _labExtraCols.length >= RT_COL_ROLES.length ? 'none' : '';
 }
 function renderLabPreview(){
   if(!labImportData) return;
@@ -4277,13 +4277,16 @@ function parseDateCell(s){
    descripción = genotipos de esa bandeja, responsables = nombres distintos de esa columna
    (rotan si hay más de uno), frecuencia/próxima fecha del primer valor útil del grupo. */
 function importStockFromLabRows(headers, dataRows, genoCol){
-  if(!document.getElementById('labStockToggle').checked) return 0;
-  const trayI = +document.getElementById('labColTray').value;
-  const respI = +document.getElementById('labColResp').value;
-  const freqI = +document.getElementById('labColFreq').value;
-  const dueI = +document.getElementById('labColDue').value;
-  if(trayI < 0) return 0;
-  const defaultFreq = Math.max(1, +document.getElementById('labDefaultFreq').value || 21);
+  const trayRow = _labExtraCols.find(r=>r.role==='tray');
+  if(!trayRow) return 0;
+  const respRow = _labExtraCols.find(r=>r.role==='resp');
+  const freqRow = _labExtraCols.find(r=>r.role==='freq');
+  const dueRow = _labExtraCols.find(r=>r.role==='due');
+  const trayI = trayRow.col;
+  const respI = respRow ? respRow.col : -1;
+  const freqI = freqRow ? freqRow.col : -1;
+  const dueI = dueRow ? dueRow.col : -1;
+  const defaultFreq = freqRow ? freqRow.defaultFreq : 21;
   const today = toLocalDateInput(new Date());
   const groups = new Map();
   dataRows.forEach(r=>{
