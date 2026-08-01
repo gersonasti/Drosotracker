@@ -631,6 +631,14 @@
     border:2px solid var(--pink);border-radius:16px;padding:16px 18px;
     box-shadow:0 18px 46px -10px rgba(20,16,30,.55),0 0 0 5px rgba(243,182,205,.16);
     transition:left .35s ease,top .35s ease}
+  #tourCallout.tour-dragging{transition:none}
+  /* la posición inicial de cada paso se calcula en JS (tourApplyPosition) para todos los
+     anchos de pantalla — así el usuario siempre puede arrastrar el cuadro con #tourDragHandle
+     si tapa lo que está señalando (sobre todo en celular, donde no siempre entra al lado del
+     target); un !important de CSS pisaría ese arrastre. */
+  #tourDragHandle{cursor:grab;touch-action:none;margin:-2px -4px 8px;padding:2px 4px}
+  #tourDragHandle:active{cursor:grabbing}
+  .tour-drag-bar{width:34px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 10px}
   #tourCallout .tour-step{font-size:.72rem;font-weight:700;letter-spacing:.02em;color:var(--ink-soft);margin-bottom:4px}
   #tourCallout h3{font-family:'Poppins',sans-serif;font-size:1.02rem;margin-bottom:6px;color:var(--ink)}
   #tourCallout p{font-size:.86rem;line-height:1.5;color:var(--ink-soft);margin-bottom:14px}
@@ -639,9 +647,6 @@
   #tourCallout .tour-nav .btn{flex:1;justify-content:center;padding:9px 10px;font-size:.86rem}
   #tourSkip{display:block;width:100%;text-align:center;margin-top:10px;background:none;border:none;
     color:var(--ink-soft);font-size:.78rem;text-decoration:underline;cursor:pointer;font-family:inherit}
-  @media (max-width:699px){
-    #tourCallout{left:10px !important;right:10px;bottom:10px;top:auto !important;width:auto;max-width:none}
-  }
 </style>
 </head>
 <body>
@@ -688,6 +693,7 @@
         <div class="menu-pop" id="settingsPop">
           <button onclick="openTutorial()" data-i18n="menu.tutorial" data-tip-key="tip.tutorial">Tutorial</button>
           <button onclick="openAdvancedTutorial()" data-i18n="menu.tutorialAdvanced" data-tip-key="tip.tutorialAdvanced">Advanced tutorial</button>
+          <button id="installMenuBtn" onclick="openInstallNotice()" data-i18n="menu.install" data-tip-key="tip.install">How to install the app</button>
           <div class="menu-sep"></div>
           <button class="set-group" onclick="toggleSetGroup(this)">🌐 <span data-i18n="set.language">Language</span><span class="set-caret">▾</span></button>
           <div class="set-sub">
@@ -1115,8 +1121,11 @@
     </svg>
   </div>
   <div id="tourCallout">
-    <div class="tour-step" id="tourStepCount"></div>
-    <h3 id="tourTitle"></h3>
+    <div id="tourDragHandle">
+      <div class="tour-drag-bar"></div>
+      <div class="tour-step" id="tourStepCount"></div>
+      <h3 id="tourTitle"></h3>
+    </div>
     <p id="tourBody"></p>
     <div class="tour-nav">
       <button type="button" class="btn ghost" id="tourBackBtn" onclick="tourPrev()"></button>
@@ -1182,6 +1191,19 @@
   </div>
 </div>
 
+<!-- Aviso de instalación como PWA: sólo si no se está corriendo ya instalada -->
+<div class="overlay" id="installOverlay" onclick="if(event.target===this)closeInstallNotice()">
+  <div class="modal">
+    <h2 data-i18n="install.title">Install DrosoTracker</h2>
+    <div class="sub" data-i18n="install.sub">Add it to your home screen or desktop for faster access, a full-screen view without the browser bar, and offline access to your saved data.</div>
+    <div class="hint" id="installBody" style="margin-top:4px"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" onclick="closeInstallNotice()" data-i18n="install.later">Not now</button>
+      <button type="button" class="btn" id="installNowBtn" style="display:none" onclick="doInstallPrompt()" data-i18n="install.now">Install now</button>
+    </div>
+  </div>
+</div>
+
 <!-- Confirmación reutilizable (borrar tarjetas / tareas) -->
 <div class="overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm()">
   <div class="modal confirm-modal">
@@ -1193,6 +1215,18 @@
     <div class="modal-actions">
       <button type="button" class="btn ghost" onclick="closeConfirm()" data-i18n="form.cancel">Cancel</button>
       <button type="button" class="btn danger" id="confirmOkBtn" onclick="doConfirm()" data-i18n="confirm.delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Importar backup: sumar a lo que ya hay, o reemplazar todo -->
+<div class="overlay" id="importChoiceOverlay" onclick="if(event.target===this)closeImportChoice()">
+  <div class="modal confirm-modal">
+    <div class="confirm-msg" id="importChoiceMsg"></div>
+    <div class="t50-opts">
+      <button type="button" class="btn" onclick="resolveImportChoice('merge')" data-i18n="import.merge">Add to current records</button>
+      <button type="button" class="btn ghost" onclick="resolveImportChoice('replace')" data-i18n="import.replace">Replace all records</button>
+      <button type="button" class="btn ghost" onclick="closeImportChoice()" data-i18n="form.cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -1228,7 +1262,7 @@ const I18N = {
     'notice.model':'<b>Model update:</b> the development model was recalibrated from published data (Powsner 1935, 16–28 °C). Predicted times shifted a little — mainly, adult emergence is now ~1 day earlier at 20–28 °C, while pupation barely changes. Your saved records already show the updated dates.','notice.dismiss':'Got it',
     'tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
     'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.',
-    'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
+    'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.deletePair':'Delete both parental records of this cross.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
     'foot.tagline':'Tracks the <i>Drosophila melanogaster</i> life cycle, tasks and lifespan.',
@@ -1326,13 +1360,20 @@ const I18N = {
     'al.crossSameSex':'Pick one genotype as females (♀) and the other as males (♂) — a cross needs both.',
     'menu.feedback':'📝 Report a bug / suggest an improvement','tip.feedback':'Opens a short form (no account, no email required) — goes straight to the developer.',
     'al.feedbackNotReady':'This isn\'t wired up yet — coming soon.',
-    'al.cohortN':'Enter a valid initial N of adults.','cf.importReplace':'Importing will replace the {n} current records with {m}. Continue?','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
+    'al.cohortN':'Enter a valid initial N of adults.','import.choiceMsg':'You have {n} current records and the backup has {m}. What do you want to do?','import.merge':'Add to current records','import.replace':'Replace all records','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
     'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','confirm.dontAskAgain':'Don\'t show this again','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
     // tutorial guiado
     'menu.tutorial':'Starter tutorial','tip.tutorial':'An interactive guided tour of the basics: creating a new record (genetic cross example), planning an experiment backward, and comparing cohorts (Kaplan-Meier).',
     'menu.tutorialAdvanced':'Advanced tutorial','tip.tutorialAdvanced':'A guided tour of the less common features: importing/exporting data, Google Calendar sync, sample size, and reporting a bug.',
+    'menu.install':'How to install the app','tip.install':'Add DrosoTracker to your home screen or desktop for faster, full-screen access.',
+    'install.title':'Install DrosoTracker','install.sub':'Add it to your home screen or desktop for faster access, a full-screen view without the browser bar, and offline access to your saved data.',
+    'install.autoBody':'Your browser can install it directly. Tap <b>Install now</b>.',
+    'install.body.ios':'On iPhone/iPad (Safari): tap the <b>Share</b> icon (the square with an arrow, at the bottom of the screen) and choose <b>"Add to Home Screen"</b>.',
+    'install.body.android':'On Android: tap your browser\'s <b>⋮</b> menu (top right) and choose <b>"Install app"</b> or <b>"Add to Home screen"</b>.',
+    'install.body.desktop':'On desktop (Chrome / Edge): look for the install icon in the address bar, or open the browser menu and choose <b>"Install DrosoTracker…"</b>. On Safari (Mac): <b>File → Add to Dock</b>.',
+    'install.later':'Not now','install.now':'Install now',
     'tour.back':'Back','tour.next':'Continue','tour.done':'Got it','tour.skip':'Exit tutorial','tour.count':'Step {i} of {n}',
     'tour.t0':'Welcome to DrosoTracker','tour.b0':'Quick tour: creating a record (genetic cross example), planning an experiment backward, and comparing cohorts with survival curves. You can go back anytime or exit whenever you like. Hit <b>Continue</b> to start.',
     'tour.t1':'Calibrate','tour.b1':'First things first: every line develops a bit faster or slower than the base model. Calibrating is what improves the accuracy of every date you see in the app the most.',
@@ -1379,7 +1420,7 @@ const I18N = {
     'notice.model':'<b>Modelo actualizado:</b> el modelo de desarrollo se recalibró con datos publicados (Powsner 1935, 16–28 °C). Los tiempos estimados cambiaron un poco — sobre todo, la eclosión de adultos se adelanta ~1 día a 20–28 °C, mientras que la pupación casi no cambia. Tus registros guardados ya muestran las fechas actualizadas.','notice.dismiss':'Entendido',
     'tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
     'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.',
-    'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
+    'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.deletePair':'Eliminar los dos registros parentales de esta cruza.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
     'foot.tagline':'Sigue el ciclo de vida, las tareas y la longevidad de <i>Drosophila melanogaster</i>.',
@@ -1467,13 +1508,20 @@ const I18N = {
     'al.crossSameSex':'Elegí un genotipo como hembras (♀) y el otro como machos (♂) — una cruza necesita los dos.',
     'menu.feedback':'📝 Reportar un error / sugerir una mejora','tip.feedback':'Abre un formulario corto (sin cuenta, sin pedir tu mail) — llega directo al desarrollador.',
     'al.feedbackNotReady':'Todavía no está conectado — pronto va a estar.',
-    'al.cohortN':'Ingresá un N inicial válido de adultos.','cf.importReplace':'Importar reemplazará los {n} registros actuales por {m}. ¿Continuar?','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
+    'al.cohortN':'Ingresá un N inicial válido de adultos.','import.choiceMsg':'Tenés {n} registros cargados y el backup trae {m}. ¿Qué querés hacer?','import.merge':'Sumar a los registros actuales','import.replace':'Reemplazar todos los registros','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
     'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','confirm.dontAskAgain':'No volver a mostrar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
     // tutorial guiado
     'menu.tutorial':'Tutorial inicial','tip.tutorial':'Un recorrido interactivo por lo básico: crear un registro nuevo (con el ejemplo de una cruza genética), planificar un experimento hacia atrás, y comparar cohortes (Kaplan-Meier).',
     'menu.tutorialAdvanced':'Tutorial avanzado','tip.tutorialAdvanced':'Un recorrido guiado por las funciones menos frecuentes: importar/exportar datos, sincronización con Google Calendar, tamaño muestral, y cómo reportar un error.',
+    'menu.install':'¿Cómo instalar la app?','tip.install':'Agregá DrosoTracker a tu pantalla de inicio o escritorio para un acceso más rápido, a pantalla completa.',
+    'install.title':'Instalá DrosoTracker','install.sub':'Agregala a tu pantalla de inicio o escritorio para un acceso más rápido, pantalla completa sin la barra del navegador, y que tus datos guardados sigan disponibles sin conexión.',
+    'install.autoBody':'Tu navegador ya te la puede instalar directo. Tocá <b>Instalar ahora</b>.',
+    'install.body.ios':'En iPhone/iPad (Safari): tocá el ícono <b>Compartir</b> (el cuadrado con la flecha hacia arriba, abajo de la pantalla) y elegí <b>«Agregar a pantalla de inicio»</b>.',
+    'install.body.android':'En Android: tocá el menú <b>⋮</b> de tu navegador (arriba a la derecha) y elegí <b>«Instalar app»</b> o <b>«Agregar a pantalla de inicio»</b>.',
+    'install.body.desktop':'En la computadora (Chrome / Edge): buscá el ícono de instalar en la barra de direcciones, o abrí el menú del navegador y elegí <b>«Instalar DrosoTracker…»</b>. En Safari (Mac): menú <b>Archivo → Agregar al Dock</b>.',
+    'install.later':'Ahora no','install.now':'Instalar ahora',
     'tour.back':'Atrás','tour.next':'Continuar','tour.done':'Entendido','tour.skip':'Salir del tutorial','tour.count':'Paso {i} de {n}',
     'tour.t0':'Bienvenido a DrosoTracker','tour.b0':'Te muestro rápido cómo crear un registro (ejemplo de cruza genética), planificar un experimento hacia atrás, y comparar cohortes con curvas de supervivencia. Podés volver atrás cuando quieras o salir en cualquier momento. Tocá <b>Continuar</b> para arrancar.',
     'tour.t1':'Calibrar','tour.b1':'Antes que nada: cada línea se desarrolla un poco más rápido o más lento que el modelo base. Calibrar es lo que más mejora la precisión de las fechas que ves en toda la app.',
@@ -1679,10 +1727,10 @@ function tourApplyPosition(){
      renderizado) se trata como si no hubiera target, en vez de mal-posicionar
      el cursor en la esquina superior izquierda de la pantalla. */
   if(target){ const rr = target.getBoundingClientRect(); if(!rr.width && !rr.height) target = null; }
+  const cw = callout.offsetWidth || 300, ch = callout.offsetHeight || 200, margin = 16;
   if(!target){
     dim.style.opacity = '0';
     cursor.style.opacity = '0';
-    const cw = callout.offsetWidth || 300, ch = callout.offsetHeight || 200;
     callout.style.left = Math.round((window.innerWidth-cw)/2) + 'px';
     callout.style.top = Math.round((window.innerHeight-ch)/2) + 'px';
     return;
@@ -1697,16 +1745,49 @@ function tourApplyPosition(){
   cursor.style.opacity = '1';
   cursor.style.left = Math.round(Math.max(edge, Math.min(r.left-14, window.innerWidth-58-edge))) + 'px';
   cursor.style.top = Math.round(Math.max(edge, Math.min(r.top-10, window.innerHeight-58-edge))) + 'px';
+  let left, top;
   if(window.innerWidth >= 700){
-    const cw = 300, chGuess = callout.offsetHeight || 200, margin = 16;
-    let left = r.right + 26;
+    left = r.right + 26;
     if(left + cw + margin > window.innerWidth) left = r.left - cw - 26;
     left = Math.max(margin, Math.min(left, window.innerWidth - cw - margin));
-    let top = Math.max(margin, Math.min(r.top, window.innerHeight - chGuess - margin));
+    top = Math.max(margin, Math.min(r.top, window.innerHeight - ch - margin));
+  } else {
+    /* en celular casi nunca entra al lado del target: por defecto lo apoyamos abajo,
+       centrado — el usuario puede arrastrarlo (#tourDragHandle) si aun así tapa algo. */
+    left = Math.max(margin, Math.min((window.innerWidth-cw)/2, window.innerWidth - cw - margin));
+    top = Math.max(margin, window.innerHeight - ch - margin);
+  }
+  callout.style.left = Math.round(left) + 'px';
+  callout.style.top = Math.round(top) + 'px';
+}
+/* Arrastrar el comentario del tour por #tourDragHandle (Pointer Events: mouse y touch
+   con el mismo código). Sobre todo pensado para celular, donde el cuadro a veces tapa
+   justo lo que señala y no hay lugar para reacomodarlo solo. */
+(function(){
+  const handle = document.getElementById('tourDragHandle');
+  const callout = document.getElementById('tourCallout');
+  let dragging = false, startX = 0, startY = 0, baseLeft = 0, baseTop = 0;
+  handle.addEventListener('pointerdown', e=>{
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    const r = callout.getBoundingClientRect();
+    baseLeft = r.left; baseTop = r.top;
+    callout.classList.add('tour-dragging');
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const margin = 8;
+    const cw = callout.offsetWidth, ch = callout.offsetHeight;
+    const left = Math.max(margin, Math.min(baseLeft + (e.clientX-startX), window.innerWidth - cw - margin));
+    const top = Math.max(margin, Math.min(baseTop + (e.clientY-startY), window.innerHeight - ch - margin));
     callout.style.left = Math.round(left) + 'px';
     callout.style.top = Math.round(top) + 'px';
-  }
-}
+  });
+  const stopDrag = ()=>{ dragging = false; callout.classList.remove('tour-dragging'); };
+  handle.addEventListener('pointerup', stopDrag);
+  handle.addEventListener('pointercancel', stopDrag);
+})();
 function tourRender(){
   const i = _tourStep, n = _tourSteps.length, step = _tourSteps[i];
   document.getElementById('tourStepCount').textContent = t('tour.count', {i:i+1, n});
@@ -1759,6 +1840,8 @@ function toggleSetGroup(btn){
 function updateSettingsUI(){
   document.querySelectorAll('#settingsPop [data-lang]').forEach(b=> b.classList.toggle('active', b.dataset.lang===lang));
   document.querySelectorAll('#settingsPop [data-mode]').forEach(b=> b.classList.toggle('active', b.dataset.mode===mode));
+  const installBtn = document.getElementById('installMenuBtn');
+  if(installBtn) installBtn.style.display = isStandalonePWA() ? 'none' : '';
 }
 function applyThemeColor(){
   const tc = document.querySelector('meta[name="theme-color"]');
@@ -2850,7 +2933,10 @@ function pairCard(female, male){
   return `<div class="card pair-card" id="card-${female.pairId}">
     <div class="pair-head">
       <span class="pair-title">${esc(female.genotype)} × ${esc(male.genotype)}</span>
-      <button class="timeline-btn act-lav" onclick="mountCross('${female.pairId}')">${t('cross.mountBtn')}</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="timeline-btn act-lav" onclick="mountCross('${female.pairId}')">${t('cross.mountBtn')}</button>
+        <button class="icon-btn" data-tip="${esc(t('tip.deletePair'))}" onclick="delCrossPair('${female.pairId}')">✕</button>
+      </div>
     </div>
     <div class="pair-body">
       ${pairMiniBlock(female, t('cross.female'))}
@@ -3583,6 +3669,7 @@ function exportJSON(){
     `drosotracker-backup-${new Date().toISOString().slice(0,10)}.json`);
   closeMenu();
 }
+let _pendingImportData = null;
 function importJSON(e){
   const f = e.target.files[0]; if(!f) return;
   const r = new FileReader();
@@ -3591,7 +3678,7 @@ function importJSON(e){
       const data = JSON.parse(r.result);
       if(!Array.isArray(data)) throw new Error(t('err.notList'));
       if(data.length===0) throw new Error(t('err.empty'));
-      // validar cada entrada ANTES de reemplazar nada (evita romper la app con un backup dañado)
+      // validar cada entrada ANTES de tocar nada (evita romper la app con un backup dañado)
       const isValid = c => c && typeof c==='object'
         && typeof c.genotype==='string' && c.genotype.trim()!==''
         && typeof c.crossDate==='string'
@@ -3599,18 +3686,37 @@ function importJSON(e){
         && typeof c.temp==='number' && isFinite(c.temp);
       const bad = data.filter(c=>!isValid(c)).length;
       if(bad>0) throw new Error(t('err.badFormat',{bad, total:data.length}));
-      if(crosses.length && !confirm(t('cf.importReplace',{n:crosses.length, m:data.length}))) return;
       // completar campos no críticos que pudieran faltar
       data.forEach(c=>{
         if(!c.id) c.id = 'c'+Date.now()+Math.random().toString(36).slice(2,5);
         if(typeof c.parentsRemoved!=='boolean') c.parentsRemoved = false;
       });
-      crosses = data; save(crosses); render();
-      alert(t('al.imported',{n:data.length}));
+      if(crosses.length){
+        _pendingImportData = data;
+        document.getElementById('importChoiceMsg').textContent = t('import.choiceMsg',{n:crosses.length, m:data.length});
+        document.getElementById('importChoiceOverlay').classList.add('open');
+      } else {
+        crosses = data; save(crosses); render();
+        alert(t('al.imported',{n:data.length}));
+      }
     }catch(err){ alert(t('al.importFail',{e:err.message})); }
   };
   r.readAsText(f);
   e.target.value=''; closeMenu();
+}
+function closeImportChoice(){ document.getElementById('importChoiceOverlay').classList.remove('open'); _pendingImportData = null; }
+function resolveImportChoice(mode){
+  const data = _pendingImportData; if(!data) return;
+  closeImportChoice();
+  if(mode==='merge'){
+    // nuevos ids para los que llegan: evita cualquier choque con los ids ya presentes
+    data.forEach(c=> c.id = 'c'+Date.now()+Math.random().toString(36).slice(2,5));
+    crosses = crosses.concat(data);
+  } else {
+    crosses = data;
+  }
+  save(crosses); render();
+  alert(t('al.imported',{n:data.length}));
 }
 /* Exportar/Importar la calibración (observaciones crudas + referencia wild-type del lab) para
    compartirla entre integrantes del mismo laboratorio. Cada uno la abre en su propio dispositivo
@@ -4264,6 +4370,17 @@ function delCross(id){
     save(crosses); render();
   });
 }
+/* Borra las DOS mitades (♀/♂) de una cruza sin montar todavía, de una — evita tener que
+   borrar cada tarjeta parental por separado. */
+function delCrossPair(pairId){
+  const pair = crosses.filter(c=>c.pairId===pairId); if(!pair.length) return;
+  const female = pair.find(c=>c.pairRole==='female'), male = pair.find(c=>c.pairRole==='male');
+  const label = female && male ? female.genotype+' × '+male.genotype : pair[0].genotype;
+  askConfirm(t('cf.deleteCross',{name:label}), ()=>{
+    crosses = crosses.filter(c=>c.pairId!==pairId);
+    save(crosses); render();
+  });
+}
 /* Vaciar todos los registros (acción destructiva → confirma). Conserva la base del lab
    y las calibraciones por genotipo; limpia lo que queda huérfano (notificados/tareas hechas). */
 function clearAllRecords(){
@@ -4295,7 +4412,7 @@ document.getElementById('planOverlay').addEventListener('click',e=>{
 document.getElementById('labOverlay').addEventListener('click',e=>{
   if(e.target.id==='labOverlay') closeLabModal();
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); closeImportChoice(); closeInstallNotice(); } });
 /* cerrar el menú de datos al click fuera. Mientras el tutorial está activo, el propio motor
    del tour controla cuándo el menú "Más ▾" se abre y se cierra (ver tourResetToBaseline) —
    sin esta guarda, el click en "Continuar"/"Atrás" del tour burbujea hasta acá y cierra el
@@ -4319,6 +4436,70 @@ function renderModelNotice(){
 }
 function dismissModelNotice(){ localStorage.setItem(MODEL_NOTICE_KEY, '1'); renderModelNotice(); }
 
+/* ============================================================
+   Aviso de instalación como PWA: se muestra una sola vez (descartable) si la app se está
+   usando desde el navegador y todavía no está instalada. Si el navegador ofrece el prompt
+   nativo (beforeinstallprompt — Chrome/Edge, escritorio y Android), un botón lo dispara
+   directo; si no (Safari/iOS, Firefox), se explican los pasos manuales según plataforma.
+   Nunca compite con la apertura automática del tutorial inicial en la primera visita. ============================================================ */
+const INSTALL_NOTICE_KEY = 'drosotrack.installnotice.v1';
+let _deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  if(document.getElementById('installOverlay').classList.contains('open')) renderInstallBody();
+});
+window.addEventListener('appinstalled', ()=>{
+  _deferredInstallPrompt = null;
+  localStorage.setItem(INSTALL_NOTICE_KEY, '1');
+  updateSettingsUI();
+});
+function isStandalonePWA(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function installPlatform(){
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  if(isIOS) return 'ios';
+  if(/Android/.test(ua)) return 'android';
+  return 'desktop';
+}
+function renderInstallBody(){
+  const body = document.getElementById('installBody');
+  const btn = document.getElementById('installNowBtn');
+  if(_deferredInstallPrompt){
+    btn.style.display = '';
+    body.innerHTML = t('install.autoBody');
+  } else {
+    btn.style.display = 'none';
+    body.innerHTML = t('install.body.'+installPlatform());
+  }
+}
+function openInstallNotice(){
+  document.getElementById('settingsPop').classList.remove('open');
+  renderInstallBody();
+  document.getElementById('installOverlay').classList.add('open');
+}
+function closeInstallNotice(){
+  const ov = document.getElementById('installOverlay');
+  if(!ov.classList.contains('open')) return;
+  ov.classList.remove('open');
+  localStorage.setItem(INSTALL_NOTICE_KEY, '1');
+}
+async function doInstallPrompt(){
+  if(!_deferredInstallPrompt) return;
+  _deferredInstallPrompt.prompt();
+  try{ await _deferredInstallPrompt.userChoice; }catch(e){}
+  _deferredInstallPrompt = null;
+  closeInstallNotice();
+}
+function maybeAutoShowInstallNotice(){
+  if(isStandalonePWA()) return;
+  if(localStorage.getItem(INSTALL_NOTICE_KEY)) return;
+  if(!localStorage.getItem(TUTORIAL_KEY) && !crosses.length) return;   // no competir con el tutorial en la primera visita
+  openInstallNotice();
+}
+
 /* refrescar periódicamente para que los recordatorios estén al día,
    sin redibujar (y borrar) lo que se está escribiendo en un campo */
 function autoRender(){
@@ -4336,6 +4517,7 @@ rebuildAutocompleteCache();
 render();
 renderModelNotice();
 if(!localStorage.getItem(TUTORIAL_KEY) && !crosses.length) openTutorial();
+else maybeAutoShowInstallNotice();
 setInterval(autoRender, 60000);
 
 /* ---- Tooltips propios: hover (desktop) o mantener apretado (touch) ----
