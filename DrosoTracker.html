@@ -715,7 +715,6 @@
       </div>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(event)" />
       <input type="file" id="labFile" accept=".csv,.tsv,.tab,.txt,text/csv,text/tab-separated-values,text/plain" style="display:none" onchange="importLabDB(event)" />
-      <input type="file" id="taskImportFile" accept=".csv,.tsv,.tab,.txt,text/csv,text/tab-separated-values,text/plain" style="display:none" onchange="importTasksFile(event)" />
     </div>
   </header>
 
@@ -993,7 +992,7 @@
 <!-- Modal importar base de genotipos del laboratorio -->
 <div class="overlay" id="labOverlay">
   <div class="modal">
-    <h2 data-i18n="lab.title">Import genotype database</h2>
+    <h2 data-i18n="lab.title">Import lab database</h2>
     <div class="sub" id="labSub"></div>
     <div class="field">
       <label for="labCol" data-i18n="lab.col">Which column has the genotype?</label>
@@ -1004,9 +1003,41 @@
       <label data-i18n="lab.preview">Preview</label>
       <div class="lab-preview" id="labPreview"></div>
     </div>
+    <div class="menu-sep"></div>
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:9px;font-weight:700;cursor:pointer">
+        <input type="checkbox" id="labStockToggle" onchange="toggleLabStockFields()" style="width:auto" />
+        <span data-i18n="lab.stockToggle">This sheet also has stock trays to flip</span>
+      </label>
+      <div class="hint" data-i18n="lab.stockHint">Creates or updates recurring flip tasks (responsible + schedule) from the same file — matched by tray name, so re-importing later updates them instead of duplicating.</div>
+    </div>
+    <div id="labStockFields" style="display:none">
+      <div class="field">
+        <label for="labColTray" data-i18n="rti.colTitle">Which column is the tray or task name?</label>
+        <select id="labColTray"></select>
+      </div>
+      <div class="field">
+        <label for="labColResp" data-i18n="rti.colResp">Which column is the responsible person? (optional)</label>
+        <select id="labColResp"></select>
+        <div class="hint" data-i18n="rti.colRespHint">If a cell has more than one name (comma-separated), they'll take turns.</div>
+      </div>
+      <div class="field">
+        <label for="labColFreq" data-i18n="rti.colFreq">Which column has the frequency, in days? (optional)</label>
+        <select id="labColFreq" onchange="onLabColFreqChange()"></select>
+        <div class="field" id="labDefaultFreqRow" style="margin-top:8px">
+          <label for="labDefaultFreq" data-i18n="rti.defaultFreq">Default frequency for rows without one (days)</label>
+          <input id="labDefaultFreq" type="number" min="1" step="1" value="21" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="labColDue" data-i18n="rti.colDue">Which column has the next due date? (optional)</label>
+        <select id="labColDue"></select>
+        <div class="hint" data-i18n="rti.colDueHint">Rows without a usable date start counting from today.</div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button type="button" class="btn ghost" onclick="closeLabModal()" data-i18n="lab.cancel">Cancel</button>
-      <button type="button" class="btn" onclick="confirmLabImport()" data-i18n="lab.import">Import genotypes</button>
+      <button type="button" class="btn" onclick="confirmLabImport()" data-i18n="lab.import">Import</button>
     </div>
   </div>
 </div>
@@ -1014,11 +1045,10 @@
 <!-- Listado de tareas recurrentes (repiques, etc.) -->
 <div class="overlay" id="recTaskListOverlay">
   <div class="modal">
-    <h2 data-i18n="rt.listTitle">Recurring tasks</h2>
-    <div class="sub" data-i18n="rt.listSub">Chores that repeat on a schedule (stock flips, cleaning…), each with its own responsible person(s).</div>
+    <h2 data-i18n="rt.listTitle">Create task</h2>
+    <div class="sub" data-i18n="rt.listSub">Chores that repeat on a schedule (stock flips, cleaning…), each with its own responsible person(s). Create one by hand, or import a whole sheet from "Import lab database".</div>
     <div id="recTaskListBox"></div>
     <div class="modal-actions" style="flex-wrap:wrap">
-      <button type="button" class="btn ghost" onclick="document.getElementById('taskImportFile').click()" data-i18n="rt.importBtn">⬆ Import from Excel</button>
       <button type="button" class="btn" onclick="openRecTaskForm()" data-i18n="rt.newBtn">+ New task</button>
     </div>
     <div class="modal-actions" style="margin-top:0">
@@ -1043,7 +1073,7 @@
         <textarea id="rtDesc" rows="2" maxlength="300" data-i18n-ph="rt.descPh" placeholder="What needs to be done"></textarea>
       </div>
       <div class="field">
-        <div class="lbl-row"><label for="respInput" data-i18n="rt.responsibles">Responsible person(s) *</label><span class="qh" data-tip-key="rt.respHint">?</span></div>
+        <div class="lbl-row"><label for="respInput" data-i18n="rt.responsibles">Responsible person(s)</label><span class="qh" data-tip-key="rt.respHint">?</span></div>
         <div class="tags-input" id="respBox" onclick="document.getElementById('respInput').focus()">
           <input id="respInput" list="respList" autocomplete="off" data-i18n-ph="rt.respPh" placeholder="e.g. Juan…" onkeydown="respInputKey(event)" />
         </div>
@@ -1070,44 +1100,6 @@
         <button type="submit" class="btn" data-i18n="rt.save">Save task</button>
       </div>
     </form>
-  </div>
-</div>
-
-<!-- Importar tareas recurrentes desde Excel/CSV, con mapeo de columnas -->
-<div class="overlay" id="taskImportOverlay">
-  <div class="modal">
-    <h2 data-i18n="rti.title">Import recurring tasks</h2>
-    <div class="sub" id="rtiSub"></div>
-    <div class="field">
-      <label for="rtiCol" data-i18n="rti.colTitle">Which column is the task title?</label>
-      <select id="rtiCol" onchange="renderTaskImportPreview()"></select>
-    </div>
-    <div class="field">
-      <label for="rtiColResp" data-i18n="rti.colResp">Which column is the responsible person?</label>
-      <select id="rtiColResp" onchange="renderTaskImportPreview()"></select>
-      <div class="hint" data-i18n="rti.colRespHint">If a cell has more than one name (comma-separated), they'll take turns.</div>
-    </div>
-    <div class="field">
-      <label for="rtiColFreq" data-i18n="rti.colFreq">Which column has the frequency, in days? (optional)</label>
-      <select id="rtiColFreq" onchange="renderTaskImportPreview()"></select>
-      <div class="field" id="rtiDefaultFreqRow" style="margin-top:8px">
-        <label for="rtiDefaultFreq" data-i18n="rti.defaultFreq">Default frequency for rows without one (days)</label>
-        <input id="rtiDefaultFreq" type="number" min="1" step="1" value="21" />
-      </div>
-    </div>
-    <div class="field">
-      <label for="rtiColDue" data-i18n="rti.colDue">Which column has the next due date? (optional)</label>
-      <select id="rtiColDue"></select>
-      <div class="hint" data-i18n="rti.colDueHint">Rows without a usable date start counting from today.</div>
-    </div>
-    <div class="field">
-      <label data-i18n="lab.preview">Preview</label>
-      <div class="lab-preview" id="rtiPreview"></div>
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn ghost" onclick="closeTaskImport()" data-i18n="lab.cancel">Cancel</button>
-      <button type="button" class="btn" onclick="confirmTaskImport()" data-i18n="rti.import">Import tasks</button>
-    </div>
   </div>
 </div>
 
@@ -1354,7 +1346,7 @@ const I18N = {
     'hdr.plan':'Plan','hdr.data':'⇅ Data','hdr.more':'More ▾','hdr.newCross':'New record','hdr.settings':'Settings',
     'brand.sub':'We track the life cycle, not behaviour.','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Export backup (JSON)','menu.importBackup':'⬆ Import backup',
-    'menu.exportSurvival':'Export survival (CSV)','menu.importLab':'🧬 Import lab genotype database','menu.recTasks':'🔁 Recurring tasks',
+    'menu.exportSurvival':'Export survival (CSV)','menu.importLab':'🧬 Import lab database','menu.recTasks':'🔁 Create task',
     'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Clear all records','tip.clearAll':'Delete every record at once (keeps your lab database and calibrations).',
     'gcal.menu':'<img src="gcal-icon.png" class="menu-ico" alt=""> Google Calendar','tip.gcal':'Sync your tasks and eclosions to your Google Calendar so it reminds you natively, even with the app closed.',
     'gcal.title':'Google Calendar','gcal.desc':'Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively — even with the app closed.',
@@ -1365,7 +1357,7 @@ const I18N = {
     'set.language':'Language','set.english':'English','set.spanish':'Español','set.appearance':'Appearance','set.light':'Light','set.dark':'Dark',
     'notice.model':'<b>Model update:</b> the development model was recalibrated from published data (Powsner 1935, 16–28 °C). Predicted times shifted a little — mainly, adult emergence is now ~1 day earlier at 20–28 °C, while pupation barely changes. Your saved records already show the updated dates.','notice.dismiss':'Got it',
     'tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
-    'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes.','tip.recTasks':'Chores that repeat on a schedule (stock flips, cleaning…) with a responsible person — create them by hand or import them from your lab\'s spreadsheet.',
+    'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes — the same file can also set up stock-tray flip tasks if it has the columns for it.','tip.recTasks':'Create or manage chores that repeat on a schedule (stock flips, cleaning…) with a responsible person who can rotate.',
     'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.deletePair':'Delete both parental records of this cross.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
@@ -1457,18 +1449,19 @@ const I18N = {
     'agm.title':'Log flip / count','agm.date':'Check date and time','agm.deaths':'Dead flies at this check','agm.censored':'Censored (escaped, stuck, accidents)',
     'agm.censoredHint':'Removed from the at-risk group without counting as deaths (Kaplan-Meier).','agm.flip':'Flipped the cohort to fresh food','agm.note':'Note (optional)','agm.notePh':'e.g. females, 2 vials','agm.sub':'{geno} · cohort day {d}',
     // importar base del lab
-    'lab.title':'Import genotype database','lab.col':'Which column has the genotype?','lab.colHint':'The first row is assumed to be the column headers.','lab.preview':'Preview','lab.cancel':'Cancel','lab.import':'Import genotypes',
-    'lab.sub':'{file} · {n} rows. Pick the genotype column and confirm.','lab.noCol':'The selected column has no genotypes.','lab.loaded':'Lab database: {n} genotypes','lab.clear':'Clear','lab.colN':'Column {n}','err.labFormat':'Expected a header row + at least one data row.',
+    'lab.title':'Import lab database','lab.col':'Which column has the genotype?','lab.colHint':'The first row is assumed to be the column headers.','lab.preview':'Preview','lab.cancel':'Cancel','lab.import':'Import',
+    'lab.sub':'{file} · {n} rows. Pick the genotype column below.','lab.noCol':'The selected column has no genotypes.','lab.loaded':'Lab database: {n} genotypes','lab.clear':'Clear','lab.colN':'Column {n}','err.labFormat':'Expected a header row + at least one data row.',
+    'lab.stockToggle':'This sheet also has stock trays to flip','lab.stockHint':'Creates or updates recurring flip tasks (responsible + schedule) from the same file — matched by tray name, so re-importing later updates them instead of duplicating.',
     // tareas recurrentes (repiques, etc.)
-    'rt.listTitle':'Recurring tasks','rt.listSub':'Chores that repeat on a schedule (stock flips, cleaning…), each with its own responsible person(s).','rt.empty':'No recurring tasks yet.','rt.importBtn':'⬆ Import from Excel','rt.newBtn':'+ New task','rt.close':'Close','rt.every':'Every {n} d','rt.count':'{n} recurring task(s)',
+    'rt.listTitle':'Create task','rt.listSub':'Chores that repeat on a schedule (stock flips, cleaning…), each with its own responsible person(s). Create one by hand, or import a whole sheet from "Import lab database".','rt.empty':'No recurring tasks yet.','rt.newBtn':'+ New task','rt.close':'Close','rt.every':'Every {n} d','rt.count':'{n} recurring task(s)',
     'rt.newTitle':'New recurring task','rt.editTitle':'Edit recurring task','rt.formSub':'E.g. flipping a stock tray, cleaning the incubator — anything that repeats on a schedule.',
     'rt.title':'Task title *','rt.titlePh':'e.g. Autophagy tray','rt.desc':'Description <span class="opt">(optional)</span>','rt.descPh':'What needs to be done',
-    'rt.responsibles':'Responsible person(s) *','rt.respHint':'Add one name, or several if they take turns.','rt.respPh':'e.g. Juan…','rt.respHintText':'If you add more than one, they take turns in that order each time the task is marked done.',
+    'rt.responsibles':'Responsible person(s)','rt.respHint':'Add one name, or several if they take turns.','rt.respPh':'e.g. Juan…','rt.respHintText':'Optional. If you add more than one, they take turns in that order each time the task is marked done.','rt.noResp':'No one assigned',
     'rt.freq':'Repeats every (days) *','rt.nextDue':'Next due date *','rt.save':'Save task','rt.rotates':'rotates among {n}',
     'rt.overdue':'Overdue {d} d','rt.dueToday':'Due today','rt.dueSoon':'In {h}',
-    'rti.title':'Import recurring tasks','rti.sub':'{file} · {n} rows. Map the columns below and confirm.','rti.colTitle':'Which column is the task title?','rti.colResp':'Which column is the responsible person?','rti.colRespHint':'If a cell has more than one name (comma-separated), they\'ll take turns.',
-    'rti.colFreq':'Which column has the frequency, in days? (optional)','rti.defaultFreq':'Default frequency for rows without one (days)','rti.colDue':'Which column has the next due date? (optional)','rti.colDueHint':'Rows without a usable date start counting from today.','rti.none':'— None','rti.import':'Import tasks','rti.noneImported':'No valid rows found (need at least a title and a responsible person).',
-    'al.rtNeedsResp':'Add at least one responsible person.','cf.deleteRecTask':'Delete this recurring task? This can\'t be undone.','al.tasksImported':'Imported {n} recurring task(s).',
+    'rti.colTitle':'Which column is the tray or task name?','rti.colResp':'Which column is the responsible person? (optional)','rti.colRespHint':'If a cell has more than one name (comma-separated), they\'ll take turns.',
+    'rti.colFreq':'Which column has the frequency, in days? (optional)','rti.defaultFreq':'Default frequency for rows without one (days)','rti.colDue':'Which column has the next due date? (optional)','rti.colDueHint':'Rows without a usable date start counting from today.','rti.none':'— None',
+    'cf.deleteRecTask':'Delete this recurring task? This can\'t be undone.','al.stockFromLab':'Also saved {n} stock task(s) (flip schedule, etc.).',
     'ac.comp':'common','ac.stock':'stock',
     // alertas / confirmaciones / notificaciones
     'al.crossSameSex':'Pick one genotype as females (♀) and the other as males (♂) — a cross needs both.',
@@ -1507,7 +1500,8 @@ const I18N = {
     'tour.demoA':'Canton-S, Condition 1 (example)','tour.demoB':'Canton-S, Condition 2 (example)',
     'tour.demoFemale':'w[1118] (example)','tour.demoMale':'UAS-GFP / CyO (example)',
     'tourA.t0':'Advanced tutorial','tourA.b0':'This tour covers less common but useful features: importing your lab\'s genotype database, syncing with Google Calendar, making backups, exporting survival data, planning sample size, and how to report a problem. Hit <b>Continue</b> to start.',
-    'tourA.t1':'Import lab genotype database','tourA.b1':'Upload a CSV/TSV with the genotypes your lab uses so they autocomplete when typing in any genotype field. You choose which column holds the genotype; the rest of the file is ignored.',
+    'tourA.t1':'Import lab database','tourA.b1':'Upload a CSV/TSV with the genotypes your lab uses so they autocomplete when typing in any genotype field. You choose which column holds the genotype. If the same sheet also lists stock trays (tray name, responsible, how often to flip them), tick "This sheet also has stock trays" to create those as recurring tasks too — the rest of the columns are ignored.',
+    'tourA.t1b':'Create task','tourA.b1b':'Prefer to set one up by hand instead of importing a sheet? "Create task" opens the same list, where you can add a chore with a title, one or more responsible people (they take turns if there\'s more than one), and how often it repeats.',
     'tourA.t2':'Google Calendar','tourA.b2':'Sync your tasks and estimated eclosions to your Google Calendar, so you get native reminders even with the app closed.',
     'tourA.t3':'Connect Google Calendar','tourA.b3':'Once connected, DrosoTracker creates one event per upcoming task/eclosion and keeps them updated; marking a task done here deletes its event (and vice versa). Disconnecting stops syncing but keeps the events already created.',
     'tourA.t4':'Import backup','tourA.b4':'Load a JSON backup exported earlier (from this device or another one). Careful: it replaces all current records, it doesn\'t add to them.',
@@ -1522,7 +1516,7 @@ const I18N = {
     'hdr.plan':'Planificar','hdr.data':'⇅ Datos','hdr.more':'Más ▾','hdr.newCross':'Nuevo registro','hdr.settings':'Ajustes',
     'brand.sub':'Trackeamos el ciclo de vida, no comportamiento.','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Exportar backup (JSON)','menu.importBackup':'⬆ Importar backup',
-    'menu.exportSurvival':'Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base de genotipos del lab','menu.recTasks':'🔁 Tareas recurrentes',
+    'menu.exportSurvival':'Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base del lab','menu.recTasks':'🔁 Crear tarea',
     'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Vaciar registros','tip.clearAll':'Borra todos los registros de una (conserva la base del lab y las calibraciones).',
     'gcal.menu':'<img src="gcal-icon.png" class="menu-ico" alt=""> Google Calendar','tip.gcal':'Sincronizá tus tareas y eclosiones con tu Google Calendar para que te avise de forma nativa, aun con la app cerrada.',
     'gcal.title':'Google Calendar','gcal.desc':'Empujá tus tareas y eclosiones estimadas a tu Google Calendar para que te avise de forma nativa — aun con la app cerrada.',
@@ -1533,7 +1527,7 @@ const I18N = {
     'set.language':'Idioma','set.english':'English','set.spanish':'Español','set.appearance':'Apariencia','set.light':'Claro','set.dark':'Oscuro',
     'notice.model':'<b>Modelo actualizado:</b> el modelo de desarrollo se recalibró con datos publicados (Powsner 1935, 16–28 °C). Los tiempos estimados cambiaron un poco — sobre todo, la eclosión de adultos se adelanta ~1 día a 20–28 °C, mientras que la pupación casi no cambia. Tus registros guardados ya muestran las fechas actualizadas.','notice.dismiss':'Entendido',
     'tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
-    'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos.','tip.recTasks':'Tareas que se repiten con una frecuencia (repiques de bandejas, limpieza…) con un responsable — creálas a mano o importalas desde la planilla de tu lab.',
+    'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos — el mismo archivo también puede armar las tareas de repique de bandejas si tiene esas columnas.','tip.recTasks':'Creá o gestioná tareas que se repiten con una frecuencia (repique de bandejas, limpieza…) con un responsable que puede rotar.',
     'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.deletePair':'Eliminar los dos registros parentales de esta cruza.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
@@ -1616,18 +1610,19 @@ const I18N = {
     'plan.rPast':'⚠ Esa fecha ya pasó: no llegás a tiempo a esa temperatura.','plan.rUpdate':'✓ Actualizar registro planificado','plan.rCreate':'+ Crear registro con esta fecha',
     'agm.title':'Registrar pase / conteo','agm.date':'Fecha y hora del control','agm.deaths':'Moscas muertas en este control','agm.censored':'Censuradas (escapadas, pegadas, accidentes)',
     'agm.censoredHint':'Se descuentan del grupo en riesgo sin contar como muerte (Kaplan-Meier).','agm.flip':'Pasé la cohorte a comida fresca','agm.note':'Nota (opcional)','agm.notePh':'ej. hembras, 2 viales','agm.sub':'{geno} · día {d} de cohorte',
-    'lab.title':'Importar base de genotipos','lab.col':'¿Qué columna tiene el genotipo?','lab.colHint':'Se asume que la primera fila son los títulos de las columnas.','lab.preview':'Vista previa','lab.cancel':'Cancelar','lab.import':'Importar genotipos',
-    'lab.sub':'{file} · {n} filas. Elegí la columna del genotipo y confirmá.','lab.noCol':'La columna elegida no tiene genotipos.','lab.loaded':'Base del lab: {n} genotipos','lab.clear':'Borrar','lab.colN':'Columna {n}','err.labFormat':'Se espera una fila de títulos + al menos una fila de datos.',
+    'lab.title':'Importar base del lab','lab.col':'¿Qué columna tiene el genotipo?','lab.colHint':'Se asume que la primera fila son los títulos de las columnas.','lab.preview':'Vista previa','lab.cancel':'Cancelar','lab.import':'Importar',
+    'lab.sub':'{file} · {n} filas. Elegí la columna del genotipo abajo.','lab.noCol':'La columna elegida no tiene genotipos.','lab.loaded':'Base del lab: {n} genotipos','lab.clear':'Borrar','lab.colN':'Columna {n}','err.labFormat':'Se espera una fila de títulos + al menos una fila de datos.',
+    'lab.stockToggle':'Esta planilla también tiene bandejas de stock para repicar','lab.stockHint':'Crea o actualiza tareas de repique (responsable + frecuencia) desde el mismo archivo — se emparejan por nombre de bandeja, así que reimportar más adelante las actualiza en vez de duplicarlas.',
     // tareas recurrentes (repiques, etc.)
-    'rt.listTitle':'Tareas recurrentes','rt.listSub':'Tareas que se repiten con una frecuencia (repique de bandejas, limpieza…), cada una con su/s responsable/s.','rt.empty':'Todavía no hay tareas recurrentes.','rt.importBtn':'⬆ Importar desde Excel','rt.newBtn':'+ Nueva tarea','rt.close':'Cerrar','rt.every':'Cada {n} d','rt.count':'{n} tarea(s) recurrente(s)',
+    'rt.listTitle':'Crear tarea','rt.listSub':'Tareas que se repiten con una frecuencia (repique de bandejas, limpieza…), cada una con su/s responsable/s. Creá una a mano, o importá toda una planilla desde "Importar base del lab".','rt.empty':'Todavía no hay tareas recurrentes.','rt.newBtn':'+ Nueva tarea','rt.close':'Cerrar','rt.every':'Cada {n} d','rt.count':'{n} tarea(s) recurrente(s)',
     'rt.newTitle':'Nueva tarea recurrente','rt.editTitle':'Editar tarea recurrente','rt.formSub':'Ej. repicar una bandeja de stock, limpiar la incubadora — cualquier cosa que se repita con una frecuencia.',
     'rt.title':'Título de la tarea *','rt.titlePh':'ej. Bandeja autofagia','rt.desc':'Descripción <span class="opt">(opcional)</span>','rt.descPh':'Qué hay que hacer',
-    'rt.responsibles':'Responsable(s) *','rt.respHint':'Agregá un nombre, o varios si se turnan.','rt.respPh':'ej. Juan…','rt.respHintText':'Si agregás más de uno, se turnan en ese orden cada vez que se marca la tarea como hecha.',
+    'rt.responsibles':'Responsable(s)','rt.respHint':'Agregá un nombre, o varios si se turnan.','rt.respPh':'ej. Juan…','rt.respHintText':'Opcional. Si agregás más de uno, se turnan en ese orden cada vez que se marca la tarea como hecha.','rt.noResp':'Sin asignar',
     'rt.freq':'Se repite cada (días) *','rt.nextDue':'Próxima fecha *','rt.save':'Guardar tarea','rt.rotates':'rota entre {n}',
     'rt.overdue':'Atrasado {d} d','rt.dueToday':'Hoy','rt.dueSoon':'En {h}',
-    'rti.title':'Importar tareas recurrentes','rti.sub':'{file} · {n} filas. Mapeá las columnas y confirmá.','rti.colTitle':'¿Qué columna es el título de la tarea?','rti.colResp':'¿Qué columna es el responsable?','rti.colRespHint':'Si una celda tiene más de un nombre (separados por coma), se van a turnar.',
-    'rti.colFreq':'¿Qué columna tiene la frecuencia, en días? (opcional)','rti.defaultFreq':'Frecuencia por defecto para filas sin ese dato (días)','rti.colDue':'¿Qué columna tiene la próxima fecha? (opcional)','rti.colDueHint':'Las filas sin una fecha utilizable arrancan a contar desde hoy.','rti.none':'— Ninguna','rti.import':'Importar tareas','rti.noneImported':'No se encontró ninguna fila válida (hace falta al menos título y responsable).',
-    'al.rtNeedsResp':'Agregá al menos un responsable.','cf.deleteRecTask':'¿Eliminar esta tarea recurrente? Esta acción no se puede deshacer.','al.tasksImported':'Se importaron {n} tarea(s) recurrente(s).',
+    'rti.colTitle':'¿Qué columna es el nombre de la bandeja o tarea?','rti.colResp':'¿Qué columna es el responsable? (opcional)','rti.colRespHint':'Si una celda tiene más de un nombre (separados por coma), se van a turnar.',
+    'rti.colFreq':'¿Qué columna tiene la frecuencia, en días? (opcional)','rti.defaultFreq':'Frecuencia por defecto para filas sin ese dato (días)','rti.colDue':'¿Qué columna tiene la próxima fecha? (opcional)','rti.colDueHint':'Las filas sin una fecha utilizable arrancan a contar desde hoy.','rti.none':'— Ninguna',
+    'cf.deleteRecTask':'¿Eliminar esta tarea recurrente? Esta acción no se puede deshacer.','al.stockFromLab':'También se guardaron {n} tarea(s) de stock (repique, etc.).',
     'ac.comp':'común','ac.stock':'stock',
     'al.crossSameSex':'Elegí un genotipo como hembras (♀) y el otro como machos (♂) — una cruza necesita los dos.',
     'menu.feedback':'📝 Reportar un error / sugerir una mejora','tip.feedback':'Abre un formulario corto (sin cuenta, sin pedir tu mail) — llega directo al desarrollador.',
@@ -1665,7 +1660,8 @@ const I18N = {
     'tour.demoA':'Canton-S, Condición 1 (ejemplo)','tour.demoB':'Canton-S, Condición 2 (ejemplo)',
     'tour.demoFemale':'w[1118] (ejemplo)','tour.demoMale':'UAS-GFP / CyO (ejemplo)',
     'tourA.t0':'Tutorial avanzado','tourA.b0':'Este recorrido cubre funciones menos frecuentes pero útiles: importar la base de genotipos del lab, sincronizar con Google Calendar, hacer backups, exportar datos de supervivencia, planificar el tamaño muestral y cómo reportar un problema. Tocá <b>Continuar</b> para arrancar.',
-    'tourA.t1':'Importar base de genotipos del lab','tourA.b1':'Subí un CSV/TSV con los genotipos que usa tu lab para que se autocompleten al escribir en cualquier campo de genotipo. Elegís qué columna tiene el genotipo; el resto del archivo se ignora.',
+    'tourA.t1':'Importar base del lab','tourA.b1':'Subí un CSV/TSV con los genotipos que usa tu lab para que se autocompleten al escribir en cualquier campo de genotipo. Elegís qué columna tiene el genotipo. Si esa misma planilla también lista las bandejas de stock (nombre de la bandeja, responsable, cada cuánto repicarlas), tildá "Esta planilla también tiene bandejas de stock" para crearlas como tareas recurrentes también — el resto de las columnas se ignora.',
+    'tourA.t1b':'Crear tarea','tourA.b1b':'¿Preferís armar una a mano en vez de importar una planilla? "Crear tarea" abre el mismo listado, donde podés agregar una tarea con título, uno o más responsables (se turnan si hay más de uno) y cada cuánto se repite.',
     'tourA.t2':'Google Calendar','tourA.b2':'Sincronizá tus tareas y eclosiones estimadas con tu Google Calendar, para recibir avisos nativos aunque tengas la app cerrada.',
     'tourA.t3':'Conectar Google Calendar','tourA.b3':'Al conectar, DrosoTracker crea un evento por cada tarea/eclosión próxima y los mantiene actualizados; si marcás una tarea como hecha acá, se borra el evento (y viceversa). Desconectar detiene la sincronización pero conserva los eventos ya creados.',
     'tourA.t4':'Importar backup','tourA.b4':'Cargá un backup en JSON exportado antes (desde este dispositivo u otro). Ojo: reemplaza todos los registros actuales, no los suma.',
@@ -1802,6 +1798,8 @@ const TOUR_STEPS_ADVANCED = [
   { target:()=>null, titleKey:'tourA.t0', bodyKey:'tourA.b0' },
   { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
     target:()=>document.querySelector('#dataMenu button[onclick*="labFile"]'), titleKey:'tourA.t1', bodyKey:'tourA.b1' },
+  { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
+    target:()=>document.querySelector('#dataMenu button[onclick="openRecTaskList()"]'), titleKey:'tourA.t1b', bodyKey:'tourA.b1b' },
   { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
     target:()=>document.querySelector('#dataMenu button[onclick="openGcal()"]'), titleKey:'tourA.t2', bodyKey:'tourA.b2' },
   { setup:()=>{ document.getElementById('dataMenu').classList.remove('open'); openGcal(); },
@@ -4196,6 +4194,7 @@ function parseDelimited(text){
 }
 
 let labImportData = null;
+function guessCol(headers, re){ return headers.findIndex(h=>re.test(h)); }
 function importLabDB(e){
   const f = e.target.files[0]; if(!f) return;
   const r = new FileReader();
@@ -4215,13 +4214,39 @@ function importLabDB(e){
   e.target.value=''; closeMenu();
 }
 function openLabModal(gi){
+  const headers = labImportData.headers;
+  const opts = headers.map((h,i)=>`<option value="${i}">${esc(h||t('lab.colN',{n:i+1}))}</option>`).join('');
+  const optsNone = `<option value="-1">${t('rti.none')}</option>` + opts;
   const sel = document.getElementById('labCol');
-  sel.innerHTML = labImportData.headers.map((h,i)=>`<option value="${i}">${esc(h||t('lab.colN',{n:i+1}))}</option>`).join('');
+  sel.innerHTML = opts;
   sel.value = gi>=0 ? String(gi) : '0';
   document.getElementById('labSub').textContent =
     t('lab.sub',{file:labImportData.file, n:labImportData.dataRows.length});
   renderLabPreview();
+  // columnas de stock (bandeja/responsable/frecuencia/próxima fecha): se pre-completan si se
+  // detectan por nombre; el checkbox arranca tildado sólo si encontramos una columna de bandeja.
+  const trayI = guessCol(headers, /bandeja|tray|repica/i);
+  const respI = guessCol(headers, /responsab|encargad|integrante|qui[eé]n|who/i);
+  const freqI = guessCol(headers, /frecuen|frequency|cada.*d[ií]a|days/i);
+  const dueI = guessCol(headers, /pr[oó]xim|next|due|fecha/i);
+  document.getElementById('labColTray').innerHTML = opts;
+  document.getElementById('labColResp').innerHTML = optsNone;
+  document.getElementById('labColFreq').innerHTML = optsNone;
+  document.getElementById('labColDue').innerHTML = optsNone;
+  document.getElementById('labColTray').value = String(trayI>=0 ? trayI : 0);
+  document.getElementById('labColResp').value = String(respI);
+  document.getElementById('labColFreq').value = String(freqI);
+  document.getElementById('labColDue').value = String(dueI);
+  document.getElementById('labStockToggle').checked = trayI>=0;
+  toggleLabStockFields();
   document.getElementById('labOverlay').classList.add('open');
+}
+function toggleLabStockFields(){
+  document.getElementById('labStockFields').style.display = document.getElementById('labStockToggle').checked ? '' : 'none';
+  onLabColFreqChange();
+}
+function onLabColFreqChange(){
+  document.getElementById('labDefaultFreqRow').style.display = (+document.getElementById('labColFreq').value < 0) ? '' : 'none';
 }
 function renderLabPreview(){
   if(!labImportData) return;
@@ -4231,15 +4256,77 @@ function renderLabPreview(){
     ? sample.map(s=>`<div class="lab-pv-row">${esc(s)}</div>`).join('')
     : `<div class="hint">${t('lab.noCol')}</div>`;
 }
+/* admite fechas YYYY-MM-DD, DD/MM/YYYY o DD-MM-YYYY; null si no reconoce el formato */
+function parseDateCell(s){
+  s = String(s||'').trim(); if(!s) return null;
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  return null;
+}
+/* Agrupa las filas por nombre de bandeja/tarea (una bandeja puede tener varias filas, una
+   por genotipo) y crea o actualiza (por título, sin duplicar) una tarea recurrente por grupo:
+   descripción = genotipos de esa bandeja, responsables = nombres distintos de esa columna
+   (rotan si hay más de uno), frecuencia/próxima fecha del primer valor útil del grupo. */
+function importStockFromLabRows(headers, dataRows, genoCol){
+  if(!document.getElementById('labStockToggle').checked) return 0;
+  const trayI = +document.getElementById('labColTray').value;
+  const respI = +document.getElementById('labColResp').value;
+  const freqI = +document.getElementById('labColFreq').value;
+  const dueI = +document.getElementById('labColDue').value;
+  if(trayI < 0) return 0;
+  const defaultFreq = Math.max(1, +document.getElementById('labDefaultFreq').value || 21);
+  const today = toLocalDateInput(new Date());
+  const groups = new Map();
+  dataRows.forEach(r=>{
+    const title = (r[trayI]||'').trim(); if(!title) return;
+    const key = title.toLowerCase();
+    if(!groups.has(key)) groups.set(key, { title, genos: new Set(), resps: [], freq: null, due: null });
+    const g = groups.get(key);
+    if(genoCol>=0){ const gv=(r[genoCol]||'').trim(); if(gv) g.genos.add(gv); }
+    if(respI>=0){
+      (r[respI]||'').split(/[,;\/]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>{
+        if(!g.resps.some(x=>x.toLowerCase()===n.toLowerCase())) g.resps.push(n);
+      });
+    }
+    if(g.freq==null && freqI>=0){ const f=parseInt(r[freqI],10); if(Number.isFinite(f) && f>0) g.freq=f; }
+    if(g.due==null && dueI>=0){ const d=parseDateCell(r[dueI]); if(d) g.due=d; }
+  });
+  if(!groups.size) return 0;
+  const hist = loadHistorySet(RESP_HISTORY_KEY);
+  let n = 0;
+  groups.forEach(g=>{
+    const desc = [...g.genos].join(', ');
+    const freqDays = g.freq || defaultFreq;
+    const existing = recTasks.find(rt=> rt.title.trim().toLowerCase()===g.title.toLowerCase());
+    if(existing){
+      existing.desc = desc;
+      if(g.resps.length){ existing.responsibles = g.resps; existing.turn = existing.turn % g.resps.length; }
+      existing.freqDays = freqDays;
+      if(g.due) existing.nextDue = g.due;
+    } else {
+      recTasks.push({ id:'rt'+Date.now()+Math.random().toString(36).slice(2,5)+n, title:g.title, desc, responsibles:g.resps, turn:0, freqDays, nextDue: g.due || today, createdAt:new Date().toISOString() });
+    }
+    g.resps.forEach(name=>hist.add(name));
+    n++;
+  });
+  saveRecTasks(recTasks);
+  saveHistorySet(RESP_HISTORY_KEY, hist);
+  return n;
+}
 function confirmLabImport(){
   if(!labImportData) return;
   const gi = +document.getElementById('labCol').value;
   const list = [...new Set(labImportData.dataRows.map(r=>(r[gi]||'').trim()).filter(Boolean))];
   if(!list.length){ alert(t('lab.noCol')); return; }
   saveLabDB({ name: labImportData.file, date: new Date().toISOString(), list });
+  const stockN = importStockFromLabRows(labImportData.headers, labImportData.dataRows, gi);
   labImportData = null;
-  closeLabModal(); updateLabStatus();
-  alert(t('al.labImported',{n:list.length}));
+  closeLabModal(); updateLabStatus(); updateRecTaskStatus(); renderTasks();
+  let msg = t('al.labImported',{n:list.length});
+  if(stockN) msg += ' ' + t('al.stockFromLab',{n:stockN});
+  alert(msg);
 }
 function closeLabModal(){ document.getElementById('labOverlay').classList.remove('open'); }
 
@@ -4289,7 +4376,8 @@ function renderRecTaskList(){
   const T_REMOVE = t('task.remove');
   const sorted = [...recTasks].sort((a,b)=> recTaskNextDueDate(a)-recTaskNextDueDate(b));
   box.innerHTML = sorted.map(rt=>{
-    let resp = esc(recTaskResponsible(rt));
+    const respLabel = recTaskResponsible(rt);
+    let resp = respLabel ? esc(respLabel) : `<span style="opacity:.65">${t('rt.noResp')}</span>`;
     if(rt.responsibles.length>1) resp += ` <span class="hint" style="display:inline">(${t('rt.rotates',{n:rt.responsibles.length})})</span>`;
     return `<div class="task" onclick="openRecTaskForm('${rt.id}')">
       <span class="tmain"><span class="tname" title="${esc(rt.title)}">${esc(rt.title)}</span><span class="texp">${t('rt.every',{n:rt.freqDays})} · ${fmtDate(recTaskNextDueDate(rt))}</span></span>
@@ -4357,7 +4445,6 @@ function saveRecTaskForm(e){
   e.preventDefault();
   const respInput = document.getElementById('respInput');
   addRespTag(respInput.value); respInput.value='';
-  if(!formResponsibles.length){ alert(t('al.rtNeedsResp')); return; }
   const editId = document.getElementById('rtEditId').value;
   const title = document.getElementById('rtTitle').value.trim();
   const desc = document.getElementById('rtDesc').value.trim();
@@ -4365,7 +4452,7 @@ function saveRecTaskForm(e){
   const nextDue = document.getElementById('rtNextDue').value || toLocalDateInput(new Date());
   if(editId){
     const rt = recTasks.find(r=>r.id===editId);
-    if(rt){ rt.title=title; rt.desc=desc; rt.responsibles=formResponsibles.slice(); rt.turn = rt.turn % rt.responsibles.length; rt.freqDays=freqDays; rt.nextDue=nextDue; }
+    if(rt){ rt.title=title; rt.desc=desc; rt.responsibles=formResponsibles.slice(); rt.turn = rt.responsibles.length ? rt.turn % rt.responsibles.length : 0; rt.freqDays=freqDays; rt.nextDue=nextDue; }
   } else {
     recTasks.push({ id:'rt'+Date.now()+Math.random().toString(36).slice(2,5), title, desc, responsibles:formResponsibles.slice(), turn:0, freqDays, nextDue, createdAt:new Date().toISOString() });
   }
@@ -4377,98 +4464,6 @@ function saveRecTaskForm(e){
   openRecTaskList();
   updateRecTaskStatus();
   renderTasks();
-}
-
-/* --- Importar tareas recurrentes desde Excel/CSV, con mapeo de columnas --- */
-let taskImportData = null;
-function importTasksFile(e){
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ()=>{
-    try{
-      const rows = parseDelimited(r.result);
-      if(rows.length < 2) throw new Error(t('err.labFormat'));
-      const headers = rows[0].map(h=>h.trim());
-      const dataRows = rows.slice(1);
-      taskImportData = { headers, dataRows, file: f.name };
-      openTaskImportModal();
-    }catch(err){ alert(t('al.readFail',{e:err.message})); }
-  };
-  r.readAsText(f);
-  e.target.value='';
-}
-function guessCol(headers, re){ return headers.findIndex(h=>re.test(h)); }
-function openTaskImportModal(){
-  document.getElementById('recTaskListOverlay').classList.remove('open');
-  const headers = taskImportData.headers;
-  const opts = headers.map((h,i)=>`<option value="${i}">${esc(h||t('lab.colN',{n:i+1}))}</option>`).join('');
-  const optsNone = `<option value="-1">${t('rti.none')}</option>` + opts;
-  document.getElementById('rtiCol').innerHTML = opts;
-  document.getElementById('rtiColResp').innerHTML = opts;
-  document.getElementById('rtiColFreq').innerHTML = optsNone;
-  document.getElementById('rtiColDue').innerHTML = optsNone;
-  let gi = guessCol(headers, /bandeja|tray|t[ií]tulo|title|tarea|nombre/i); if(gi<0) gi=0;
-  let ri = guessCol(headers, /responsab|encargad|qui[eé]n|who|repica/i); if(ri<0) ri = headers.length>1 ? 1 : 0;
-  const fi = guessCol(headers, /frecuen|frequency|cada.*d[ií]a|days/i);
-  const di = guessCol(headers, /pr[oó]xim|next|due|fecha/i);
-  document.getElementById('rtiCol').value = String(gi);
-  document.getElementById('rtiColResp').value = String(ri);
-  document.getElementById('rtiColFreq').value = String(fi);
-  document.getElementById('rtiColDue').value = String(di);
-  document.getElementById('rtiSub').textContent = t('rti.sub',{file:taskImportData.file, n:taskImportData.dataRows.length});
-  renderTaskImportPreview();
-  document.getElementById('taskImportOverlay').classList.add('open');
-}
-function renderTaskImportPreview(){
-  if(!taskImportData) return;
-  const ti = +document.getElementById('rtiCol').value, ri = +document.getElementById('rtiColResp').value;
-  document.getElementById('rtiDefaultFreqRow').style.display = (+document.getElementById('rtiColFreq').value < 0) ? '' : 'none';
-  const sample = taskImportData.dataRows.slice(0,6).map(r=> `${(r[ti]||'').trim()} — ${(r[ri]||'').trim()}`).filter(s=>s!==' — ');
-  document.getElementById('rtiPreview').innerHTML = sample.length
-    ? sample.map(s=>`<div class="lab-pv-row">${esc(s)}</div>`).join('')
-    : `<div class="hint">${t('lab.noCol')}</div>`;
-}
-function closeTaskImport(){ document.getElementById('taskImportOverlay').classList.remove('open'); taskImportData=null; }
-/* admite fechas YYYY-MM-DD, DD/MM/YYYY o DD-MM-YYYY; null si no reconoce el formato */
-function parseDateCell(s){
-  s = String(s||'').trim(); if(!s) return null;
-  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
-  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
-  return null;
-}
-function confirmTaskImport(){
-  if(!taskImportData) return;
-  const ti = +document.getElementById('rtiCol').value;
-  const ri = +document.getElementById('rtiColResp').value;
-  const fi = +document.getElementById('rtiColFreq').value;
-  const di = +document.getElementById('rtiColDue').value;
-  const defaultFreq = Math.max(1, +document.getElementById('rtiDefaultFreq').value || 21);
-  const today = toLocalDateInput(new Date());
-  const hist = loadHistorySet(RESP_HISTORY_KEY);
-  let n = 0;
-  taskImportData.dataRows.forEach(r=>{
-    const title = (r[ti]||'').trim();
-    const respRaw = (r[ri]||'').trim();
-    if(!title || !respRaw) return;
-    const responsibles = [...new Set(respRaw.split(/[,;\/]+/).map(s=>s.trim()).filter(Boolean))];
-    if(!responsibles.length) return;
-    const freqRaw = fi>=0 ? parseInt(r[fi],10) : NaN;
-    const freqDays = Number.isFinite(freqRaw) && freqRaw>0 ? freqRaw : defaultFreq;
-    const nextDue = (di>=0 && parseDateCell(r[di])) || today;
-    n++;
-    recTasks.push({ id:'rt'+Date.now()+Math.random().toString(36).slice(2,5)+n, title, desc:'', responsibles, turn:0, freqDays, nextDue, createdAt:new Date().toISOString() });
-    responsibles.forEach(name=>hist.add(name));
-  });
-  if(!n){ alert(t('rti.noneImported')); return; }
-  saveRecTasks(recTasks);
-  saveHistorySet(RESP_HISTORY_KEY, hist);
-  taskImportData = null;
-  closeTaskImport();
-  updateRecTaskStatus();
-  renderTasks();
-  alert(t('al.tasksImported',{n}));
 }
 
 /* Lista curada de componentes frecuentes de genotipos de Drosophila */
@@ -4796,10 +4791,7 @@ document.getElementById('recTaskListOverlay').addEventListener('click',e=>{
 document.getElementById('recTaskFormOverlay').addEventListener('click',e=>{
   if(e.target.id==='recTaskFormOverlay') closeRecTaskForm();
 });
-document.getElementById('taskImportOverlay').addEventListener('click',e=>{
-  if(e.target.id==='taskImportOverlay') closeTaskImport();
-});
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); closeImportChoice(); closeInstallNotice(); closeRecTaskList(); closeRecTaskForm(); closeTaskImport(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); closeImportChoice(); closeInstallNotice(); closeRecTaskList(); closeRecTaskForm(); } });
 /* cerrar el menú de datos al click fuera. Mientras el tutorial está activo, el propio motor
    del tour controla cuándo el menú "Más ▾" se abre y se cierra (ver tourResetToBaseline) —
    sin esta guarda, el click en "Continuar"/"Atrás" del tour burbujea hasta acá y cierra el
