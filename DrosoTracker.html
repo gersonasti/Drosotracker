@@ -367,8 +367,6 @@
   .menu-pop button.menu-danger{color:var(--coral)}
   .menu-pop button.menu-danger:hover{background:var(--peach-soft)}
   .menu-sep{height:1px;background:var(--line);margin:5px 4px}
-  .menu-fmt{font-size:.72rem;color:var(--ink-soft);padding:2px 12px 4px}
-  .menu-fmt b{color:var(--ink)}
   #labStatus .lab-stat-line, #recTaskStatus .lab-stat-line{font-size:.74rem;color:var(--ink-soft);padding:5px 12px;display:flex;align-items:center;gap:4px}
   .lab-clear{margin-left:auto;border:none;background:var(--peach-soft);color:#d98162;font-weight:700;font-size:.72rem;padding:3px 9px;border-radius:8px;cursor:pointer;font-family:'Nunito'}
   .lab-clear:hover{filter:brightness(.97)}
@@ -682,7 +680,6 @@
           <button onclick="document.getElementById('importFile').click()" data-i18n="menu.importBackup" data-tip-key="tip.importBackup">⬆ Import backup</button>
           <button onclick="exportSurvivalCSV()" data-i18n="menu.exportSurvival" data-tip-key="tip.exportSurvival">Export survival (CSV)</button>
           <button onclick="document.getElementById('labFile').click()" data-i18n="menu.importLab" data-tip-key="tip.importLab">🧬 Import lab genotype database</button>
-          <div class="menu-fmt" data-i18n="menu.fmt">.csv · .tab · .tsv</div>
           <div id="labStatus"></div>
           <div class="menu-sep"></div>
           <button onclick="openGcal()" data-i18n-html="gcal.menu" data-tip-key="tip.gcal"><img src="gcal-icon.png" class="menu-ico" alt="">Google Calendar</button>
@@ -1317,7 +1314,7 @@ const I18N = {
     'brand.sub':'We track the life cycle, not behaviour.','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Export backup','menu.importBackup':'⬆ Import backup',
     'menu.exportSurvival':'Export survival (CSV)','menu.importLab':'🧬 Import lab database','menu.recTasks':'Create task',
-    'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Clear all records','tip.clearAll':'Delete every record at once (keeps your lab database and calibrations).',
+    'menu.importLabTitle':'If your database is in Excel, export it as CSV (Save as → CSV)','menu.clearAll':'Clear all records','tip.clearAll':'Delete every record at once (keeps your lab database and calibrations).',
     'gcal.menu':'<img src="gcal-icon.png" class="menu-ico" alt=""> Google Calendar','tip.gcal':'Sync your tasks and eclosions to your Google Calendar so it reminds you natively, even with the app closed.',
     'gcal.title':'Google Calendar','gcal.desc':'Push your tasks and estimated eclosions to your Google Calendar so it reminds you natively, even with the app closed.',
     'gcal.connect':'Connect Google Calendar','gcal.syncNow':'Sync now','gcal.disconnect':'Disconnect','gcal.auto':'Keep it in sync automatically',
@@ -1431,7 +1428,7 @@ const I18N = {
     'rt.overdue':'Overdue {d} d','rt.dueToday':'Due today','rt.dueSoon':'In {h}',
     'rt.select':'Select','rt.bulkLabel':'Assign responsible to the {n} selected','rt.bulkPh':'e.g. Juan, Maria','rt.bulkApply':'Assign','rt.bulkClear':'Clear selection',
     'cf.bulkAssignResp':'Set "{names}" as the responsible for the {n} selected tasks? This replaces whatever they had before.',
-    'rti.addColumn':'+ Add column','rti.roleTray':'Tray or task name','rti.roleResp':'Responsible','rti.roleFreq':'Frequency (days)','rti.roleDue':'Next due date',
+    'rti.addColumn':'+ Add column','rti.roleTray':'Which column is the tray or task name?','rti.roleResp':'Which column is the responsible person? (optional)','rti.roleFreq':'Which column has the frequency, in days? (optional)','rti.roleDue':'Which column has the next due date? (optional)',
     'rti.colRespHint':'If a cell has more than one name (comma-separated), they\'ll take turns.','rti.defaultFreqInline':'Default if a row has none (days)','rti.colDueHint':'Rows without a usable date start counting from today.',
     'cf.deleteRecTask':'Delete this recurring task? This can\'t be undone.','al.stockFromLab':'Also saved {n} stock task(s) (flip schedule, etc.).',
     'ac.comp':'common','ac.stock':'stock',
@@ -1489,7 +1486,7 @@ const I18N = {
     'brand.sub':'Trackeamos el ciclo de vida, no comportamiento.','doc.title':'DrosoTracker',
     'menu.exportBackup':'⬇ Exportar backup','menu.importBackup':'⬆ Importar backup',
     'menu.exportSurvival':'Exportar supervivencia (CSV)','menu.importLab':'🧬 Importar base del lab','menu.recTasks':'Crear tarea',
-    'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.fmt':'.csv · .tab · .tsv','menu.clearAll':'Vaciar registros','tip.clearAll':'Borra todos los registros de una (conserva la base del lab y las calibraciones).',
+    'menu.importLabTitle':'Si tu base está en Excel, exportala como CSV (Guardar como → CSV)','menu.clearAll':'Vaciar registros','tip.clearAll':'Borra todos los registros de una (conserva la base del lab y las calibraciones).',
     'gcal.menu':'<img src="gcal-icon.png" class="menu-ico" alt=""> Google Calendar','tip.gcal':'Sincronizá tus tareas y eclosiones con tu Google Calendar para que te avise de forma nativa, aun con la app cerrada.',
     'gcal.title':'Google Calendar','gcal.desc':'Empujá tus tareas y eclosiones estimadas a tu Google Calendar para que te avise de forma nativa, aun con la app cerrada.',
     'gcal.connect':'Conectar Google Calendar','gcal.syncNow':'Sincronizar ahora','gcal.disconnect':'Desconectar','gcal.auto':'Mantener sincronizado automáticamente',
@@ -1594,7 +1591,7 @@ const I18N = {
     'rt.overdue':'Atrasado {d} d','rt.dueToday':'Hoy','rt.dueSoon':'En {h}',
     'rt.select':'Seleccionar','rt.bulkLabel':'Asignar responsable a las {n} seleccionadas','rt.bulkPh':'ej. Juan, Maria','rt.bulkApply':'Asignar','rt.bulkClear':'Cancelar selección',
     'cf.bulkAssignResp':'¿Asignar "{names}" como responsable de las {n} tareas seleccionadas? Esto reemplaza lo que tuvieran antes.',
-    'rti.addColumn':'+ Agregar columna','rti.roleTray':'Nombre de bandeja o tarea','rti.roleResp':'Responsable','rti.roleFreq':'Frecuencia (días)','rti.roleDue':'Próxima fecha',
+    'rti.addColumn':'+ Agregar columna','rti.roleTray':'¿Qué columna es el nombre de la bandeja o tarea?','rti.roleResp':'¿Qué columna es el responsable? (opcional)','rti.roleFreq':'¿Qué columna tiene la frecuencia, en días? (opcional)','rti.roleDue':'¿Qué columna tiene la próxima fecha? (opcional)',
     'rti.colRespHint':'Si una celda tiene más de un nombre (separados por coma), se van a turnar.','rti.defaultFreqInline':'Si una fila no tiene dato, usar (días)','rti.colDueHint':'Las filas sin una fecha utilizable arrancan a contar desde hoy.',
     'cf.deleteRecTask':'¿Eliminar esta tarea recurrente? Esta acción no se puede deshacer.','al.stockFromLab':'También se guardaron {n} tarea(s) de stock (repique, etc.).',
     'ac.comp':'común','ac.stock':'stock',
@@ -4207,9 +4204,10 @@ function openLabModal(gi){
   document.getElementById('labOverlay').classList.add('open');
 }
 /* --- Columnas extra (opcionales) para crear tareas recurrentes desde la misma planilla:
-   se agregan de a una con "+ Agregar columna", cada una eligiendo qué rol cumple (bandeja/
-   tarea, responsable, frecuencia, próxima fecha, siempre en ese orden, así "bandeja" queda
-   primera) y qué columna del archivo la alimenta. --- */
+   se agregan de a una con "+ Agregar columna", siempre en el mismo orden fijo (bandeja/
+   tarea, responsable, frecuencia, próxima fecha, así "bandeja" queda primera). Cada fila
+   pregunta una sola cosa, igual que la del genotipo: qué columna del archivo usar, con su
+   vista previa; el rol de cada fila ya está determinado por su lugar en el orden, no se elige. */
 const RT_COL_ROLES = ['tray','resp','freq','due'];
 let _labExtraCols = [];
 function labRoleLabel(role){ return { tray:t('rti.roleTray'), resp:t('rti.roleResp'), freq:t('rti.roleFreq'), due:t('rti.roleDue') }[role]; }
@@ -4228,28 +4226,30 @@ function addLabColumnRow(){
   renderLabExtraCols();
 }
 function removeLabColumnRow(i){ _labExtraCols.splice(i,1); renderLabExtraCols(); }
-function setLabExtraColRole(i, role){ _labExtraCols[i].role = role; renderLabExtraCols(); }
-function setLabExtraColSrc(i, col){ _labExtraCols[i].col = +col; }
+function setLabExtraColSrc(i, col){ _labExtraCols[i].col = +col; renderLabExtraCols(); }
 function setLabExtraColFreq(i, v){ _labExtraCols[i].defaultFreq = Math.max(1, +v||21); }
 function renderLabExtraCols(){
   const box = document.getElementById('labExtraCols'); if(!box) return;
   const headers = labImportData.headers;
   box.innerHTML = _labExtraCols.map((row,i)=>{
-    const used = _labExtraCols.map(r=>r.role);
-    const roleOpts = RT_COL_ROLES.filter(r=> r===row.role || !used.includes(r))
-      .map(r=>`<option value="${r}" ${r===row.role?'selected':''}>${esc(labRoleLabel(r))}</option>`).join('');
     const colOpts = headers.map((h,ci)=>`<option value="${ci}" ${ci===row.col?'selected':''}>${esc(h||t('lab.colN',{n:ci+1}))}</option>`).join('');
+    const sample = labImportData.dataRows.map(r=>(r[row.col]||'').trim()).filter(Boolean).slice(0,6);
+    const preview = sample.length
+      ? sample.map(s=>`<div class="lab-pv-row">${esc(s)}</div>`).join('')
+      : `<div class="hint">${t('lab.noCol')}</div>`;
     let extra = '';
     if(row.role==='resp') extra = `<div class="hint" style="margin-top:6px">${t('rti.colRespHint')}</div>`;
     if(row.role==='freq') extra = `<div class="hint" style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span>${t('rti.defaultFreqInline')}</span><input type="number" min="1" step="1" value="${row.defaultFreq}" style="width:70px" onchange="setLabExtraColFreq(${i}, this.value)" /></div>`;
     if(row.role==='due') extra = `<div class="hint" style="margin-top:6px">${t('rti.colDueHint')}</div>`;
     return `<div class="field">
-      <div style="display:flex;gap:8px">
-        <select style="flex:none;width:auto" onchange="setLabExtraColRole(${i}, this.value)">${roleOpts}</select>
-        <select style="flex:1" onchange="setLabExtraColSrc(${i}, this.value)">${colOpts}</select>
+      <div class="lbl-row" style="justify-content:space-between">
+        <label style="margin-bottom:0">${esc(labRoleLabel(row.role))}</label>
         <button type="button" class="task-del" title="${esc(t('task.remove'))}" onclick="removeLabColumnRow(${i})">✕</button>
       </div>
+      <select onchange="setLabExtraColSrc(${i}, this.value)">${colOpts}</select>
       ${extra}
+      <label style="margin-top:10px" data-i18n="lab.preview">${t('lab.preview')}</label>
+      <div class="lab-preview">${preview}</div>
     </div>`;
   }).join('');
   const addBtn = document.getElementById('labAddColBtn');
