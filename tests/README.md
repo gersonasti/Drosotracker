@@ -1,7 +1,7 @@
 # Tests de DrosoTracker
 
 Suite de tests **sin dependencias externas** (corre con Node a secas). Los tests **extraen
-las funciones científicas reales** de `DrosoTracker.html` (no una copia) y las verifican
+las funciones científicas reales** de `index.html` (no una copia) y las verifican
 contra valores calculados a mano y referencias independientes, de modo que testean el código
 tal como se despliega.
 

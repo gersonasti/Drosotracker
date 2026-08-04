@@ -200,7 +200,7 @@ R² = 0,997), se auto-verifica, y genera la Figura 1 en PDF vectorial + PNG 300 
 
 ### Correspondencia con el código de la app
 
-Las constantes viven en `DrosoTracker.html`:
+Las constantes viven en `index.html`:
 
 ```js
 const T0 = 11.78;         // Powsner 1935, regresión ~15–28 °C (n=13, R²=0.997)

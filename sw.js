@@ -4,10 +4,10 @@
      sin internet, abre la última versión guardada.
    - Íconos / manifest / fuentes: CACHÉ primero, y se actualizan en segundo plano.
    Subí VERSION cada vez que quieras forzar una actualización limpia. */
-const VERSION = 'v10';
+const VERSION = 'v11';
 const CACHE = 'drosotracker-' + VERSION;
 const ASSETS = [
-  'DrosoTracker.html',
+  './',
   'manifest.webmanifest',
   'icon-192.png',
   'icon-512.png',
@@ -40,10 +40,10 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(req, { cache: 'reload' })
         .then(res => {
-          if (!res.redirected) { const copy = res.clone(); caches.open(CACHE).then(c => c.put('DrosoTracker.html', copy)); }
+          if (!res.redirected) { const copy = res.clone(); caches.open(CACHE).then(c => c.put('./', copy)); }
           return res;
         })
-        .catch(() => caches.match(req).then(r => r || caches.match('DrosoTracker.html')))
+        .catch(() => caches.match(req).then(r => r || caches.match('./')))
     );
     return;
   }

@@ -1,7 +1,7 @@
 /*
  * DrosoTracker — test suite (sin dependencias externas).
  *
- * Extrae las funciones científicas REALES de DrosoTracker.html (no una copia)
+ * Extrae las funciones científicas REALES de index.html (no una copia)
  * y las verifica contra valores calculados a mano / referencias independientes.
  *
  * Correr:  node tests/run-tests.mjs
@@ -9,7 +9,7 @@
  */
 import { readFileSync } from 'node:fs';
 
-const SRC = readFileSync(new URL('../DrosoTracker.html', import.meta.url), 'utf8');
+const SRC = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 /* ---- extracción por conteo de llaves/corchetes (roba el texto real de la función) ---- */
 function grabBalanced(src, fromIdx, open, close) {
