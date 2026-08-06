@@ -61,17 +61,18 @@ and the pairing were verified against the original PDF by the authors**
 
 | Parameter | Value | 95 % CI |
 |---|---|---|
-| **T₀** | **11.78 °C** | ±0.4 |
-| **DD** | **116.4 °C·days** (→ 116) | ±4.2 |
+| **T₀** | **11.78 °C** | 11.39 – 12.18 |
+| **DD** | **116.38 °C·days** (→ 116) | 112.20 – 120.56 |
 | **R²** | **0.9971** | — |
 
-Egg→adult predictions (with the fitted DD of 116.4): 18 °C → 18.7 d ·
+Egg→adult predictions (with the fitted DD of 116.38): 18 °C → 18.7 d ·
 21 °C → 12.6 d · 25 °C → 8.8 d · 29 °C → 6.8 d. The app rounds DD to 116, ~0.03 d
 less at 25 °C. The fitting range includes 15.24 °C and 27.77 °C and excludes
 ≥28.07 °C.
 
-*(Figure 1 — rate vs. temperature with the fitted line, its confidence band and
-the T₀ intercept; the excluded ≥29 °C points depart from the line.)*
+*(Figure 1 of the manuscript — rate vs. temperature with the fitted line and the
+T₀ intercept marked with a red cross; the excluded ≥29 °C points, in grey, depart
+from the line.)*
 
 ### Robustness
 
@@ -103,10 +104,9 @@ verified point between 16 and 18 °C, the 16–28 and 18–28 cut-offs coincide.
 | **Total** | **8.71 d** | 100 % |
 
 The breakdown is stored as fractions of the total and rescaled proportionally
-with temperature. The larval period is subdivided **L1 : L2 : L3 = 1 : 1 : 2**
-following a *Current Biology* review (embryogenesis, L1 and L2 of one day each,
-L3 of two days), **not Powsner**, who measures the larval period as a single
-block (see caveat 9).
+with temperature. The larval period is subdivided **L1 : L2 : L3 = 1 : 1 : 2**,
+taken from the **FlyBase developmental staging** (25 : 23 : 48 h at 25 °C), **not
+from Powsner**, who measures the larval period as a single block (see caveat 9).
 
 ---
 
@@ -130,7 +130,7 @@ Al-Saffar reports durations ~60–70 % longer because **each larva was reared in
 isolation** (1 egg per compartment), which slows larval development; their egg
 and pupal values, by contrast, are normal. This is evidence that culture
 conditions change the thermal constants, the core argument for the app's
-per-genotype / per-lab calibration. *(Figures 4 and 6.)*
+per-genotype / per-lab calibration. *(Figure 2 of the manuscript.)*
 
 ---
 
@@ -151,21 +151,23 @@ per-genotype / per-lab calibration. *(Figures 4 and 6.)*
    larvae/vial with a bounded egg-lay, but crowding *with starvation* lengthens
    development (111 → 188 h). The critical factor is available food.
 6. **Sex differences.** They exist and change with temperature; the model uses
-   the average of both (Figure 5).
+   the average of both.
 7. **Fluctuating temperatures speed development up by ~15 %** relative to thermal
    summation (Kaufmann effect / rate summation; Worner 1992). Al-Saffar confirms
    this across 22 alternating regimes, but concludes it is **too small to
    invalidate** the model. In real use (incubators that oscillate, vials taken
    out) somewhat faster development is to be expected; it pushes in the same
    direction as the bias already corrected for, and the per-genotype calibration
-   absorbs it. (Figure 6.)
+   absorbs it.
 8. **The stage breakdown was measured at 25 °C** and is rescaled proportionally;
    it assumes constant between-stage proportions (a good approximation in the
    mid-range, worse at the edges, above all for the larval period).
-9. **The L1/L2/L3 subdivision comes from a source other than Powsner** (a
-   *Current Biology* review), who measures the larval period as a single block.
-   Parkin & Burnet 1986 would imply 1 : 1 : 1.5; the difference is a matter of
-   hours.
+9. **The L1/L2/L3 subdivision comes from a source other than Powsner** (the
+   FlyBase developmental staging, 25 : 23 : 48 h at 25 °C), since Powsner measures
+   the larval period as a single block. The subdivision is not a parameter fitted
+   by the model, and it depends on rearing conditions: on a pure yeast diet
+   Parkin & Burnet (1986) report a proportionally longer third instar,
+   ≈ 1 : 0.9 : 2.5.
 10. **The model is very sensitive near the lower threshold.** Below ~18 °C, as θ
     approaches T₀, dividing by `(θ − T₀)` makes the duration grow quickly and
     amplifies a small temperature error. Use the predictions with caution near
@@ -187,20 +189,41 @@ Primary data transcribed in `analysis/data/`:
 
 The script `analysis/calibration.R` (R) fits the regression on
 `powsner1935_total_verified.csv`, reproduces the constants (T₀ = 11.78 ·
-DD = 116.38 · R² = 0.997), self-checks, and generates Figure 1 as vector PDF +
-300 dpi PNG.
+DD = 116.38 · R² = 0.997) together with their 95 % confidence intervals by the
+delta method, self-checks every one of those values against the published ones,
+and generates Figure 1 as vector PDF + 300 dpi PNG.
 
 ### Calibration references
 
-- Powsner, L. (1935). *Physiol. Zool.* **8**(4): 474–520. doi:10.1086/physzool.8.4.30151263
-- AL-Saffar, Z.Y., Grainger, J.N.R. & Aldrich, J. (1995). *Biol. Environ.: Proc. R. Ir. Acad.* **95B**(2): 119–122. JSTOR 20504505
-- AL-Saffar, Z.Y., Grainger, J.N.R. & Aldrich, J. (1995). *J. Thermal Biology* **20**(5): 389–397. doi:10.1016/0306-4565(94)00075-T
-- Worner, S.P. (1992). *Environ. Entomol.* **21**: 689–699.
-- Bloomington Drosophila Stock Center — Fly Culture. https://bdsc.indiana.edu/information/fly-culture.html
+Numbering follows the DrosoTracker manuscript.
 
-> Check the full bibliographic details before citing in the manuscript.
-> The attribution of the larval subdivision to *Current Biology* still needs its
-> authors and full details confirmed.
+- [1] Powsner, L.H. (1935). The effects of temperature on the durations of the developmental
+  stages of *Drosophila melanogaster*. *Physiol. Zool.* **8**(4): 474–520.
+  doi:10.1086/physzool.8.4.30151263
+- [9] Larkin, A., Marygold, S.J., Antonazzo, G., et al. (2021). FlyBase: updates to the
+  *Drosophila melanogaster* knowledge base. *Nucleic Acids Res.* **49**(D1): D899–D907.
+  (Developmental staging: the L1 : L2 : L3 = 25 : 23 : 48 h subdivision at 25 °C.)
+- [10] Cook, K.R., Parks, A.L., Jacobus, L.M., Kaufman, T.C. & Matthews, K.A. (2010). New
+  research resources at the Bloomington Drosophila Stock Center. *Fly (Austin)* **4**(1): 88–91.
+  Reference values: https://bdsc.indiana.edu/information/fly-culture.html
+- [11] Réaumur, R.A.F. de (1735). Observations du thermomètre… *Mem. Acad. R. Sci.*: 545–576.
+  (Origin of the thermal-summation model.)
+- [12] Davidson, J. (1944). On the relationship between temperature and rate of development of
+  insects at constant temperatures. *J. Anim. Ecol.* **13**(1): 26–38.
+- [20] AL-Saffar, Z.Y., Grainger, J.N.R. & Aldrich, J. (1995). Influence of constant and changing
+  temperature and humidity on the development and survival of the eggs and pupae of
+  *Drosophila melanogaster* (Meigen). *J. Therm. Biol.* **20**(5): 389–397.
+  doi:10.1016/0306-4565(94)00075-T
+- [23] Worner, S.P. (1992). Performance of phenological models under variable temperature
+  regimes: consequences of the Kaufmann or rate summation effect. *Environ. Entomol.*
+  **21**(4): 689–699.
+- [24] Parkin, C.A. & Burnet, B. (1986). Growth arrest of *Drosophila melanogaster* on erg-2 and
+  erg-6 sterol mutant strains of *Saccharomyces cerevisiae*. *J. Insect Physiol.* **32**(6): 463–471.
+
+Also transcribed here, and used for the between-source comparison of §4 but not cited in the
+manuscript: AL-Saffar, Z.Y., Grainger, J.N.R. & Aldrich, J. (1995), *Biol. Environ.: Proc. R.
+Ir. Acad.* **95B**(2): 119–122 (JSTOR 20504505), the source of the egg→adult totals in
+`alsaffar1995_total.csv`.
 
 ### Correspondence with the app code
 

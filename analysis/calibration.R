@@ -8,14 +8,15 @@
 # (1935, Physiol. Zool. 8:474-520; Tables IX corrected + X, sexes averaged).
 #   DD = 1 / slope ;  T0 = -intercept / slope.
 #
-# Prints and self-checks the constants (stops if they drift) and draws
+# Prints the constants with their 95 % confidence intervals (delta method),
+# self-checks them against the published values (stops if they drift) and draws
 # Figure 1 (developmental rate vs temperature).
 #
 # Run from the analysis/ folder:   Rscript calibration.R
 # =====================================================================
 
 # ---- 1) Data: the verified Powsner totals (committed CSV) ------------
-d <- read.csv("data/powsner1935_total_verified.csv")   # cols: temp_c, total_days, nota
+d <- read.csv("data/powsner1935_total_verified.csv")   # cols: temp_c, total_days, note
 d$rate <- 1 / d$total_days                              # developmental rate (1/day)
 
 # ---- 2) Linear fit over the linear range (~15-28 C) -----------------
@@ -26,26 +27,43 @@ LO <- 15; HI <- 28
 lin <- d$temp_c >= LO & d$temp_c <= HI
 fit <- lm(rate ~ temp_c, data = d[lin, ])
 
-b0 <- coef(fit)[1]; b1 <- coef(fit)[2]
-T0 <- as.numeric(-b0 / b1)         # developmental-zero threshold (x-intercept)
-DD <- as.numeric(1 / b1)           # thermal constant (degree-days)
+b0 <- as.numeric(coef(fit)[1]); b1 <- as.numeric(coef(fit)[2])
+T0 <- -b0 / b1                     # developmental-zero threshold (x-intercept)
+DD <- 1 / b1                       # thermal constant (degree-days)
 R2 <- summary(fit)$r.squared
 n  <- sum(lin)
 
+# ---- 3) 95 % confidence intervals by the delta method ---------------
+# Both constants are non-linear functions of the fitted coefficients, so their
+# variance comes from the gradient applied to the covariance matrix of the fit.
+V     <- vcov(fit)                          # cov of (b0, b1)
+gT0   <- c(-1 / b1, b0 / b1^2)              # gradient of T0 = -b0/b1
+seT0  <- sqrt(as.numeric(t(gT0) %*% V %*% gT0))
+seDD  <- sqrt(as.numeric(V[2, 2]) / b1^4)   # DD = 1/b1  =>  dDD/db1 = -1/b1^2
+tcrit <- qt(0.975, df = n - 2)
+ciT0  <- T0 + c(-1, 1) * tcrit * seT0
+ciDD  <- DD + c(-1, 1) * tcrit * seDD
+
 cat(sprintf("Powsner egg->adult, ~%g-%g C (n=%d):  T0 = %.2f C   DD = %.2f degree-days   R2 = %.4f\n",
             LO, HI, n, T0, DD, R2))
+cat(sprintf("95%% CI (delta method):  T0 = %.2f-%.2f C   DD = %.2f-%.2f degree-days\n",
+            ciT0[1], ciT0[2], ciDD[1], ciDD[2]))
 print(summary(fit))
 
-# ---- 3) Self-check: must reproduce the published values -------------
+# ---- 4) Self-check: must reproduce the published values -------------
 stopifnot(
   abs(T0 - 11.78)  < 0.03,
   abs(DD - 116.38) < 0.60,
+  abs(ciT0[1] - 11.39)  < 0.02,
+  abs(ciT0[2] - 12.18)  < 0.02,
+  abs(ciDD[1] - 112.20) < 0.10,
+  abs(ciDD[2] - 120.56) < 0.10,
   R2 > 0.995,
   n == 13
 )
-cat("self-check OK: reproduces T0 = 11.78 C, DD = 116.38 degree-days, n = 13.\n")
+cat("self-check OK: reproduces T0 = 11.78 C (11.39-12.18), DD = 116.38 degree-days (112.20-120.56), n = 13.\n")
 
-# ---- 4) Figure 1: developmental rate vs temperature -----------------
+# ---- 5) Figure 1: developmental rate vs temperature -----------------
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   library(ggplot2)
   dir.create("figures", showWarnings = FALSE)
@@ -62,7 +80,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
     geom_hline(yintercept = 0, colour = "grey60") +
     geom_line(data = fit_line, colour = "black", linewidth = 1) +
     geom_point(aes(fill = group), shape = 21, size = 3, colour = "transparent") +
-    annotate("point", x = T0, y = 0, shape = 4, colour = "black", size = 3, stroke = 1.2) +
+    annotate("point", x = T0, y = 0, shape = 4, colour = "red", size = 3, stroke = 1.2) +
     annotate("text",  x = T0, y = 0, label = sprintf("T0 = %.2f °C", T0),
              hjust = -0.1, vjust = -0.6, colour = "black", size = 3.5) +
     scale_fill_manual(values = cols, name = NULL) +

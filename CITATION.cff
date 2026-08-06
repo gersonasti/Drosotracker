@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use DrosoTracker, please cite it using the metadata below."
+title: "DrosoTracker"
+abstract: >-
+  A self-contained web application with a self-calibrating thermal model for husbandry
+  scheduling and lifespan analysis in Drosophila melanogaster. It predicts development with a
+  thermal-summation model recalibrated by regression on primary data (T0 = 11.78 °C,
+  DD = 116.38 °C·days, R² = 0.997), offers an optional two-level calibration (laboratory
+  wild-type and per genotype) driven by user observations, schedules husbandry tasks, and
+  analyses adult cohort survival with the Kaplan-Meier estimator, the log-rank test and
+  Schoenfeld's sample-size formula.
+type: software
+license: MIT
+repository-code: "https://github.com/gersonasti/Drosotracker"
+url: "https://drosotracker.maimonides.edu"
+keywords:
+  - Drosophila melanogaster
+  - thermal-summation model
+  - development scheduling
+  - laboratory software
+  - Kaplan-Meier survival analysis
+  - experiment planning
+authors:
+  - family-names: "Asti Tello"
+    given-names: "Gerson Smith"
+    orcid: "https://orcid.org/0009-0007-5106-0387"
+    affiliation: >-
+      Centro de Estudios Biomédicos, Básicos, Aplicados y Desarrollo (CEBBAD),
+      Universidad Maimónides, Buenos Aires, Argentina
+  - family-names: "Melani"
+    given-names: "Mariana"
+    orcid: "https://orcid.org/0000-0002-9491-932X"
+    affiliation: "Fundación Instituto Leloir, Buenos Aires, Argentina"
+  - family-names: "Liberman"
+    given-names: "Ana Clara"
+    orcid: "https://orcid.org/0000-0001-9316-3893"
+    affiliation: >-
+      Centro de Estudios Biomédicos, Básicos, Aplicados y Desarrollo (CEBBAD),
+      Universidad Maimónides, Buenos Aires, Argentina
