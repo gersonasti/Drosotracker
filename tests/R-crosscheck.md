@@ -1,45 +1,45 @@
-# Verificación del Kaplan–Meier contra R `survival`
+# Cross-check of the Kaplan–Meier estimator against R `survival`
 
-Este documento reproduce, en **R** (paquete `survival`, el estándar del campo), el mismo
-dataset que usa el test automatizado `run-tests.mjs`, para documentar en el manuscrito la
-**concordancia** entre la implementación de DrosoTracker y una referencia establecida.
+This document reproduces, in **R** (package `survival`, the standard in the field), the same
+dataset used by the automated test `run-tests.mjs`, in order to document for the manuscript
+the **agreement** between the DrosoTracker implementation and an established reference.
 
-## Dataset canónico
+## Canonical dataset
 
-10 individuos · 7 muertes · 3 censuras.
+10 individuals · 7 deaths · 3 censored.
 
-| Tiempo (días) | Estado |
+| Time (days) | Status |
 |---|---|
-| 4 | muerte |
-| 6 | censura |
-| 8 | muerte |
-| 8 | muerte |
-| 10 | muerte |
-| 12 | censura |
-| 14 | muerte |
-| 14 | muerte |
-| 16 | muerte |
-| 18 | censura |
+| 4 | death |
+| 6 | censored |
+| 8 | death |
+| 8 | death |
+| 10 | death |
+| 12 | censored |
+| 14 | death |
+| 14 | death |
+| 16 | death |
+| 18 | censored |
 
-## Script de R
+## R script
 
 ```r
 library(survival)
 
-# 1 = muerte (evento), 0 = censura
+# 1 = death (event), 0 = censored
 time   <- c(4, 6, 8, 8, 10, 12, 14, 14, 16, 18)
 status <- c(1, 0, 1, 1, 1,  0,  1,  1,  1,  0)
 
 fit <- survfit(Surv(time, status) ~ 1)
-summary(fit)   # S(t) en cada tiempo de evento
-print(fit)     # mediana de supervivencia
+summary(fit)   # S(t) at each event time
+print(fit)     # median survival
 ```
 
-## Salida esperada de R (y que produce DrosoTracker)
+## Expected R output (which DrosoTracker also produces)
 
-`summary(fit)` — estimador de supervivencia:
+`summary(fit)` — survival estimator:
 
-| tiempo | n.risk | n.event | survival |
+| time | n.risk | n.event | survival |
 |---|---|---|---|
 | 4 | 10 | 1 | 0.9000 |
 | 8 | 8 | 2 | 0.6750 |
@@ -47,16 +47,16 @@ print(fit)     # mediana de supervivencia
 | 14 | 4 | 2 | 0.2813 |
 | 16 | 2 | 1 | 0.1406 |
 
-`print(fit)` → **mediana = 14**.
+`print(fit)` → **median = 14**.
 
-## Concordancia
+## Agreement
 
-`tests/run-tests.mjs` verifica automáticamente que la función `kmCurve` de DrosoTracker
-produce **exactamente** estos valores: `S(4)=0.9`, `S(8)=0.675`, `S(10)=0.5625`,
-`S(14)=0.28125`, `S(16)=0.140625`, y **mediana = 14** (el primer tiempo con `S ≤ 0.5`).
+`tests/run-tests.mjs` automatically checks that DrosoTracker's `kmCurve` function produces
+**exactly** these values: `S(4)=0.9`, `S(8)=0.675`, `S(10)=0.5625`, `S(14)=0.28125`,
+`S(16)=0.140625`, and **median = 14** (the first time with `S ≤ 0.5`).
 
-Es decir: la implementación de DrosoTracker coincide con `survival::survfit` de R en el
-estimador de Kaplan–Meier, incluido el manejo de censuras y el criterio de mediana. Correr
-el script de R de arriba reproduce estos números de forma independiente.
+In other words: the DrosoTracker implementation agrees with R's `survival::survfit` on the
+Kaplan–Meier estimator, including the handling of censored observations and the median
+criterion. Running the R script above reproduces these numbers independently.
 
-> Para el paper: adjuntar la salida real de R (copiada de la consola) junto a esta tabla.
+> For the paper: attach the actual R output (copied from the console) alongside this table.

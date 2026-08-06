@@ -1,10 +1,10 @@
-/* Service worker de DrosoTracker (PWA).
-   Estrategia:
-   - El HTML (navegación): RED primero, caché de respaldo → con internet ves siempre lo último;
-     sin internet, abre la última versión guardada.
-   - Íconos / manifest / fuentes: CACHÉ primero, y se actualizan en segundo plano.
-   Subí VERSION cada vez que quieras forzar una actualización limpia. */
-const VERSION = 'v11';
+/* DrosoTracker service worker (PWA).
+   Strategy:
+   - The HTML (navigation): NETWORK first, cache as fallback → online you always get the
+     latest version; offline, it opens the last one saved.
+   - Icons / manifest / fonts: CACHE first, refreshed in the background.
+   Bump VERSION whenever you want to force a clean update. */
+const VERSION = 'v12';
 const CACHE = 'drosotracker-' + VERSION;
 const ASSETS = [
   './',
@@ -32,10 +32,10 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  // No interceptar Google Identity / Calendar API (auth y llamadas a la API van directo a la red).
+  // Do not intercept Google Identity / Calendar API (auth and API calls go straight to the network).
   if (/(accounts\.google\.com|googleapis\.com|apis\.google\.com)/.test(new URL(req.url).host)) return;
 
-  // El documento HTML: red primero (sin caché HTTP → siempre lo último), caché de respaldo.
+  // The HTML document: network first (no HTTP cache → always the latest), cache as fallback.
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req, { cache: 'reload' })
@@ -48,7 +48,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Resto (íconos, manifest, fuentes): caché primero + refresco en segundo plano.
+  // Everything else (icons, manifest, fonts): cache first + background refresh.
   e.respondWith(
     caches.match(req).then(cached => {
       const network = fetch(req)

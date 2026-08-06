@@ -4,11 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>DrosoTracker</title>
-<!-- Aplica el modo oscuro antes de pintar (evita el parpadeo claro al cargar) -->
+<!-- Apply dark mode before painting (avoids the light flash on load) -->
 <script>try{if(localStorage.getItem('drosotrack.mode.v1')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
-<!-- Fase de pruebas: que los buscadores no lo indexen. Quitar al lanzar públicamente. -->
-<meta name="robots" content="noindex, nofollow" />
-<!-- PWA: instalable y con apariencia de app -->
+<meta name="description" content="Track the Drosophila melanogaster life cycle: developmental stages, estimated eclosion, tasks and reminders. Free, offline-first, no account needed." />
+<!-- PWA: installable and app-like -->
 <meta name="theme-color" content="#c9bdf0" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icon-192.png" type="image/png" />
@@ -49,8 +48,8 @@
     --radius:22px;
   }
 
-  /* ---------- Modo oscuro: superficies oscuras + glow verde/lavanda; los pasteles
-     quedan como acento (chips, badges) que resaltan sobre lo oscuro ---------- */
+  /* ---------- Dark mode: dark surfaces + green/lavender glow; the pastels
+     stay as accents (chips, badges) that stand out against the dark ---------- */
   html[data-theme="dark"]{
     --bg-1:#252137;
     --bg-2:#1e1b2b;
@@ -61,9 +60,9 @@
     --shadow:0 12px 32px -12px rgba(0,0,0,.6);
     --shadow-sm:0 4px 14px -8px rgba(0,0,0,.55);
   }
-  html[data-theme="dark"]{ background:#141019; }        /* base sólida uniforme (color plano: no puede tener costuras) */
+  html[data-theme="dark"]{ background:#141019; }        /* uniform solid base (flat colour: it cannot show seams) */
   html[data-theme="dark"] body{ background:transparent; }
-  /* Glow como CAPA FIJA (pseudo-elemento): cubre el viewport, no se repite ni deja línea al scrollear en páginas largas */
+  /* Glow as a FIXED LAYER (pseudo-element): covers the viewport, never repeats or leaves a seam when scrolling long pages */
   html[data-theme="dark"] body::before{
     content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
     background:
@@ -77,13 +76,13 @@
   html[data-theme="dark"] .obj-chip{background:var(--line);color:var(--ink-soft)}
   html[data-theme="dark"] .plan-result{background:rgba(159,224,201,.14)}
   html[data-theme="dark"] .tasks.alert{background:#3a2531;border-color:#5b3543}
-  /* .menu-pop button:hover usa var(--lav-soft)/var(--peach-soft) para el fondo, pero esos
-     pasteles no cambian en modo oscuro (siguen claros) mientras el texto sí se aclara para
-     ese tema; el resultado era texto casi invisible sobre un fondo pastel claro. */
+  /* .menu-pop button:hover uses var(--lav-soft)/var(--peach-soft) as the background, but those
+     pastels do not change in dark mode (they stay light) while the text does lighten for that
+     theme; the result was near-invisible text on a light pastel background. */
   html[data-theme="dark"] .menu-pop button:hover{background:var(--line)}
   html[data-theme="dark"] .menu-pop button.menu-danger:hover{background:#3a2531}
-  /* mismo problema (fondo pastel fijo + texto var(--ink) que sí cambia con el tema) en el
-     banner de referencia de lab de Calibrar. */
+  /* same problem (fixed pastel background + var(--ink) text that does change with the theme) in
+     the lab-reference banner of the Calibrate modal. */
   html[data-theme="dark"] .calib-labref-banner{background:rgba(201,189,240,.14)}
 
   *{box-sizing:border-box;margin:0;padding:0}
@@ -128,7 +127,7 @@
   }
   .btn:hover{transform:translateY(-1px)}
   .btn:active{transform:translateY(0)}
-  /* menta reservada para la acción "Nuevo registro" */
+  /* mint reserved for the "New record" action */
   .btn.hero{background:linear-gradient(135deg,var(--mint),#7fcfb5);box-shadow:0 8px 20px -8px rgba(120,200,175,.9)}
   .btn.ghost{background:#fff;color:var(--ink);box-shadow:var(--shadow-sm)}
   .btn.danger{background:linear-gradient(135deg,#f6a8a8,var(--coral));box-shadow:0 8px 20px -8px rgba(245,120,120,.8)}
@@ -143,7 +142,7 @@
 
   /* ---------- Cards grid ---------- */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:20px;align-items:stretch}
-  /* mientras hay una cronología abierta, no estirar las vecinas (solo crece la abierta) */
+  /* while a timeline is open, do not stretch its neighbours (only the open one grows) */
   .grid.tl-open{align-items:start}
 
   .card{
@@ -170,7 +169,7 @@
 
   .card-mid{display:flex;align-items:center;gap:18px;margin:16px 0 6px}
 
-  /* Tarjeta doble: los dos padres de una cruza, criándose por separado hasta "Montar la cruza" */
+  /* Paired card: the two parents of a cross, reared separately until "Set up the cross" */
   .pair-card{grid-column:span 2}
   .pair-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
   .pair-title{font-family:'Poppins';font-weight:600;font-size:1.05rem;color:var(--ink)}
@@ -210,7 +209,7 @@
   .meta-row:last-child{border-bottom:none}
   .meta-row .k{color:var(--ink-soft)}
   .meta-row .v{font-weight:700;color:var(--ink)}
-  /* fecha de eclosión: editable (se puede cargar la real si el tratamiento la corrió) */
+  /* eclosion date: editable (the real one can be entered if a treatment shifted it) */
   .ecl-edit{color:inherit;text-decoration:none;border-bottom:1.5px dotted var(--ink-soft);cursor:pointer}
   .ecl-edit.set{color:var(--lav);border-bottom-style:solid;border-bottom-color:var(--lav-soft)}
 
@@ -234,10 +233,10 @@
     border-radius:14px;font-size:.88rem;transition:background .12s;
   }
   .timeline-btn:hover{background:var(--lav-soft);color:var(--lav)}
-  /* Nueva generación: acción secundaria (ya no menta) */
+  /* New generation: secondary action (no longer mint) */
   .gen-btn{background:var(--bg-1);color:var(--ink-soft)}
   .gen-btn:hover{background:var(--lav-soft);color:var(--lav)}
-  /* acción principal de una tarjeta (p. ej. registrar T50): lavanda suave, no menta */
+  /* main action of a card (e.g. record T50): soft lavender, not mint */
   .act-lav{background:var(--lav-soft);color:#6f5fb0}
   .act-lav:hover{filter:brightness(.97);background:var(--lav-soft);color:#6f5fb0}
   .btn-row{display:flex;gap:8px;margin-top:10px}
@@ -247,10 +246,10 @@
   .timeline{max-height:0;overflow:hidden;transition:max-height .35s ease}
   .timeline.open{max-height:680px}
   .tl-inner{padding-top:14px}
-  /* encabezado de sección dentro del panel "Más" (cronología / detalles) */
+  /* section heading inside the "More" panel (timeline / details) */
   .more-h{font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);opacity:.8;margin:0 0 8px}
   .info-inner .more-h{margin-top:2px}
-  /* Panel "Detalles" (info adicional que no satura la tarjeta) */
+  /* "Details" panel (extra info that would otherwise clutter the card) */
   .info-panel{max-height:0;overflow:hidden;transition:max-height .35s ease}
   .info-panel.open{max-height:600px}
   .info-inner{padding-top:14px;display:flex;flex-direction:column;gap:9px}
@@ -299,7 +298,7 @@
   .task.done .chip{filter:grayscale(.35)}
   .task-del{flex:none;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:.85rem;line-height:1;padding:3px 5px;border-radius:7px}
   .task-del:hover{background:var(--peach-soft);color:var(--coral)}
-  /* En celular la fila de tarea pasa a 2 líneas (nombre arriba, chip abajo) para no desbordar */
+  /* On mobile the task row wraps to 2 lines (name on top, chip below) so it does not overflow */
   @media (max-width:560px){
     .task{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"main check" "chip del";column-gap:10px;row-gap:6px;align-items:center}
     .tmain{display:flex;grid-area:main;align-items:center;gap:8px;min-width:0}
@@ -308,20 +307,20 @@
     .task-check{grid-area:check;justify-self:end;align-self:center}
     .task-del{grid-area:del;justify-self:end;align-self:center}
   }
-  /* Experimento(s): etiquetas en el formulario */
+  /* Experiment(s): tags in the form */
   .tags-input{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;border-radius:13px;border:1.5px solid var(--line);background:var(--bg-2);cursor:text}
   .tags-input:focus-within{border-color:var(--lav)}
   .tags-input input{flex:1;min-width:130px;border:none;outline:none;background:none;font-family:'Nunito';font-size:.95rem;color:var(--ink);padding:4px 2px}
   .tag-chip{display:inline-flex;align-items:center;gap:5px;background:var(--lav-soft);color:var(--lav);font-weight:700;font-size:.82rem;padding:4px 6px 4px 11px;border-radius:999px}
   .tag-chip button{border:none;background:none;cursor:pointer;color:var(--lav);font-size:.8rem;line-height:1;padding:0 2px}
-  /* etiquetas de experimento/condición en la tarjeta */
+  /* experiment/condition tags on the card */
   .card-exps{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
   .exp-chip{font-size:.72rem;font-weight:700;color:var(--lav);background:var(--lav-soft);padding:2px 9px;border-radius:999px}
   .cond-chip{color:#3fae8c;background:var(--mint-soft)}
   .obj-chip{color:#7c7990;background:#ebe9f0}
   .card.planned{filter:grayscale(.92);opacity:.75;border:1.5px dashed #cfcbd9}
   .card-title{word-break:break-word}
-  /* secciones colapsables por experimento */
+  /* collapsible sections per experiment */
   .exp-group{margin-bottom:24px}
   .exp-head{width:100%;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;background:none;padding:4px 2px 14px;font-family:'Poppins';font-weight:700;font-size:1.15rem;color:var(--ink)}
   .exp-count{background:var(--lav-soft);color:var(--lav);font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:999px}
@@ -353,7 +352,7 @@
   .cf-row input,.cf-row select{flex:1;min-width:0;padding:9px 11px;border-radius:11px;border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;background:var(--bg-2);color:var(--ink)}
   .cf-row.cf-head{gap:10px;margin-bottom:-2px}
   .cf-row.cf-head span{flex:1;min-width:0;font-size:.72rem;font-weight:700;color:var(--ink-soft);padding-left:2px}
-  /* una cohorte (♀ / ♂ / ⚥) dentro del panel de envejecimiento */
+  /* one cohort (♀ / ♂ / ⚥) inside the aging panel */
   .ag-group + .ag-group{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
   .ag-head{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:.85rem;font-weight:700;color:var(--ink)}
   .ag-head .sw{width:11px;height:11px;border-radius:4px;flex:none}
@@ -361,7 +360,7 @@
   .ag-head a{color:var(--lav);font-weight:700;text-decoration:none;font-size:.8rem}
   .aging-inner .hint a{color:var(--lav);font-weight:700;text-decoration:none}
 
-  /* ---------- Menú de datos ---------- */
+  /* ---------- Data menu ---------- */
   .menu{position:relative}
   .menu-pop{
     position:absolute;right:0;top:calc(100% + 8px);background:var(--card);
@@ -398,12 +397,12 @@
   .ac-tag.stock{background:var(--mint-soft);color:#3fae8c}
   .ac-tag.comp{background:var(--blue-soft);color:#5b8fc7}
 
-  /* ---------- Vista previa de importación del lab ---------- */
+  /* ---------- Lab import preview ---------- */
   .lab-preview{background:var(--bg-1);border-radius:11px;padding:6px 10px;max-height:170px;overflow:auto}
   .lab-pv-row{font-size:.82rem;color:var(--ink);padding:4px 0;border-bottom:1px dashed var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lab-pv-row:last-child{border-bottom:none}
 
-  /* ---------- Planificación ---------- */
+  /* ---------- Planning ---------- */
   .field select{
     width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);
     font-family:'Nunito';font-size:.95rem;color:var(--ink);background:var(--bg-2);
@@ -438,7 +437,7 @@
     width:100%;max-width:460px;padding:26px;animation:pop .25s ease;
     max-height:92vh;overflow:auto;
   }
-  /* En desktop, más aire (sobre todo para la cruza con dos genotipos lado a lado) */
+  /* On desktop, more breathing room (above all for the two-genotype cross side by side) */
   @media (min-width:700px){ .modal{max-width:760px} }
   .modal h2{font-size:1.3rem;margin-bottom:4px;text-align:center}
   .modal .sub{color:var(--ink-soft);font-size:.86rem;margin-bottom:20px}
@@ -457,13 +456,13 @@
   .duo{display:flex;gap:8px}
   .duo select{flex:1}
   .duo input{width:82px;flex:none;text-align:center}
-  /* Los inputs numéricos (♀/♂/total, n°) muestran flechitas de incremento nativas que
-     empujan el placeholder hacia la izquierda pese a text-align:center, así que se ocultan. */
+  /* Number inputs (♀/♂/total, no.) show native spinner arrows that push the placeholder
+     to the left despite text-align:center, so they are hidden. */
   .trio input::-webkit-outer-spin-button,.trio input::-webkit-inner-spin-button,
   .duo input::-webkit-outer-spin-button,.duo input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .trio input[type=number],.duo input[type=number]{-moz-appearance:textfield}
   .field .hint{font-size:.74rem;color:var(--ink-soft);margin-top:5px}
-  /* etiqueta con un (?) que muestra la explicación en un tooltip (en vez de un párrafo fijo) */
+  /* label with a (?) that shows the explanation in a tooltip (instead of a fixed paragraph) */
   .lbl-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
   .lbl-row label{margin-bottom:0}
   .qh{flex:none;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;
@@ -474,13 +473,13 @@
     cursor:pointer;font-family:'Nunito';font-weight:700;font-size:.82rem;color:var(--ink-soft);transition:all .12s;
   }
   .temp-presets button.on,.temp-presets button:hover{border-color:var(--lav);background:var(--lav-soft);color:var(--lav)}
-  /* pie fijo: en formularios largos, Cancelar/Guardar quedan siempre a la vista sin
-     tener que llegar scrolleando hasta el final */
+  /* sticky footer: in long forms, Cancel/Save stay in view without having to
+     scroll all the way to the bottom */
   .modal-actions{display:flex;gap:10px;margin-top:24px;position:sticky;bottom:-26px;
     background:var(--card);padding:14px 0 26px;border-top:1px solid var(--line)}
   .modal-actions .btn{flex:1;justify-content:center}
 
-  /* Cruza con dos genotipos (♀ de uno, ♂ de otro) */
+  /* Cross with two genotypes (♀ from one, ♂ from the other) */
   .link-btn{border:none;background:none;color:var(--lav);font-family:'Nunito';font-weight:700;font-size:.83rem;
     cursor:pointer;padding:8px 2px;text-align:left}
   .link-btn:hover{text-decoration:underline}
@@ -490,9 +489,9 @@
     border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;color:var(--ink);background:var(--bg-2)}
   .cross-pair-half input:focus,.cross-pair-half select:focus{outline:none;border-color:var(--lav)}
   .cross-pair-half .trio,.cross-pair-half .duo{margin-top:0}
-  /* La regla ".cross-pair-half input,.cross-pair-half select{width:100%}" de arriba tiene la
-     misma especificidad que ".duo input{width:82px}" y, al venir después, la pisaba: el select
-     de recipiente quedaba reducido a la flechita y el input de n° se desbordaba a la derecha. */
+  /* The rule ".cross-pair-half input,.cross-pair-half select{width:100%}" above has the same
+     specificity as ".duo input{width:82px}" and, coming later, overrode it: the container
+     select shrank to just its arrow and the number input overflowed to the right. */
   .cross-pair-half .trio input{width:auto}
   .cross-pair-half .duo select{width:auto}
   .cross-pair-half .duo input{width:82px;flex:none}
@@ -509,19 +508,19 @@
     .ring-wrap{width:112px;height:112px}
     .stage-art svg{width:54px;height:54px}
     header .btn span.lbl{display:inline}
-    /* Más/engranaje ahora viven en el extremo derecho: el menú se abre hacia la izquierda y nunca se sale de la pantalla */
+    /* More/gear now live at the far right: the menu opens leftwards and never runs off screen */
     .menu-pop{right:0;left:auto;max-width:calc(100vw - 28px)}
-    /* en celular, "New record" queda a la izquierda y Más/engranaje se van al extremo derecho.
-       margin-left:auto (no sólo justify-content:space-between) porque en pantallas muy angostas
-       (~320px) "New record" + Más + engranaje no entran en una fila y el grupo Más/engranaje
-       pasa a su propia línea (ahí, solo en esa línea, space-between no empuja nada a la derecha)
-       y el popup terminaba abriéndose fuera de la pantalla por la izquierda. */
+    /* on mobile, "New record" stays on the left and More/gear move to the far right.
+       margin-left:auto (not just justify-content:space-between) because on very narrow screens
+       (~320px) "New record" + More + gear do not fit on one row and the More/gear group wraps
+       to its own line (there, alone on that line, space-between pushes nothing to the right)
+       and the popup ended up opening off screen to the left. */
     .header-actions{width:100%;justify-content:space-between}
     .header-actions-sub{margin-left:auto;position:relative}
-    /* El popup de "Más" (#dataMenu) debe abrirse desde el borde derecho del GRUPO, no del botón
-       "Más" en sí: en pantallas angostas ese botón queda a la izquierda del engranaje y no le
-       sobra espacio propio para sus 230px de ancho. Sacarle su propio position:relative hace que
-       right:0 se resuelva contra .header-actions-sub (mismo borde seguro que ya usa el engranaje). */
+    /* The "More" popup (#dataMenu) must open from the right edge of the GROUP, not of the "More"
+       button itself: on narrow screens that button sits to the left of the gear and has no room
+       of its own for its 230px width. Removing its own position:relative makes right:0 resolve
+       against .header-actions-sub (the same safe edge the gear already uses). */
     .header-actions-sub .menu:first-child{position:static}
   }
 
@@ -531,9 +530,9 @@
     box-shadow:0 10px 28px rgba(31,27,54,.28);pointer-events:none;opacity:0;transform:translateY(4px);
     transition:opacity .12s ease,transform .12s ease;left:0;top:0}
   .tip.show{opacity:1;transform:translateY(0)}
-  /* al mantener apretado, evitar que el navegador seleccione/copie el texto o abra el menú del sistema */
+  /* on long-press, stop the browser from selecting/copying the text or opening the system menu */
   [data-tip]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-  /* Menú de ajustes: grupos desplegables (idioma / apariencia) con tick en el activo */
+  /* Settings menu: collapsible groups (language / appearance) with a tick on the active one */
   #settingsPop{min-width:210px}
   #settingsPop .set-group{display:flex;align-items:center;gap:8px;font-weight:700}
   #settingsPop .set-group .set-caret{margin-left:auto;color:var(--ink-soft);font-size:.72rem;transition:transform .2s}
@@ -543,17 +542,17 @@
   #settingsPop .set-sub button{display:flex;align-items:center;gap:8px;font-weight:600}
   #settingsPop .set-tick{width:13px;flex:none;color:var(--mint);font-weight:900;visibility:hidden}
   #settingsPop .set-sub button.active .set-tick{visibility:visible}
-  /* Al tocar una tarjeta, sus tareas pendientes parpadean en el panel */
+  /* Tapping a card makes its pending tasks flash in the panel */
   .task.flash{box-shadow:0 0 0 2.5px var(--lav);background:var(--lav-soft)}
-  /* Diálogo de confirmación (borrar) */
+  /* Confirmation dialog (delete) */
   #confirmOverlay{z-index:100}
   .confirm-modal{max-width:380px}
   .confirm-msg{font-size:.95rem;color:var(--ink);line-height:1.45;margin-bottom:20px}
   .confirm-dontask{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--ink-soft);cursor:pointer;margin:-8px 0 20px}
   .confirm-dontask input{width:16px;height:16px;flex:none;accent-color:var(--lav)}
-  /* Calibración */
-  /* el título va centrado como en el resto de las ventanas; el "?" se saca del flujo
-     (position:absolute) para no correrlo del centro */
+  /* Calibration */
+  /* the title is centred as in every other modal; the "?" is taken out of the flow
+     (position:absolute) so it does not push the title off centre */
   .calib-head{position:relative;margin-bottom:4px}
   .calib-head h2{margin:0}
   .calib-head .help-q{position:absolute;right:0;top:50%;transform:translateY(-50%)}
@@ -574,8 +573,8 @@
   .calib-row .cx:hover{background:var(--peach-soft);color:var(--coral)}
   .t50-opts{display:flex;flex-direction:column;gap:9px}
   .t50-opts .btn{width:100%;justify-content:center}
-  /* Referencia wild-type del lab: es la decisión más importante de la calibración (define el
-     modelo base para TODOS los genotipos), así que va primero y se destaca del resto del form. */
+  /* The lab's wild-type reference: the most important decision in the calibration (it defines
+     the base model for ALL genotypes), so it comes first and stands out from the rest of the form. */
   .calib-labref-banner{display:flex;align-items:center;gap:12px;font-size:.92rem;font-weight:700;color:var(--ink);
     line-height:1.4;margin:0 0 18px;padding:14px 16px;border-radius:14px;cursor:pointer;
     background:var(--lav-soft);border:1.5px solid var(--lav)}
@@ -588,7 +587,7 @@
   .calib-done{background:var(--mint-soft);color:#3fae8c;border-radius:14px;padding:11px 14px;margin-top:10px;font-size:.85rem;font-weight:700;text-align:center;line-height:1.35}
   .calib-done.prov{background:var(--bg-1);color:var(--ink-soft)}
   .t50-div{text-align:center;font-size:.73rem;color:var(--ink-soft);margin:6px 0 2px}
-  /* Aviso de recalibración del modelo (una sola vez, descartable) */
+  /* Model-recalibration notice (shown once, dismissible) */
   .model-notice{display:flex;gap:12px;align-items:flex-start;background:var(--bg-1);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:16px;font-size:.85rem;line-height:1.45;color:var(--ink-soft)}
   .model-notice b{color:var(--ink)}
   .model-notice .mn-x{flex:none;border:none;background:none;cursor:pointer;color:var(--ink-soft);font-size:.9rem;padding:2px 7px;border-radius:8px;font-weight:700}
@@ -608,7 +607,7 @@
   .cmp-lr span{font-weight:500;color:var(--ink-soft);font-size:.82rem}
   .cmp-lr.sig{background:var(--mint-soft);color:#3fae8c}
   .cmp-lr.sig span{color:#3fae8c}
-  /* Planificación estadística */
+  /* Statistical planning */
   .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
   .stat-out{display:flex;gap:8px;margin:16px 0 4px}
   .stat-out .so{flex:1;background:var(--bg-1);border-radius:12px;padding:11px 6px;text-align:center}
@@ -619,12 +618,12 @@
   .gcal-off{color:var(--ink-soft);font-weight:700}
   .gcal-auto{display:flex;align-items:center;gap:9px;font-size:.9rem;color:var(--ink);cursor:pointer}
   .gcal-auto input{width:17px;height:17px;flex:none}
-  /* ---------- Tutorial interactivo (spotlight): cursor grande + comentario + oscurecido + marco ----------
-     IMPORTANTE: #tourWrap (el contenedor) NO tiene position/z-index, no crea contexto de
-     apilamiento propio, así que cada hijo compite por z-index DIRECTAMENTE contra el resto de
-     la página, sin quedar todos atrapados "por encima de todo" como grupo. #tourDim va con
-     z-index alto (por encima de menús/modales: así la máscara siempre se ve, tapando lo que
-     no sea el "agujero" del target) pero por debajo del cursor y el comentario. */
+  /* ---------- Interactive tutorial (spotlight): large cursor + callout + dimming + frame ----------
+     IMPORTANT: #tourWrap (the container) has NO position/z-index, so it does not create its own
+     stacking context and each child competes for z-index DIRECTLY against the rest of the page,
+     instead of all being trapped "above everything" as a group. #tourDim gets a high z-index
+     (above menus/modals: that way the mask is always visible, covering everything that is not
+     the target's "hole") but below the cursor and the callout. */
   #tourDim{position:fixed;z-index:9001;pointer-events:none;border-radius:16px;
     box-shadow:0 0 0 9999px rgba(37,33,55,.58);
     transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease,opacity .2s ease;}
@@ -642,10 +641,10 @@
     box-shadow:0 18px 46px -10px rgba(20,16,30,.55),0 0 0 5px rgba(243,182,205,.16);
     transition:left .35s ease,top .35s ease}
   #tourCallout.tour-dragging{transition:none}
-  /* la posición inicial de cada paso se calcula en JS (tourApplyPosition) para todos los
-     anchos de pantalla, así el usuario siempre puede arrastrar el cuadro con #tourDragHandle
-     si tapa lo que está señalando (sobre todo en celular, donde no siempre entra al lado del
-     target); un !important de CSS pisaría ese arrastre. */
+  /* the starting position of each step is computed in JS (tourApplyPosition) for every screen
+     width, so the user can always drag the box with #tourDragHandle if it covers what is being
+     pointed at (above all on mobile, where it does not always fit beside the target); a CSS
+     !important would override that dragging. */
   #tourDragHandle{cursor:grab;touch-action:none;margin:-2px -4px 8px;padding:2px 4px}
   #tourDragHandle:active{cursor:grabbing}
   .tour-drag-bar{width:34px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 10px}
@@ -736,6 +735,7 @@
   <div class="footer-note">
     <span data-i18n-html="foot.tagline" style="display:block;margin-bottom:5px">Tracks the <i>Drosophila melanogaster</i> life cycle, tasks and lifespan.</span>
     <span data-i18n="foot.model">Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for ~15–28 °C). Estimated times · Data stored locally in your browser.</span>
+    <span style="display:block;margin-top:6px"><a href="privacy.html" data-i18n="foot.privacy" style="color:inherit">Privacy policy</a></span>
   </div>
 </div>
 
@@ -903,7 +903,7 @@
   </div>
 </div>
 
-<!-- Modal planificación -->
+<!-- Planning modal -->
 <div class="overlay" id="planOverlay">
   <div class="modal">
     <h2 id="planTitle">Planning</h2>
@@ -960,7 +960,7 @@
   </div>
 </div>
 
-<!-- Modal fecha de eclosión (cargar la real, que puede no coincidir con la estimada) -->
+<!-- Eclosion-date modal (enter the real one, which may differ from the estimate) -->
 <div class="overlay" id="eclOverlay">
   <div class="modal">
     <h2 data-i18n="ecl.title">Eclosion date</h2>
@@ -1018,7 +1018,7 @@
   </div>
 </div>
 
-<!-- Modal importar base de genotipos del laboratorio -->
+<!-- Modal for importing the lab's genotype database -->
 <div class="overlay" id="labOverlay">
   <div class="modal">
     <h2 data-i18n="lab.title">Import lab database</h2>
@@ -1058,7 +1058,7 @@
   </div>
 </div>
 
-<!-- Crear / editar una tarea recurrente -->
+<!-- Create / edit a recurring task -->
 <div class="overlay" id="recTaskFormOverlay">
   <div class="modal">
     <h2 id="recTaskFormTitle" data-i18n="rt.newTitle">New recurring task</h2>
@@ -1104,7 +1104,7 @@
   </div>
 </div>
 
-<!-- Calibrar el ciclo de un genotipo con una observación real -->
+<!-- Calibrate a genotype's cycle with a real observation -->
 <div class="overlay" id="calibOverlay">
   <div class="modal">
     <div class="calib-head">
@@ -1171,7 +1171,7 @@
   </div>
 </div>
 
-<!-- Planificación estadística: tamaño muestral / potencia / duración de un experimento de supervivencia -->
+<!-- Statistical planning: sample size / power / duration of a survival experiment -->
 <div class="overlay" id="statOverlay" onclick="if(event.target===this)closeStatPlan()">
   <div class="modal">
     <div class="calib-head"><h2 data-i18n="stat.title">Sample size &amp; power</h2></div>
@@ -1191,13 +1191,13 @@
   </div>
 </div>
 
-<!-- Tutorial interactivo (spotlight): recorre la app real, paso a paso, con el resto de la
-     pantalla congelado. Sólo estos 3 controles (Atrás/Continuar/Salir) quedan interactuables.
-     #tourWrap NO tiene position/z-index propios (a propósito): así no crea su propio contexto
-     de apilamiento y cada hijo compite por z-index directamente contra el resto de la página
-     (el menú "Más ▾" y los modales, en z-index 40-100); #tourDim queda deliberadamente MUY
-     por debajo de ellos para nunca taparlos, mientras #tourBlock/#tourCursor/#tourCallout
-     quedan muy por arriba de todo (bloqueo de clicks + visibilidad garantizada). -->
+<!-- Interactive tutorial (spotlight): walks through the real app, step by step, with the rest
+     of the screen frozen. Only these 3 controls (Back/Continue/Exit) stay interactive.
+     #tourWrap deliberately has NO position/z-index of its own: that way it does not create its
+     own stacking context and each child competes for z-index directly against the rest of the
+     page (the "More ▾" menu and the modals, at z-index 40-100); #tourDim sits deliberately WELL
+     below them so it never covers them, while #tourBlock/#tourCursor/#tourCallout sit well above
+     everything (click blocking + guaranteed visibility). -->
 <div id="tourWrap" style="display:none">
   <div id="tourDim"></div>
   <div id="tourFrame"></div>
@@ -1232,7 +1232,7 @@
   </div>
 </div>
 
-<!-- Registrar el T50 (eclosión de la mitad) sin pedir cálculos -->
+<!-- Record the T50 (half of the flies eclosed) without asking for any maths -->
 <div class="overlay" id="t50Overlay" onclick="if(event.target===this)closeT50()">
   <div class="modal confirm-modal">
     <div class="confirm-msg" id="t50Msg" data-i18n="calib.q">Has about half of the flies eclosed?</div>
@@ -1246,7 +1246,7 @@
   </div>
 </div>
 
-<!-- T50 por conteo: se registran conteos en el tiempo y se interpola la mitad (más preciso) -->
+<!-- T50 from counts: counts are recorded over time and the halfway point is interpolated (more precise) -->
 <div class="overlay" id="countOverlay" onclick="if(event.target===this)closeCount()">
   <div class="modal">
     <h2 data-i18n="count.title">Log by count</h2>
@@ -1271,7 +1271,7 @@
   </div>
 </div>
 
-<!-- Sincronización con Google Calendar -->
+<!-- Google Calendar sync -->
 <div class="overlay" id="gcalOverlay" onclick="if(event.target===this)closeGcal()">
   <div class="modal">
     <h2 data-i18n="gcal.title">Google Calendar</h2>
@@ -1288,7 +1288,7 @@
   </div>
 </div>
 
-<!-- Aviso de instalación como PWA: sólo si no se está corriendo ya instalada -->
+<!-- PWA install prompt: only if the app is not already running installed -->
 <div class="overlay" id="installOverlay" onclick="if(event.target===this)closeInstallNotice()">
   <div class="modal">
     <h2 data-i18n="install.title">Install DrosoTracker</h2>
@@ -1301,7 +1301,7 @@
   </div>
 </div>
 
-<!-- Confirmación reutilizable (borrar tarjetas / tareas) -->
+<!-- Reusable confirmation (deleting cards / tasks) -->
 <div class="overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm()">
   <div class="modal confirm-modal">
     <div class="confirm-msg" id="confirmMsg"></div>
@@ -1316,7 +1316,7 @@
   </div>
 </div>
 
-<!-- Importar backup: sumar a lo que ya hay, o reemplazar todo -->
+<!-- Import a backup: merge with what is already there, or replace everything -->
 <div class="overlay" id="importChoiceOverlay" onclick="if(event.target===this)closeImportChoice()">
   <div class="modal confirm-modal">
     <div class="confirm-msg" id="importChoiceMsg"></div>
@@ -1336,12 +1336,12 @@
 const STORE_KEY = 'drosotrack.crosses.v1';
 
 /* ============================================================
-   i18n (inglés por defecto, español opcional vía la ruedita ⚙️)
+   i18n (English by default, Spanish optional via the ⚙️ gear)
    ============================================================ */
 const LANG_KEY = 'drosotrack.lang.v1';
 let lang = localStorage.getItem(LANG_KEY) || 'en';
 const MODE_KEY = 'drosotrack.mode.v1';
-let mode = localStorage.getItem(MODE_KEY) || 'light';   // apariencia: 'light' (por defecto) | 'dark'
+let mode = localStorage.getItem(MODE_KEY) || 'light';   // appearance: 'light' (default) | 'dark'
 const I18N = {
   en: {
     'hdr.plan':'Plan','hdr.data':'⇅ Data','hdr.more':'More ▾','hdr.newCross':'New record','hdr.settings':'Settings',
@@ -1364,6 +1364,7 @@ const I18N = {
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
     'foot.tagline':'Tracks the <i>Drosophila melanogaster</i> life cycle, tasks and lifespan.',
     'foot.model':'Temperature-dependent development model (thermal summation, threshold ≈ 11.8 °C · ~116 degree-days, calibrated for ~15–28 °C). Estimated times · Data stored locally in your browser.',
+    'foot.privacy':'Privacy policy',
     'empty.title':'No records yet','empty.text':'Add your first record with its genotype, date and incubation temperature. DrosoTracker will compute the current stage and alert you at each transition.','empty.btn':'+ New record','group.none':'No experiment',
     // objetivos
     'obj.none':'— No specific objective','obj.cross':'Genetic cross','obj.amplify':'Line amplification','obj.stock':'Stock maintenance','obj.aging':'Aging cohort','obj.dissect':'Larval dissection',
@@ -1395,7 +1396,7 @@ const I18N = {
     'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Load flies','cohort.save':'Save','cohort.cancel':'Cancel',
     'cohort.hint':'Log the adult cohort to follow its survival curve (Kaplan-Meier). Recommended density: ≤25–30 flies/vial.','cohort.nPh':'e.g. 100','cohort.vialsPh':'optional',
     'cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
-    // fecha de eclosión real
+    // real eclosion date
     'card.metaEclReal':'Eclosion (recorded)','tip.eclEdit':'Set the actual eclosion date: a treatment can bring it forward or push it back.',
     'ecl.title':'Eclosion date','ecl.sub':'{geno} · model estimate: {d}','ecl.date':'Observed eclosion (date and time)',
     'ecl.hint':'Day 0 of adult age and of the survival curve. The stages before it are rescaled proportionally.','ecl.reset':'Back to estimate',
@@ -1444,7 +1445,7 @@ const I18N = {
     'calib.sInconsistent':'Inconsistent · {n} batches disagree beyond their uncertainty; check for a data-entry error or a batch effect.',
     'calib.warnSingle':'Only one batch so far, genotype and batch effects are still mixed. Add another independent cross to separate them.',
     'calib.labRefOpt':'Use as my lab\'s wild-type reference (calibrates the base model for all genotypes).','calib.labRefBadge':'lab reference','calib.labRefLegend':'★ = your lab\'s wild-type reference: calibrates the base model for all genotypes.','calib.labRefSet':'Set as lab reference (wild-type)','calib.labRefClear':'Remove lab reference','calib.vsLab':'· vs your lab reference',
-    // planificación
+    // planning
     'plan.title':'Planning','plan.titleEdit':'Edit planned record','plan.sub':'Upcoming events and reverse scheduling.',
     'plan.upcoming':'📆 Upcoming events','plan.backward':'⏪ Plan backward','plan.backwardSub':'When to set it up to reach a stage by a target date?',
     'plan.expPh':'e.g. Eye phenotype (comma-separated)','plan.reachStage':'I want to reach','plan.stEgg':'Embryo (egg-lay)','plan.stAdult':'Adults / virgins (eclosion)',
@@ -1454,7 +1455,7 @@ const I18N = {
     // modal envejecimiento
     'agm.title':'Log flip / count','agm.date':'Check date and time','agm.deaths':'Dead flies at this check','agm.censored':'Censored (escaped, stuck, accidents)',
     'agm.censoredHint':'Removed from the at-risk group without counting as deaths (Kaplan-Meier).','agm.flip':'Flipped the cohort to fresh food','agm.note':'Note (optional)','agm.notePh':'e.g. females, 2 vials','agm.sub':'{geno} · cohort day {d}',
-    // importar base del lab
+    // lab database import
     'lab.title':'Import lab database','lab.col':'Which column has the genotype?','lab.colHint':'The first row is assumed to be the column headers.','lab.preview':'Preview','lab.cancel':'Cancel','lab.import':'Import',
     'lab.sub':'{file} · {n} rows. Pick the genotype column below.','lab.noCol':'The selected column has no genotypes.','lab.loaded':'Lab database: {n} genotypes','lab.clear':'Clear','lab.colN':'Column {n}','err.labFormat':'Expected a header row + at least one data row.',
     'lab.stockHint':'Add a column with the tray/task name to also create (or update) recurring tasks from this same file (you can add responsible, frequency and next-due too). Matched by task name, so re-importing later updates them instead of duplicating.',
@@ -1542,6 +1543,7 @@ const I18N = {
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
     'foot.tagline':'Sigue el ciclo de vida, las tareas y la longevidad de <i>Drosophila melanogaster</i>.',
     'foot.model':'Modelo de desarrollo dependiente de temperatura (suma térmica, umbral ≈ 11.8 °C · ~116 grados-día, calibrado para ~15–28 °C). Tiempos estimados · Datos guardados localmente en tu navegador.',
+    'foot.privacy':'Política de privacidad',
     'empty.title':'Todavía no hay registros','empty.text':'Agregá tu primer registro con su genotipo, fecha y temperatura de incubación. DrosoTracker calculará el estadio actual y te avisará de cada transición.','empty.btn':'+ Nuevo registro','group.none':'Sin experimento',
     'obj.none':'— Sin objetivo específico','obj.cross':'Cruza genética','obj.amplify':'Amplificación de línea','obj.stock':'Mantenimiento de stock','obj.aging':'Cohorte de envejecimiento','obj.dissect':'Disección larval',
     'cross.addSecond':'+ Agregar un segundo genotipo (armar una cruza)','cross.removeSecond':'✕ Quitar el segundo genotipo',
@@ -1695,10 +1697,10 @@ function t(key, vars){
   return s;
 }
 function localeTag(){ return lang === 'es' ? 'es-ES' : 'en-GB'; }
-/* nombres de estadio traducidos (STAGES/ADULT guardan sólo la key) */
+/* translated stage names (STAGES/ADULT only store the key) */
 function stageName(s){ return t('stage.'+s.key); }
 function stageShort(s){ return t('stage.short.'+s.key); }
-/* aplica traducciones a los textos estáticos del HTML (marcados con data-i18n*) */
+/* applies translations to the static HTML texts (marked with data-i18n*) */
 function applyStaticI18n(){
   document.querySelectorAll('[data-i18n]').forEach(el=> el.textContent = t(el.getAttribute('data-i18n')));
   document.querySelectorAll('[data-i18n-html]').forEach(el=> el.innerHTML = t(el.getAttribute('data-i18n-html')));
@@ -1710,23 +1712,23 @@ function applyStaticI18n(){
 function toggleSettings(){ const open = document.getElementById('settingsPop').classList.toggle('open'); if(open) updateSettingsUI(); }
 
 /* ============================================================
-   Tutorial interactivo (spotlight): un cursor grande recorre la app REAL,
-   abre/cierra los modales y menús que hacen falta en cada paso, mientras el
-   resto de la pantalla queda congelado (bloqueado por #tourBlock). El usuario
-   solo puede tocar Atrás / Continuar / Salir del tutorial.
-   Se abre solo (auto) la primera vez que se usa la app sin registros todavía;
-   siempre queda accesible desde ⚙️ Ajustes → Tutorial. ============================================================ */
+   Interactive tutorial (spotlight): a large cursor walks through the REAL app,
+   opening/closing the modals and menus each step needs, while the rest of the
+   screen stays frozen (blocked by #tourBlock). The user can only press
+   Back / Continue / Exit tutorial.
+   It opens by itself the first time the app is used with no records yet;
+   it stays available from ⚙️ Settings → Tutorial. ============================================================ */
 const TUTORIAL_KEY = 'drosotrack.tutorial.v1';
 const TUTORIAL_ADVANCED_KEY = 'drosotrack.tutorial-advanced.v1';
 let _tourStep = 0;
-let _tourSteps = null;   // TOUR_STEPS_BASIC o TOUR_STEPS_ADVANCED, según cuál se haya abierto
-let _tourKey = TUTORIAL_KEY;   // qué localStorage key marcar como "visto" al cerrar
+let _tourSteps = null;   // TOUR_STEPS_BASIC or TOUR_STEPS_ADVANCED, depending on which one was opened
+let _tourKey = TUTORIAL_KEY;   // which localStorage key to mark as "seen" on close
 
-/* Construye 2 cohortes "cross-like" enteramente en memoria (nunca se insertan en
-   `crosses` de forma permanente ni pasan por save()) para ilustrar Comparar cohortes
-   (KM) con datos reales de ejemplo, no una explicación abstracta. ensureAging/
-   computeState son funciones puras (sólo leen/mutan el objeto recibido), así que un
-   objeto sintético bien formado pasa sin problema por kmCurve/cohortSeries/logRankTest. */
+/* Builds 2 "cross-like" cohorts entirely in memory (they are never inserted into
+   `crosses` permanently, nor do they go through save()) to illustrate Compare cohorts
+   (KM) with real example data instead of an abstract explanation. ensureAging/
+   computeState are pure functions (they only read/mutate the object they are given), so a
+   well-formed synthetic object goes through kmCurve/cohortSeries/logRankTest without trouble. */
 function buildDemoCohorts(){
   const crossDateISO = new Date(Date.now() - 70*86400000).toISOString();
   function mk(id, genoKey, startN, deathSchedule){
@@ -1742,12 +1744,12 @@ function buildDemoCohorts(){
     mk('tour-demo-b', 'tour.demoB', 40, [[10,3],[15,6],[20,9],[25,10],[30,7],[35,3],[40,2]]),
   ];
 }
-/* Construye el par de una cruza (♀/♂, mismo pairId) enteramente en memoria, con la MISMA
-   forma que crea saveCross() para una cruza real (ver buildParent() más abajo en el archivo)
-   (así renderCardsWithPairs()/pairCard() la dibujan como la tarjeta doble real), y el
-   cálculo de tareas (findCrossPairs) genera "Montar la cruza" con normalidad. crossDate
-   bien atrás en el tiempo para que ambos ya sean adultos y la ♀ tenga ≥2 días (condición
-   real de esa tarea, ver más abajo). */
+/* Builds the pair of a cross (♀/♂, same pairId) entirely in memory, with the SAME shape
+   that saveCross() creates for a real cross (see buildParent() further down the file)
+   (so renderCardsWithPairs()/pairCard() draw it as the real paired card), and the task
+   computation (findCrossPairs) generates "Set up the cross" as usual. crossDate is set
+   well back in time so both are already adults and the ♀ is ≥2 days old (the real
+   condition for that task, see below). */
 function buildDemoCrossPair(){
   const pairId = 'tour-demo-pair';
   const shared = { experiments:[], conditions:[], objective:'cross', dissectStage:null, notes:'',
@@ -1758,8 +1760,8 @@ function buildDemoCrossPair(){
   ];
 }
 const TOUR_DEMO_IDS = ['tour-demo-a','tour-demo-b','tour-demo-female','tour-demo-male'];
-/* rect "sintético" que abarca dos elementos a la vez (para señalar ambas tarjetas de
-   ejemplo juntas); cualquier objeto con getBoundingClientRect() sirve como target. */
+/* "synthetic" rect spanning two elements at once (to point at both example cards
+   together); any object with getBoundingClientRect() works as a target. */
 function unionRect(a, b){
   if(!a || !b) return null;
   const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
@@ -1770,7 +1772,7 @@ function unionRect(a, b){
 
 const TOUR_STEPS_BASIC = [
   { target:()=>null, titleKey:'tour.t0', bodyKey:'tour.b0' },
-  /* Primero de todo: Calibrar, por su importancia (ver menú "Más ▾"). */
+  /* First of all: Calibrate, because of its importance (see the "More ▾" menu). */
   { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
     target:()=>document.querySelector('#dataMenu button[onclick="openCalib()"]'), titleKey:'tour.t1', bodyKey:'tour.b1' },
   { setup:()=>{ document.getElementById('dataMenu').classList.remove('open'); openCalib(); },
@@ -1781,12 +1783,12 @@ const TOUR_STEPS_BASIC = [
     target:()=>document.getElementById('crossPairBlock'), titleKey:'tour.t5', bodyKey:'tour.b5' },
   { setup:()=>{ openForm(); document.getElementById('objective').value='cross'; onObjectiveChange(); },
     target:()=>document.querySelector('#overlay button[type="submit"]'), titleKey:'tour.t6', bodyKey:'tour.b6' },
-  /* Cómo quedan las dos líneas parentales en la pantalla principal después de guardar
-     (tarjeta doble real, vía pairCard/renderCardsWithPairs). */
+  /* How the two parental lines look on the main screen after saving
+     (the real paired card, via pairCard/renderCardsWithPairs). */
   { setup:()=>{ closeForm(); crosses.push(...buildDemoCrossPair()); render(); },
     target:()=>document.getElementById('card-tour-demo-pair'), titleKey:'tour.t7', bodyKey:'tour.b7' },
-  /* El panel de Tareas pendientes, abierto, mostrando "Montar la cruza" para esta misma
-     cruza de ejemplo (♀ y ♂ ya adultos, ♀ con ≥2 días). */
+  /* The Pending tasks panel, open, showing "Set up the cross" for this same example
+     cross (♀ and ♂ already adults, ♀ at least 2 days old). */
   { setup:()=>{ crosses.push(...buildDemoCrossPair()); tasksPanelOpen = true; render(); },
     target:()=>document.getElementById('tasks'), titleKey:'tour.t8', bodyKey:'tour.b8' },
   { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
@@ -1794,9 +1796,9 @@ const TOUR_STEPS_BASIC = [
   { setup:()=>{ openPlan(); }, target:()=>document.getElementById('planForm'), titleKey:'tour.t10', bodyKey:'tour.b10' },
   { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
     target:()=>document.querySelector('#dataMenu button[onclick="openCompare()"]'), titleKey:'tour.t11', bodyKey:'tour.b11' },
-  /* Muestra las 2 cohortes de ejemplo YA CARGADAS como tarjetas reales en la pantalla
-     principal (no sólo el resultado de la comparación): así se ve qué aspecto tiene una
-     cohorte definida, y el texto aclara qué pasa si todavía no tenés ninguna. */
+  /* Shows the 2 example cohorts ALREADY LOADED as real cards on the main screen (not just
+     the result of the comparison): that way you can see what a defined cohort looks like,
+     and the text explains what happens if you do not have one yet. */
   { setup:()=>{ document.getElementById('dataMenu').classList.remove('open'); crosses.push(...buildDemoCohorts()); render(); },
     target:()=>unionRect(document.getElementById('card-tour-demo-a'), document.getElementById('card-tour-demo-b')),
     titleKey:'tour.t12', bodyKey:'tour.b12' },
@@ -1805,11 +1807,11 @@ const TOUR_STEPS_BASIC = [
   { target:()=>null, titleKey:'tour.t14', bodyKey:'tour.b14' },
 ];
 
-/* Tutorial avanzado: funciones menos frecuentes (importar/exportar datos, Google Calendar,
-   tamaño muestral, reportar un error), solo accesible manualmente desde ⚙️ Ajustes, nunca
-   se abre solo. No dispara ninguna acción con efectos reales (no descarga archivos, no abre
-   selectores de archivo nativos, no conecta Google), sólo señala los botones y, cuando es
-   seguro (Google Calendar, tamaño muestral), abre el modal real para mostrar sus campos. */
+/* Advanced tutorial: less frequent features (import/export data, Google Calendar, sample
+   size, report a bug), only reachable manually from ⚙️ Settings, never opened automatically.
+   It triggers no action with real side effects (it downloads no files, opens no native file
+   pickers, connects no Google account); it only points at the buttons and, where it is safe
+   (Google Calendar, sample size), opens the real modal to show its fields. */
 const TOUR_STEPS_ADVANCED = [
   { target:()=>null, titleKey:'tourA.t0', bodyKey:'tourA.b0' },
   { setup:()=>{ document.getElementById('dataMenu').classList.add('open'); },
@@ -1835,10 +1837,10 @@ const TOUR_STEPS_ADVANCED = [
   { target:()=>null, titleKey:'tourA.t10', bodyKey:'tourA.b10' },
 ];
 
-/* Vuelve a un estado conocido antes de cada paso (en cualquier dirección): cierra
-   todo lo que el tour pudo haber abierto y saca los registros de ejemplo de `crosses`
-   si el paso anterior los había insertado. Cada paso reconstruye desde acá lo que
-   necesita, más simple y robusto que diffear el estado entre pasos. */
+/* Returns to a known state before every step (in either direction): closes everything the
+   tour may have opened and removes the example records from `crosses` if the previous step
+   had inserted them. Each step rebuilds what it needs from here, which is simpler and more
+   robust than diffing the state between steps. */
 function tourResetToBaseline(){
   if(crosses.some(c=>TOUR_DEMO_IDS.includes(c.id))){
     crosses = crosses.filter(c=>!TOUR_DEMO_IDS.includes(c.id));
@@ -1861,9 +1863,9 @@ function tourApplyPosition(){
   const cursor = document.getElementById('tourCursor');
   const dim = document.getElementById('tourDim');
   const callout = document.getElementById('tourCallout');
-  /* defensivo: un target "encontrado" pero de tamaño cero (p. ej. todavía no
-     renderizado) se trata como si no hubiera target, en vez de mal-posicionar
-     el cursor en la esquina superior izquierda de la pantalla. */
+  /* defensive: a target that is "found" but has zero size (e.g. not rendered yet)
+     is treated as no target at all, instead of mis-positioning the cursor in the
+     top-left corner of the screen. */
   if(target){ const rr = target.getBoundingClientRect(); if(!rr.width && !rr.height) target = null; }
   const cw = callout.offsetWidth || 300, ch = callout.offsetHeight || 200, margin = 16;
   if(!target){
@@ -1874,7 +1876,7 @@ function tourApplyPosition(){
     return;
   }
   const r = target.getBoundingClientRect();
-  const pad = 8, edge = 12;   // edge: nunca pegar el cursor al borde del marco decorativo
+  const pad = 8, edge = 12;   // edge: never push the cursor right up against the decorative frame
   dim.style.opacity = '1';
   dim.style.left = Math.round(r.left-pad) + 'px';
   dim.style.top = Math.round(r.top-pad) + 'px';
@@ -1890,10 +1892,10 @@ function tourApplyPosition(){
     left = Math.max(margin, Math.min(left, window.innerWidth - cw - margin));
     top = Math.max(margin, Math.min(r.top, window.innerHeight - ch - margin));
   } else {
-    /* en celular no entra al lado del target (poco ancho): probamos abajo del target
-       (como en escritorio, pero en vertical); si no entra, arriba; si tampoco entra
-       (el target ocupa casi toda la pantalla), como último recurso lo apoyamos abajo
-       de todo; ahí el usuario puede arrastrarlo (#tourDragHandle) si aun tapa algo. */
+    /* on mobile it does not fit beside the target (too narrow): we try below the target
+       (as on desktop, but vertically); if it does not fit, above; if that fails too
+       (the target takes up almost the whole screen), as a last resort we drop it at the
+       very bottom, where the user can drag it (#tourDragHandle) if it still covers something. */
     left = Math.max(margin, Math.min((window.innerWidth-cw)/2, window.innerWidth - cw - margin));
     const gap = 14, below = r.bottom + gap, above = r.top - ch - gap;
     if(below + ch + margin <= window.innerHeight) top = below;
@@ -1903,9 +1905,9 @@ function tourApplyPosition(){
   callout.style.left = Math.round(left) + 'px';
   callout.style.top = Math.round(top) + 'px';
 }
-/* Arrastrar el comentario del tour por #tourDragHandle (Pointer Events: mouse y touch
-   con el mismo código). Sobre todo pensado para celular, donde el cuadro a veces tapa
-   justo lo que señala y no hay lugar para reacomodarlo solo. */
+/* Dragging the tour callout by #tourDragHandle (Pointer Events: mouse and touch with the
+   same code). Mainly meant for mobile, where the box sometimes covers exactly what it is
+   pointing at and there is no room to reposition it automatically. */
 (function(){
   const handle = document.getElementById('tourDragHandle');
   const callout = document.getElementById('tourCallout');
@@ -1948,10 +1950,10 @@ function tourGoStep(i){
   const step = _tourSteps[_tourStep];
   if(step.setup) step.setup();
   tourRender();
-  /* si el setup recién abrió un modal, éste entra con su propia animación
-     (.modal{animation:pop .25s}, arranca ~8px más abajo); el target se mide
-     de una así el resaltado aparece ya, pero volvemos a medir cuando esa
-     animación terminó para no quedar pegados a esa posición inicial. */
+  /* if the setup just opened a modal, it enters with its own animation
+     (.modal{animation:pop .25s}, starting ~8px lower); the target is measured
+     right away so the highlight appears immediately, but we measure again once
+     that animation has finished so we do not stay stuck at the initial position. */
   setTimeout(tourApplyPosition, 280);
 }
 function tourNext(){ if(_tourStep >= _tourSteps.length-1){ closeTutorial(); return; } tourGoStep(_tourStep+1); }
@@ -1962,8 +1964,8 @@ function startTour(steps, key){
   closeMenu();
   document.getElementById('tourWrap').style.display = 'block';
   window.addEventListener('resize', tourApplyPosition);
-  /* capture:true, porque el scroll DENTRO de un modal (.modal{overflow:auto}) no burbujea,
-     así que hay que escucharlo en fase de captura para no perder el reposicionamiento. */
+  /* capture:true, because scrolling INSIDE a modal (.modal{overflow:auto}) does not bubble,
+     so it has to be listened for in the capture phase or the repositioning is lost. */
   window.addEventListener('scroll', tourApplyPosition, true);
   tourGoStep(0);
 }
@@ -1978,13 +1980,13 @@ function closeTutorial(){
   window.removeEventListener('scroll', tourApplyPosition, true);
   localStorage.setItem(_tourKey, '1');
 }
-/* grupos desplegables del menú de ajustes (acordeón: sólo uno abierto a la vez) */
+/* collapsible groups of the settings menu (accordion: only one open at a time) */
 function toggleSetGroup(btn){
   const was = btn.classList.contains('open');
   document.querySelectorAll('#settingsPop .set-group').forEach(b=>b.classList.remove('open'));
   if(!was) btn.classList.add('open');
 }
-/* marca con ✓ el idioma y la apariencia activos */
+/* marks the active language and appearance with a ✓ */
 function updateSettingsUI(){
   document.querySelectorAll('#settingsPop [data-lang]').forEach(b=> b.classList.toggle('active', b.dataset.lang===lang));
   document.querySelectorAll('#settingsPop [data-mode]').forEach(b=> b.classList.toggle('active', b.dataset.mode===mode));
@@ -2011,16 +2013,16 @@ function setLang(l){
   updateSettingsUI();
   if(document.getElementById('tourWrap').style.display !== 'none') tourRender();
 }
-/* Cerrar los menús desplegables (Datos, ⚙️) al tocar fuera; al abrir uno se cierra el otro.
-   Guarda de tour: ver el mismo comentario en el otro listener de click más abajo. */
+/* Close the dropdown menus (Data, ⚙️) on an outside tap; opening one closes the other.
+   Tour guard: see the same comment on the other click listener further down. */
 document.addEventListener('click', e=>{
   if(document.getElementById('tourWrap').style.display !== 'none') return;
   const menu = e.target.closest('.menu');
   document.querySelectorAll('.menu-pop.open').forEach(p=>{ if(!menu || !menu.contains(p)) p.classList.remove('open'); });
 });
-/* Diálogo de confirmación propio (reemplaza el confirm() del navegador; estilizado + traducido) */
-/* "No volver a mostrar": el llamador pasa una dontAskKey; si el usuario tilda el check,
-   queda guardado en localStorage y las próximas veces se salta el diálogo directamente. */
+/* Custom confirmation dialog (replaces the browser's confirm(); styled + translated) */
+/* "Do not show again": the caller passes a dontAskKey; if the user ticks the box, it is
+   stored in localStorage and the dialog is skipped outright from then on. */
 function isConfirmSkipped(key){ try{ return localStorage.getItem('drosotrack.skipConfirm.'+key)==='1'; }catch(e){ return false; } }
 function setConfirmSkipped(key){ try{ localStorage.setItem('drosotrack.skipConfirm.'+key, '1'); }catch(e){} }
 let _confirmCb = null, _confirmDontAskKey = null;
@@ -2041,21 +2043,21 @@ function doConfirm(){
   if(cb) cb();
 }
 
-/* ---- Calibración por genotipo: modal, estado y flujo de T50 ---- */
+/* ---- Per-genotype calibration: modal, state and T50 flow ---- */
 function calibStateWord(state){ return t('calib.state.'+state); }
 function calibTrendText(ci){
   if(ci.pct===0) return t('calib.matchesBase');
   return t('calib.trend', { pct: Math.abs(ci.pct), dir: ci.pct>0 ? t('calib.slower') : t('calib.faster') });
 }
 function calibBatchesText(n){ return t(n===1 ? 'calib.batchOne' : 'calib.batchMany', { n }); }
-/* Línea principal de estado (Calibrando/Calibrado/Inconsistente + tendencia ± IC). */
+/* Main status line (Calibrating/Calibrated/Inconsistent + trend ± CI). */
 function calibStatusText(geno){
   const ci = calibInfoFor(geno); if(!ci) return '';
-  const vs = (!isLabRef(geno) && loadLabRef()) ? ' '+t('calib.vsLab') : '';   // genotipo vs wild-type del lab
+  const vs = (!isLabRef(geno) && loadLabRef()) ? ' '+t('calib.vsLab') : '';   // genotype vs the lab's wild-type
   if(ci.state==='inconsistent') return t('calib.sInconsistent', { n: ci.nBatch });
   return t('calib.sMain', { st: calibStateWord(ci.state), trend: calibTrendText(ci), ci: ci.ciPct, nb: calibBatchesText(ci.nBatch) }) + vs;
 }
-/* Aviso de tanda única (genotipo × lote confundidos); vacío si ya hay ≥2 tandas. */
+/* Single-batch warning (genotype × batch confounded); empty once there are ≥2 batches. */
 function calibWarnText(geno){
   const ci = calibInfoFor(geno); if(!ci) return '';
   return (ci.singleBatch && ci.state!=='inconsistent') ? t('calib.warnSingle') : '';
@@ -2073,8 +2075,8 @@ function openCalib(){
   renderCalibStatus(); renderCalibList();
   document.getElementById('calibOverlay').classList.add('open');
 }
-/* El modo de t₀ ajusta la incertidumbre: sólo el modo acotado pide la ventana,
-   y la etiqueta/ayuda del campo de fecha cambian según el modo elegido. */
+/* The t₀ mode adjusts the uncertainty: only the bounded mode asks for the window,
+   and the label/help of the date field change with the chosen mode. */
 function updateCalibT0Mode(){
   const mode = document.getElementById('calibT0Mode').value;
   const win = document.getElementById('calibWindowField');
@@ -2110,7 +2112,7 @@ function renderCalibList(){
     return `<div class="calib-row${lab?' is-labref':''}"><span class="cg" title="${esc(k)}">${esc(k)}</span><span class="cd">${esc(detail)}</span>${labBtn}<button class="cx" title="${esc(t('task.remove'))}" onclick="clearCalibGeno(${i})">✕</button></div>`;
   }).join('') + `<div class="hint" style="margin-top:7px;font-size:.76rem">${t('calib.labRefLegend')}</div>`;
 }
-/* designar / quitar el wild-type de referencia del laboratorio (calibra el base para todo) */
+/* set / unset the lab's reference wild-type (it calibrates the base model for everything) */
 function toggleLabRef(i){
   const geno = _calibKeys[i]; if(!geno) return;
   saveLabRef(isLabRef(geno) ? '' : geno);
@@ -2126,7 +2128,7 @@ function startCalib(e){
   if(!genotype){ alert(t('al.geno')); return; }
   const t0Mode = document.getElementById('calibT0Mode').value;
   const windowH = parseFloat(document.getElementById('calibWindowH').value);
-  if(document.getElementById('calibLabRef').checked) saveLabRef(genotype);   // wild-type de referencia del lab
+  if(document.getElementById('calibLabRef').checked) saveLabRef(genotype);   // the lab's reference wild-type
   crosses.push({
     id:'c'+Date.now()+Math.random().toString(36).slice(2,5),
     calib:true, calibDone:false, parentsRemoved:true, experiments:[],
@@ -2148,7 +2150,7 @@ function recordT50(kind){
   }
   closeT50(); render();
 }
-/* --- T50 por conteo (más preciso): registra conteos y interpola --- */
+/* --- T50 from counts (more precise): records counts and interpolates --- */
 let _countId = null;
 function openCountFromT50(){ const id = _t50Id; closeT50(); openCount(id); }
 function openCount(id){
@@ -2206,19 +2208,19 @@ function saveCountCalib(){
 }
 
 /* ============================================================
-   Sincronización con Google Calendar (opcional, del lado del navegador).
-   Usa Google Identity Services (token model): sin refresh token, el permiso
-   dura ~1 h y se renueva mientras la app esté abierta. Empuja un evento por
-   tarea/eclosión con un id estable por registro+tarea, así re-sincronizar
-   ACTUALIZA en vez de duplicar, y borra los eventos de tareas que ya no existen.
-   Pegá tu Client ID de Google Cloud abajo para activarlo.
+   Google Calendar sync (optional, browser side).
+   Uses Google Identity Services (token model): with no refresh token, the grant
+   lasts ~1 h and is renewed while the app stays open. It pushes one event per
+   task/eclosion with a stable id per record+task, so re-syncing UPDATES instead
+   of duplicating, and deletes the events of tasks that no longer exist.
+   Paste your Google Cloud Client ID below to enable it.
    ============================================================ */
 const GCAL_CLIENT_ID = '959383795746-5k8sp9umg7s4rmc7hopkndjnpicmvg5u.apps.googleusercontent.com';
 const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
-const GCAL_MAP_KEY = 'drosotrack.gcalmap.v1';   // { uid: {id, sig} }, eventos ya creados
+const GCAL_MAP_KEY = 'drosotrack.gcalmap.v1';   // { uid: {id, sig} }, events already created
 const GCAL_CFG_KEY = 'drosotrack.gcal.v1';       // { connected, auto, lastSync }
 let _gcalToken = null, _gcalTokenExp = 0, _gcalClient = null, _gcalGis = null, _gcalTokenCb = null, _gcalTimer = null;
-let _gcalInteractive = false;   // sólo una sync iniciada por el usuario puede abrir la ventana de login de Google
+let _gcalInteractive = false;   // only a user-initiated sync may open the Google login window
 
 function gcalCfg(){ try{ return JSON.parse(localStorage.getItem(GCAL_CFG_KEY)) || {}; }catch(e){ return {}; } }
 function gcalSetCfg(o){ localStorage.setItem(GCAL_CFG_KEY, JSON.stringify({ ...gcalCfg(), ...o })); }
@@ -2247,9 +2249,9 @@ async function gcalEnsureClient(){
 function gcalGetToken(interactive){
   return new Promise((resolve,reject)=>{
     if(_gcalToken && Date.now() < _gcalTokenExp-60000) return resolve(_gcalToken);
-    // En modo silencioso (auto-sync) NUNCA abrimos la ventana de Google: sin token
-    // en memoria, rechazamos y la sync se saltea sola. Sólo una acción del usuario
-    // (Conectar / Sincronizar) puede mostrar el login.
+    // In silent mode (auto-sync) we NEVER open the Google window: with no token in
+    // memory we reject and the sync skips itself. Only a user action
+    // (Connect / Sync) may show the login.
     if(!interactive) return reject(new Error('no_silent_token'));
     gcalEnsureClient().then(()=>{
       _gcalTokenCb = (r)=>{ if(r && r.access_token) resolve(r.access_token); else reject(new Error((r&&r.error)||'token_error')); };
@@ -2269,7 +2271,7 @@ async function gcalApi(method, path, body){
   if(res.status===401){ _gcalToken=null; if(!_gcalInteractive) throw new Error('unauthorized'); token=await gcalGetToken(true); res=await call(token); }
   return res;
 }
-/* --- construir los eventos deseados a partir de los registros --- */
+/* --- build the desired events from the records --- */
 function gcalPad(n){ return String(n).padStart(2,'0'); }
 function gcalDateStr(d){ return `${d.getFullYear()}-${gcalPad(d.getMonth()+1)}-${gcalPad(d.getDate())}`; }
 function gcalTZ(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(e){ return 'UTC'; } }
@@ -2285,9 +2287,9 @@ function gcalDesired(now){
     }
     buildReminders(c, st, now).forEach(r=>{
       if(!r.task || !r.key || !isFinite(r.urgency) || r.urgency>=1e5) return;
-      if(done[c.id+':'+r.key]) return;   // Dirección 1: marcada hecha/descartada en la app → no va (o se borra) del calendario
+      if(done[c.id+':'+r.key]) return;   // Direction 1: marked done/dismissed in the app → it does not go to (or is removed from) the calendar
       const when=new Date(now.getTime()+Math.max(r.urgency,0)*3600000);
-      // día completo (ancla a la fecha, no a la hora) → la firma es estable y no re-sincroniza en cada corrida
+      // all-day (anchored to the date, not the time) → the signature is stable and does not re-sync on every run
       list.push({ uid:c.id+'::'+r.key, when, allDay:true, summary:r.t+' ('+c.genotype+')' });
     });
   });
@@ -2303,11 +2305,11 @@ function gcalBody(ev){
   const end=new Date(ev.when.getTime()+30*60000);
   return { ...base, start:{dateTime:ev.when.toISOString(), timeZone:gcalTZ()}, end:{dateTime:end.toISOString(), timeZone:gcalTZ()}, reminders:{useDefault:false, overrides:[{method:'popup', minutes:0}]} };
 }
-/* Dirección 2: el usuario borró en Google el evento de una tarea → marcarla hecha en la app */
+/* Direction 2: the user deleted a task's event in Google → mark it done in the app */
 function gcalMarkDoneFromEvent(uid){
   const sep = uid.indexOf('::'); if(sep<0) return false;
   const crossId = uid.slice(0,sep), key = uid.slice(sep+2);
-  if(key==='eclosion') return false;   // la eclosión no es una tarea "hecha"
+  if(key==='eclosion') return false;   // eclosion is not a task that can be "done"
   const appId = crossId+':'+key;
   const done = loadTaskDone();
   if(done[appId]) return false;
@@ -2316,17 +2318,17 @@ function gcalMarkDoneFromEvent(uid){
   if(c){ const r=buildReminders(c, computeState(c)).find(x=>x.key===key); if(r){ text=r.t; cls=r.c; } }
   done[appId] = { doneAt: Date.now(), text, c:cls, genotype:(c&&c.genotype)||'', crossId };
   saveTaskDone(done);
-  if(key==='parentales' && c){ c.parentsRemoved = true; save(crosses); }   // acción única → refleja en el registro
+  if(key==='parentales' && c){ c.parentsRemoved = true; save(crosses); }   // one-off action → reflect it on the record
   return true;
 }
 /* --- sincronizar: (pull) reflejar borrados de Google + (push) insertar/actualizar/borrar --- */
 async function gcalSync(interactive, pull){
   if(pull===undefined) pull = true;
   if(!gcalConfigured()){ if(interactive) alert(t('gcal.noClient')); return; }
-  _gcalInteractive = !!interactive;   // gobierna si gcalApi puede escalar a login
+  _gcalInteractive = !!interactive;   // governs whether gcalApi may escalate to a login
   try{ await gcalGetToken(interactive); }
   catch(e){
-    // el usuario cerró la ventana de Google por su cuenta: no es un error, no hace falta avisar
+    // the user closed the Google window themselves: not an error, no need to warn
     if(interactive && !(e && e.message==='popup_closed_by_user')) alert(t('gcal.authFail'));
     gcalUpdateUI(); return;
   }
@@ -2371,14 +2373,14 @@ let _gcalFirstSync = true;
 function gcalMaybeAutoSync(){
   const c=gcalCfg();
   if(!c.connected || !c.auto || !gcalConfigured()) return;
-  const pull = _gcalFirstSync; _gcalFirstSync = false;   // la 1ª sync tras cargar refleja borrados de Google; las de cada cambio, solo empujan
+  const pull = _gcalFirstSync; _gcalFirstSync = false;   // the 1st sync after load picks up deletions from Google; the per-change ones only push
   clearTimeout(_gcalTimer); _gcalTimer=setTimeout(()=>gcalSync(false, pull), 4000);
 }
 function gcalDisconnect(){
   try{ if(_gcalToken && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(_gcalToken, ()=>{}); }catch(e){}
   _gcalToken=null; _gcalTokenExp=0; gcalSetCfg({ connected:false, auto:false }); gcalUpdateUI();
 }
-/* --- UI del modal --- */
+/* --- Modal UI --- */
 function openGcal(){ gcalUpdateUI(); document.getElementById('gcalOverlay').classList.add('open'); }
 function closeGcal(){ document.getElementById('gcalOverlay').classList.remove('open'); }
 function gcalToggleAuto(cb){ gcalSetCfg({ auto: cb.checked }); if(cb.checked && gcalCfg().connected) gcalSync(false); }
@@ -2393,61 +2395,62 @@ function gcalUpdateUI(){
       ? `<span class="gcal-on">● ${t('gcal.stOn')}</span><div class="hint">${t('gcal.lastSync',{d:last})}</div>`
       : `<span class="gcal-off">○ ${t('gcal.stOff')}</span>`;
   }
-  const auto=document.getElementById('gcalAuto'); if(auto) auto.checked = cfg.auto !== false;   // tildado por defecto (recomendado)
+  const auto=document.getElementById('gcalAuto'); if(auto) auto.checked = cfg.auto !== false;   // ticked by default (recommended)
   document.getElementById('gcalConnectBtn').textContent = on ? t('gcal.syncNow') : t('gcal.connect');
   document.getElementById('gcalDiscBtn').style.display = on ? '' : 'none';
-  document.getElementById('gcalAutoRow').style.display = '';   // siempre visible (también antes de conectar)
+  document.getElementById('gcalAutoRow').style.display = '';   // always visible (including before connecting)
 }
 
-/* --- Modelo de desarrollo dependiente de temperatura ---
-   Suma térmica (degree-days): D(T) = DD / (T - T0)
-   Constantes derivadas por regresión de la TASA de desarrollo vs temperatura
-   (tasa = (1/DD)·T − T0/DD) sobre los datos huevo→adulto de Powsner (1935)
-   Physiol. Zool. 8:474-520, promedio de sexos, transcripción verificada de las
-   Tablas IX+X, rango ~15–28 °C (n=13, R²=0.997). DD=116.4 → se redondea a 116.
-   Válidas en ~15–28 °C; por encima de ~28 °C la relación se revierte.
-   T0 es un parámetro de AJUSTE, no un cero fisiológico (ver docs/calibracion.md).
-   Nota: los valores previos (10.2 / 148) equivalían a un mal ajuste sobre el
-   rango completo 15–32 °C; el nuevo modelo adelanta la eclosión ~1.2 d a 20–28 °C. */
+/* --- Temperature-dependent development model ---
+   Thermal summation (degree-days): D(T) = DD / (T - T0)
+   Constants derived by regression of developmental RATE against temperature
+   (rate = (1/DD)·T − T0/DD) on the egg→adult data of Powsner (1935)
+   Physiol. Zool. 8:474-520, sexes averaged, verified transcription of
+   Tables IX+X, range ~15–28 °C (n=13, R²=0.997). DD=116.4 → rounded to 116.
+   Valid over ~15–28 °C; above ~28 °C the relationship reverses.
+   T0 is a FITTING parameter, not a physiological zero (see docs/calibration.md).
+   Note: the previous values (10.2 / 148) amounted to a poor fit over the whole
+   15–32 °C range; the new model brings eclosion ~1.2 d forward at 20–28 °C. */
 const T0 = 11.78;
 const DEGREE_DAYS = 116.0;
 
-/* --- Vida adulta estimada (días), dependiente de temperatura ---
-   Ancla: ~70 d a 25°C; regla Q10≈2 (por cada 10°C menos, ~el doble de vida).
-   Sólo define cuándo el anillo de envejecimiento llega al extremo (negro):
-   el contador de "días post-eclosión" sigue sumando sin tope.                */
-const ADULT_LIFE_REF = 70; // días a 25°C
+/* --- Estimated adult lifespan (days), temperature dependent ---
+   Anchor: ~70 d at 25°C; Q10≈2 rule (for every 10°C less, ~twice the lifespan).
+   It only defines when the aging ring reaches its end (black): the
+   "days post-eclosion" counter keeps going up with no cap.                    */
+const ADULT_LIFE_REF = 70; // days at 25°C
 function lifespanDays(temp){
   const t = Math.max(temp, T0 + 1.5);
   return ADULT_LIFE_REF * Math.pow(2, (25 - t) / 10);
 }
 
-/* Estadios y su duración RELATIVA (fracciones ×10 del total; suman ~10 d, sólo
-   fijan las proporciones; stageBounds las reescala a la duración real por T).
-   Reparto de Powsner (1935) medido a 25 °C: embrión 9.8 %, larval 44.8 %,
-   pupa 45.4 %. Asume proporciones interestadio constantes con la temperatura
-   (aproximación válida en el rango medio, peor en los extremos; ver caveat 8).
-   El período larval se subdivide L1:L2:L3 = 1:1:2 (revisión de Current Biology,
-   fuente distinta de Powsner que lo mide como bloque único; ver docs/calibracion.md). */
+/* Stages and their RELATIVE duration (fractions ×10 of the total; they add up to
+   ~10 d and only fix the proportions; stageBounds rescales them to the real
+   duration at each T). Powsner (1935) breakdown measured at 25 °C: embryo 9.8 %,
+   larval 44.8 %, pupa 45.4 %. It assumes between-stage proportions constant with
+   temperature (a fair approximation in the mid-range, worse at the extremes; see
+   caveat 8). The larval period is subdivided L1:L2:L3 = 1:1:2 (a Current Biology
+   review, a source other than Powsner, who measures it as a single block; see
+   docs/calibration.md). */
 const STAGES = [
-  { key:'egg',  name:'Embrión',  short:'Embrión',  dur:0.98, color:'var(--blue)',  soft:'var(--blue-soft)',  txt:'#5b8fc7' },
+  { key:'egg',  name:'Embryo',   short:'Embryo',   dur:0.98, color:'var(--blue)',  soft:'var(--blue-soft)',  txt:'#5b8fc7' },
   { key:'l1',   name:'Larva L1', short:'L1',       dur:1.12, color:'var(--mint)',  soft:'var(--mint-soft)',  txt:'#3fae8c' },
   { key:'l2',   name:'Larva L2', short:'L2',       dur:1.12, color:'#7fd1ba',      soft:'var(--mint-soft)',  txt:'#3fae8c' },
   { key:'l3',   name:'Larva L3', short:'L3',       dur:2.24, color:'var(--yellow)',soft:'var(--yellow-soft)',txt:'#c79a2e' },
   { key:'pupa', name:'Pupa',     short:'Pupa',     dur:4.54, color:'var(--peach)', soft:'var(--peach-soft)', txt:'#d98162' },
 ];
-const ADULT = { key:'adult', name:'Adulto', short:'Adulto', color:'var(--pink)', soft:'var(--pink-soft)', txt:'#d96fa0' };
-const REF_TOTAL = STAGES.reduce((s,x)=>s+x.dur,0); // 10 días
+const ADULT = { key:'adult', name:'Adult', short:'Adult', color:'var(--pink)', soft:'var(--pink-soft)', txt:'#d96fa0' };
+const REF_TOTAL = STAGES.reduce((s,x)=>s+x.dur,0); // 10 days
 
-/* factor = corrección de calibración por genotipo (1 = modelo base; >1 = más lento) */
+/* factor = per-genotype calibration correction (1 = base model; >1 = slower) */
 function totalDays(temp, factor=1){
-  const t = Math.max(temp, T0 + 1.5); // evitar división extrema
+  const t = Math.max(temp, T0 + 1.5); // avoid an extreme division
   return factor * DEGREE_DAYS / (t - T0);
 }
 
-/* Devuelve límites cumulativos de cada estadio (en días) para una temperatura.
-   totalOverride: duración huevo→adulto medida a mano (ver eclosionOverrideDays); si viene,
-   manda sobre el modelo y los estadios se reescalan proporcionalmente. */
+/* Returns the cumulative bounds of each stage (in days) for a given temperature.
+   totalOverride: hand-measured egg→adult duration (see eclosionOverrideDays); when present,
+   it overrides the model and the stages are rescaled proportionally. */
 function stageBounds(temp, factor=1, totalOverride=null){
   const scale = (totalOverride>0 ? totalOverride : totalDays(temp, factor)) / REF_TOTAL;
   let acc = 0;
@@ -2460,42 +2463,42 @@ function stageBounds(temp, factor=1, totalOverride=null){
 }
 
 /* ============================================================
-   Calibración por genotipo (v2): estimador de encogimiento (shrinkage)
-   hacia el modelo base de literatura. Cada observación aporta:
-     t0  = inicio de la puesta (ventana corta 1–3 h)
-     t50 = momento en que eclosionó ~la mitad de las moscas
-   factor observado f_i = tiempo real (t50−t0) / tiempo del modelo base a esa T.
+   Per-genotype calibration (v2): shrinkage estimator towards the
+   literature base model. Each observation contributes:
+     t0  = start of the egg-lay (short 1–3 h window)
+     t50 = moment when ~half of the flies had eclosed
+   observed factor f_i = real time (t50−t0) / base-model time at that T.
 
-   En vez de un promedio con pesos fijos por método, el v2:
-   - asigna a cada observación una INCERTIDUMBRE real σ (en días) según el método
-     de eclosión (conteo < a ojo < "ya pasó") y la ventana de puesta, y la
-     propaga a unidades de factor;
-   - trata la TANDA (cruza) como unidad experimental: combina las mediciones de
-     una misma tanda por 1/σ² y agrega un piso de varianza ENTRE tandas (σ_batch),
-     para que una sola tanda no domine la estimación;
-   - infla la incertidumbre si las tandas discrepan más de lo que su σ predice
-     (heterogeneidad, DerSimonian–Laird / I²) y marca el estado "Inconsistente";
-   - ENCOGE hacia el prior de literatura factor~Normal(1, τ²): con 0 obs el
-     resultado es el modelo base (factor 1); con datos precisos converge a ellos.
-   El factor aplicado es la media posterior (siempre segura de aplicar porque se
-   auto-regula); el estado sólo comunica la confianza.
-   Refs: meta-análisis de efectos aleatorios (DerSimonian & Laird 1986) + prior
-   normal; justificación biológica en docs/calibracion.md (§9.3: las constantes
-   térmicas no son transferibles entre genotipos; Wright/Powsner).
+   Instead of an average with fixed per-method weights, v2:
+   - assigns each observation a real UNCERTAINTY σ (in days) from the eclosion
+     method (counting < by eye < "already happened") and the egg-lay window, and
+     propagates it into factor units;
+   - treats the BATCH (cross) as the experimental unit: it combines measurements
+     from the same batch by 1/σ² and adds a variance floor BETWEEN batches
+     (σ_batch), so that a single batch cannot dominate the estimate;
+   - inflates the uncertainty if the batches disagree more than their σ predicts
+     (heterogeneity, DerSimonian–Laird / I²) and flags the "Inconsistent" state;
+   - SHRINKS towards the literature prior factor~Normal(1, τ²): with 0 obs the
+     result is the base model (factor 1); with precise data it converges to them.
+   The applied factor is the posterior mean (always safe to apply because it is
+   self-regulating); the state only communicates confidence.
+   Refs: random-effects meta-analysis (DerSimonian & Laird 1986) + normal prior;
+   biological justification in docs/calibration.md (§9.3: thermal constants are
+   not transferable between genotypes; Wright/Powsner).
    ============================================================ */
 const CALIB_KEY = 'drosotrack.calib.v1';
-const LABREF_KEY = 'drosotrack.labref.v1';   // genotipo wild-type designado como referencia del laboratorio
-const CALIB_MIN = 3;   // tandas independientes para el estado "Calibrado" (menos = "Calibrando")
-// Incertidumbre del T50 (en DÍAS) según cómo se registró la eclosión.
+const LABREF_KEY = 'drosotrack.labref.v1';   // wild-type genotype designated as the lab's reference
+const CALIB_MIN = 3;   // independent batches required for the "Calibrated" state (fewer = "Calibrating")
+// Uncertainty of the T50 (in DAYS) depending on how the eclosion was recorded.
 const CALIB_SIGMA_T50 = { count: 0.15, eye: 0.5, past: 1.0 };
-// Incertidumbre del inicio de puesta t₀ (en DÍAS) cuando no es una ventana acotada:
-// "día de cruza" = la puesta se reparte en ~1 día; "desconocido" = t₀ sólo aproximado.
+// Uncertainty of the egg-lay start t₀ (in DAYS) when it is not a bounded window:
+// "cross day" = the egg-lay spreads over ~1 day; "unknown" = t₀ only approximate.
 const CALIB_SIGMA_T0_CROSSDAY = 0.75;
 const CALIB_SIGMA_T0_UNKNOWN = 2.0;
-// σ biológico ENTRE tandas (unidades de factor): variabilidad de tanda a tanda
-// (comida, densidad, microclima). Impide que una sola tanda arrastre la estimación.
+// biological σ BETWEEN batches (factor units): batch-to-batch variability
+// (food, density, microclimate). It stops a single batch from dragging the estimate.
 const CALIB_SIGMA_BATCH = 0.08;
-// Prior de literatura: factor ~ Normal(1, τ²). τ = dispersión típica entre genotipos.
+// Literature prior: factor ~ Normal(1, τ²). τ = typical spread between genotypes.
 const CALIB_PRIOR_SD = 0.15;
 let _calibCache = null;
 function loadCalib(){ if(_calibCache) return _calibCache; try{ _calibCache = JSON.parse(localStorage.getItem(CALIB_KEY)) || {}; }catch(e){ _calibCache = {}; } return _calibCache; }
@@ -2506,17 +2509,17 @@ function obsFactor(o){
   const baseDays = totalDays(o.temp);   // modelo base (factor 1) a esa temperatura
   return (observedDays>0 && baseDays>0) ? observedDays/baseDays : null;
 }
-/* σ del t₀ (en días) según cómo se conoce el inicio de la puesta:
-   ventana acotada (o registros viejos) → punto medio de una ventana uniforme;
-   día de cruza / desconocido → valores fijos mayores. */
+/* σ of t₀ (in days) depending on how the start of the egg-lay is known:
+   bounded window (or old records) → midpoint of a uniform window;
+   cross day / unknown → larger fixed values. */
 function obsSigmaT0Days(o){
   if(o.t0Mode==='crossday') return CALIB_SIGMA_T0_CROSSDAY;
   if(o.t0Mode==='unknown')  return CALIB_SIGMA_T0_UNKNOWN;
-  const windowH = o.windowH>0 ? o.windowH : 6;          // 'bounded' (default); 6 h si no se registró
-  return (windowH/24) / Math.sqrt(12);                  // σ del punto medio de una ventana uniforme
+  const windowH = o.windowH>0 ? o.windowH : 6;          // 'bounded' (default); 6 h if it was not recorded
+  return (windowH/24) / Math.sqrt(12);                  // σ of the midpoint of a uniform window
 }
-/* σ del factor de una observación: (método del T50 ⊕ incertidumbre de t₀) en días,
-   propagado a unidades de factor dividiendo por el tiempo base a esa T. */
+/* σ of the factor of one observation: (T50 method ⊕ t₀ uncertainty) in days,
+   propagated into factor units by dividing by the base time at that T. */
 function obsSigmaFactor(o){
   const baseDays = totalDays(o.temp); if(!(baseDays>0)) return null;
   const method = o.method || (o.late ? 'past' : 'eye');
@@ -2524,15 +2527,15 @@ function obsSigmaFactor(o){
   const sT0 = obsSigmaT0Days(o);
   return Math.sqrt(sT0*sT0 + sT50*sT50) / baseDays;
 }
-/* clave de tanda: cada cruza es una unidad experimental. Las observaciones viejas
-   sin batch usan su t0 como proxy (dos con el mismo t0 = la misma tanda). */
+/* batch key: each cross is one experimental unit. Old observations with no batch
+   use their t0 as a proxy (two with the same t0 = the same batch). */
 function obsBatch(o){ return o.batch || o.t0 || 'b'; }
-/* resumen de calibración de un genotipo, o null si no hay observaciones válidas.
-   Devuelve {n, nBatch, factor, pct, sdPost, ciPct, state, singleBatch, conf}. */
-/* priorMean = hacia dónde encoge el estimador: 1 = modelo base de literatura;
-   con un wild-type de referencia calibrado, un genotipo encoge hacia el factor
-   del laboratorio (calibrado a dos niveles). El factor devuelto es ABSOLUTO
-   (relativo a literatura); pct es relativo al prior (vs literatura o vs el lab). */
+/* calibration summary of a genotype, or null if there are no valid observations.
+   Returns {n, nBatch, factor, pct, sdPost, ciPct, state, singleBatch, conf}. */
+/* priorMean = what the estimator shrinks towards: 1 = the literature base model;
+   with a calibrated reference wild-type, a genotype shrinks towards the lab
+   factor (two-level calibration). The returned factor is ABSOLUTE (relative to
+   the literature); pct is relative to the prior (vs the literature or vs the lab). */
 function calibInfo(geno, priorMean){
   priorMean = (priorMean>0) ? priorMean : 1;
   const raw = (loadCalib()[normGeno(geno)] || [])
@@ -2540,51 +2543,51 @@ function calibInfo(geno, priorMean){
     .filter(x => x.f!=null && isFinite(x.f) && x.f>0 && x.s>0 && isFinite(x.s));
   if(!raw.length) return null;
 
-  // 1) agrupar por tanda; dentro de la tanda combinar mediciones por 1/σ²
+  // 1) group by batch; within a batch combine measurements by 1/σ²
   const groups = {};
   raw.forEach(x=>{ const k=obsBatch(x.o); (groups[k]=groups[k]||[]).push(x); });
   const batches = Object.values(groups).map(list=>{
     let sw=0, swf=0; list.forEach(x=>{ const w=1/(x.s*x.s); sw+=w; swf+=w*x.f; });
-    return { f: swf/sw, varTot: 1/sw + CALIB_SIGMA_BATCH*CALIB_SIGMA_BATCH };   // + σ² entre tandas
+    return { f: swf/sw, varTot: 1/sw + CALIB_SIGMA_BATCH*CALIB_SIGMA_BATCH };   // + σ² between batches
   });
   const nObs = raw.length, nBatch = batches.length, df = nBatch-1;
 
-  // 2) media data-only ponderada por 1/varTot y heterogeneidad (Cochran Q)
+  // 2) data-only mean weighted by 1/varTot and heterogeneity (Cochran Q)
   let W=0, WF=0, sumW2=0;
   batches.forEach(b=>{ const w=1/b.varTot; W+=w; WF+=w*b.f; sumW2+=w*w; });
   const fData = WF/W;
   let Q=0; batches.forEach(b=>{ const w=1/b.varTot; Q += w*(b.f-fData)*(b.f-fData); });
-  const tau2 = df>=1 ? Math.max(0, (Q - df) / (W - sumW2/W)) : 0;   // varianza entre tandas (DerSimonian–Laird)
+  const tau2 = df>=1 ? Math.max(0, (Q - df) / (W - sumW2/W)) : 0;   // between-batch variance (DerSimonian–Laird)
   const i2 = (df>=1 && Q>0) ? Math.max(0, (Q - df) / Q) : 0;
-  const inconsistent = nBatch>=2 && i2 > 0.5;                       // las tandas discrepan más de lo esperable
+  const inconsistent = nBatch>=2 && i2 > 0.5;                       // the batches disagree more than expected
 
-  // 3) re-agrupar con τ² y encoger hacia el prior N(priorMean, τ_prior²)
+  // 3) re-pool with τ² and shrink towards the prior N(priorMean, τ_prior²)
   let W2=0, WF2=0; batches.forEach(b=>{ const w=1/(b.varTot+tau2); W2+=w; WF2+=w*b.f; });
   const wPrior = 1/(CALIB_PRIOR_SD*CALIB_PRIOR_SD);
   const wSum = wPrior + W2;
   const factor = (wPrior*priorMean + WF2) / wSum;                   // media posterior (0 obs ⇒ priorMean)
   const sdPost = Math.sqrt(1/wSum);
 
-  // 4) estado y confianza, por nº de tandas independientes
+  // 4) state and confidence, by number of independent batches
   const state = inconsistent ? 'inconsistent' : (nBatch>=CALIB_MIN ? 'calibrated' : 'calibrating');
   const conf = nBatch>=5 ? 'high' : (nBatch>=3 ? 'med' : 'low');
   return {
-    n: nObs, nBatch, factor, pct: Math.round((factor/priorMean-1)*100),   // pct relativo al prior
-    sdPost, ciPct: Math.round(1.96*sdPost*100),                     // semiancho del IC 95 %, en puntos %
+    n: nObs, nBatch, factor, pct: Math.round((factor/priorMean-1)*100),   // pct relative to the prior
+    sdPost, ciPct: Math.round(1.96*sdPost*100),                     // half-width of the 95 % CI, in percentage points
     state, singleBatch: nBatch<2, conf, priorMean,
   };
 }
-/* --- Calibrado a dos niveles: laboratorio (wild-type) + genotipo --- */
+/* --- Two-level calibration: laboratory (wild-type) + genotype --- */
 function loadLabRef(){ try{ return localStorage.getItem(LABREF_KEY) || ''; }catch(e){ return ''; } }
 function saveLabRef(geno){ const g = normGeno(geno); if(g) localStorage.setItem(LABREF_KEY, g); else localStorage.removeItem(LABREF_KEY); }
 function isLabRef(geno){ const r = loadLabRef(); return !!r && normGeno(geno) === r; }
-/* factor global del laboratorio (del wild-type de referencia), encogido hacia literatura; 1 si no hay */
+/* the lab-wide factor (from the reference wild-type), shrunk towards the literature; 1 if there is none */
 function labFactorValue(){ const r = loadLabRef(); if(!r) return 1; const ci = calibInfo(r, 1); return ci ? ci.factor : 1; }
-/* calibInfo con el prior correcto: el wild-type encoge hacia literatura (1);
-   cualquier otro genotipo encoge hacia el factor del laboratorio. */
+/* calibInfo with the right prior: the wild-type shrinks towards the literature (1);
+   every other genotype shrinks towards the lab factor. */
 function calibInfoFor(geno){ return isLabRef(geno) ? calibInfo(geno, 1) : calibInfo(geno, labFactorValue()); }
-/* factor a aplicar al modelo: posterior del genotipo si tiene datos; si no, el
-   factor del laboratorio (con wild-type calibrado) o 1 (solo literatura). */
+/* factor to apply to the model: the genotype's posterior if it has data; otherwise
+   the lab factor (when the wild-type is calibrated) or 1 (literature only). */
 function calibFactorValue(geno){
   const ci = calibInfoFor(geno);
   if(ci) return ci.factor;
@@ -2595,12 +2598,12 @@ function addCalibObs(geno, t0, t50, temp, method, batch, windowH, t0Mode){
   const key = normGeno(geno);
   const rec = { t0, t50, temp, method: method || 'eye' };
   if(batch) rec.batch = batch;
-  if(t0Mode && t0Mode!=='bounded') rec.t0Mode = t0Mode;      // 'bounded' es el default (ventana)
-  else if(windowH>0) rec.windowH = windowH;                  // la ventana sólo aplica al modo acotado
+  if(t0Mode && t0Mode!=='bounded') rec.t0Mode = t0Mode;      // 'bounded' is the default (window)
+  else if(windowH>0) rec.windowH = windowH;                  // the window only applies to the bounded mode
   (all[key] = all[key] || []).push(rec);
   saveCalib(all);
 }
-/* T50 por conteo: interpola el momento en que la eclosión acumulada cruza N/2 */
+/* T50 from counts: interpolates the moment when cumulative eclosion crosses N/2 */
 function computeT50FromCounts(counts, total){
   if(!counts || counts.length<2 || !total || total<=0) return null;
   const half = total/2;
@@ -2611,36 +2614,36 @@ function computeT50FromCounts(counts, total){
       return pts[i-1].t + frac*(pts[i].t - pts[i-1].t);
     }
   }
-  return null;   // todavía no cruzó la mitad (faltan conteos) o el primero ya la superaba
+  return null;   // it has not crossed the halfway point yet (counts missing) or the first one was already past it
 }
 function clearCalib(geno){ const all = loadCalib(); delete all[normGeno(geno)]; saveCalib(all); }
 
-/* Fecha de eclosión REAL cargada a mano (cross.eclosionActual). El modelo estima cuándo
-   deberían eclosionar, pero un tratamiento (compuesto, dieta, etc.) puede adelantarla o
-   atrasarla: si se carga la fecha observada, manda sobre la estimación y el desarrollo
-   previo se reescala proporcionalmente (mismos porcentajes por estadio, otra duración).
-   Devuelve la duración huevo→adulto en días, o null si no hay fecha cargada/es inválida. */
+/* REAL eclosion date entered by hand (cross.eclosionActual). The model estimates when they
+   should eclose, but a treatment (compound, diet, etc.) can bring it forward or delay it:
+   if the observed date is entered, it overrides the estimate and the preceding development
+   is rescaled proportionally (same per-stage percentages, different duration).
+   Returns the egg→adult duration in days, or null if no date is entered / it is invalid. */
 function eclosionOverrideDays(cross, start){
   const s = cross.eclosionActual;
   if(!s) return null;
   const d = new Date(s.includes('T') ? s : s + 'T00:00:00');
   if(!isFinite(d)) return null;
   const days = (d - start) / 86400000;
-  return days > 0.2 ? days : null;      // tiene que caer después de la puesta
+  return days > 0.2 ? days : null;      // it has to fall after the egg-lay
 }
 
-/* --- Cálculo del estado actual de una cruza --- */
+/* --- Computing the current state of a cross --- */
 function computeState(cross, now=new Date()){
   const start = parseCross(cross);
   const elapsedMs = now - start;
   const elapsedDays = elapsedMs / 86400000;
-  const factor = calibFactorValue(cross.genotype);   // corrección por genotipo si está calibrado
-  const ovr = eclosionOverrideDays(cross, start);    // eclosión observada (pisa la estimación)
+  const factor = calibFactorValue(cross.genotype);   // per-genotype correction if it is calibrated
+  const ovr = eclosionOverrideDays(cross, start);    // observed eclosion (overrides the estimate)
   const total = ovr!=null ? ovr : totalDays(cross.temp, factor);
   const bounds = stageBounds(cross.temp, factor, ovr);
 
   if(elapsedDays < 0){
-    /* cruza PLANIFICADA (fecha futura): todavía no se montó */
+    /* PLANNED cross (future date): not set up yet */
     return {
       planned:true, stageKey:'egg', stage:STAGES[0], elapsedDays, total, bounds,
       isAdult:false, fraction:0, inStageDay:0, stageLen:bounds[0].end,
@@ -2649,13 +2652,13 @@ function computeState(cross, now=new Date()){
     };
   }
   if(elapsedDays >= total){
-    const adultAge = elapsedDays - total;            // días post-eclosión
+    const adultAge = elapsedDays - total;            // days post-eclosion
     const adultLifespan = lifespanDays(cross.temp);
     return {
       stageKey:'adult', stage:ADULT, elapsedDays, total, bounds,
       isAdult:true, adultAge, fraction:1,
       adultLifespan,
-      adultFraction: Math.min(adultAge / adultLifespan, 1), // anillo: tope en 1; la edad sí sigue
+      adultFraction: Math.min(adultAge / adultLifespan, 1), // ring: capped at 1; the age itself keeps going
       eclosionDate: addDays(start, total),
     };
   }
@@ -2669,46 +2672,46 @@ function computeState(cross, now=new Date()){
     isAdult:false, fraction: Math.min(elapsedDays/total, 1),
     inStageDay, stageLen,
     eclosionDate: addDays(start, total),
-    nextBoundaryDays: cur.end, // días desde cruza hasta próxima muda
+    nextBoundaryDays: cur.end, // days from the cross to the next moult
   };
 }
 
 function addDays(d, days){ return new Date(d.getTime() + days*86400000); }
 
-/* --- Recordatorios automáticos --- */
-/* Avisos (informativos, sólo chips en la tarjeta) y tareas (accionables, van al
-   panel de "Tareas pendientes"). Las tareas se desprenden del OBJETIVO de la cruza.
-   Cada item: { t, c, pulse, task }; task:true => aparece en el panel de tareas. */
+/* --- Automatic reminders --- */
+/* Notices (informative, just chips on the card) and tasks (actionable, they go to the
+   "Pending tasks" panel). The tasks follow from the PURPOSE of the cross.
+   Each item: { t, c, pulse, task }; task:true => it shows up in the tasks panel. */
 function buildReminders(cross, st, now=new Date()){
   const out = [];
   const obj = cross.objective || '';
-  /* urgency = horas hasta que toca hacer la tarea (menor = más urgente; 0 = hacer ya).
-     Se usa para ordenar el panel de "Tareas pendientes" de más a menos urgente. */
+  /* urgency = hours until the task is due (lower = more urgent; 0 = do it now).
+     Used to sort the "Pending tasks" panel from most to least urgent. */
   const push = (txt, c, task, pulse, key, urgency=0) => out.push({ t:txt, c, task:!!task, pulse:!!pulse, key:key||null, urgency });
 
   if(st.planned){
     push(t('rem.montar',{h:fmtH(st.daysToCross*24)}), 'action', true, st.daysToCross<=1, 'montar', st.daysToCross*24);
     return out;
   }
-  if(cross.calib) return out;   // los registros de calibración no generan tareas (se registra el T50 desde su tarjeta)
+  if(cross.calib) return out;   // calibration records generate no tasks (the T50 is recorded from their own card)
   if(!st.isAdult){
-    /* --- AVISOS de desarrollo (no son tareas) --- */
+    /* --- Development NOTICES (not tasks) --- */
     const next = st.bounds.find(b => b.start > st.elapsedDays);
     const hoursToNext = (st.nextBoundaryDays - st.elapsedDays)*24;
     if(st.stage.key === 'pupa'){
-      /* TAREA (cruza genética): recolectar vírgenes → recién 1,5 días (36 h) antes de la eclosión.
-         En una cruza con dos genotipos (pairId), solo aplica al que aporta las hembras. */
+      /* TASK (genetic cross): collect virgins → only from 1.5 days (36 h) before eclosion.
+         In a two-genotype cross (pairId), it only applies to the one contributing the females. */
       const isFemaleSide = !cross.pairId || cross.pairRole==='female';
       if(obj==='cross' && isFemaleSide){ if(hoursToNext <= 36) push(t('rem.virgenesPrep',{h:fmtH(hoursToNext)}), 'action', true, hoursToNext<=24, 'virgenes-prep', hoursToNext); }
       else if(hoursToNext <= 48) push(t('rem.eclosionEn',{h:fmtH(hoursToNext)}), 'warn', false, hoursToNext<=24);
     } else if(next){
       if(hoursToNext <= 24) push(t('rem.muda',{s:stageShort(next),h:fmtH(hoursToNext)}), 'warn', false, hoursToNext<=8);
     }
-    /* TAREA: retirar parentales, desde L3 (≈día 3 a 25°C; escala con la temperatura) hasta la eclosión */
+    /* TASK: remove the parents, from L3 (≈day 3 at 25°C; scales with temperature) until eclosion */
     if(['l3','pupa'].includes(st.stage.key) && !cross.parentsRemoved && (obj==='cross' || obj==='amplify' || obj==='')){
       push(t('rem.retirarParentales'), 'action', true, false, 'parentales');
     }
-    /* TAREA: disección larval cuando llega al estadio elegido */
+    /* TASK: larval dissection when it reaches the chosen stage */
     if(obj==='dissect' && cross.dissectStage){
       const order = ['egg','l1','l2','l3','pupa'];
       const ci = order.indexOf(st.stage.key), ti = order.indexOf(cross.dissectStage);
@@ -2719,21 +2722,21 @@ function buildReminders(cross, st, now=new Date()){
     /* --- ADULTO --- */
     push(t('rem.adultosEclosionados'), 'success', false);
     const ageD = st.adultAge;
-    /* TAREA: recolectar vírgenes (cruza genética; ventana que escala con la temperatura).
-       En una cruza con dos genotipos, solo para el que aporta las hembras. */
+    /* TASK: collect virgins (genetic cross; a window that scales with temperature).
+       In a two-genotype cross, only for the one contributing the females. */
     if(obj==='cross' && (!cross.pairId || cross.pairRole==='female')){
       const windowH = 8 * (st.total / REF_TOTAL);
       const ageH = ageD*24;
       if(ageH < windowH) push(t('rem.virgenes',{h:fmtH(windowH-ageH)}), 'action', true, true, 'virgenes');
     }
-    /* TAREA: amplificación → pasar adultos a botellas nuevas */
+    /* TASK: amplification → move the adults to fresh bottles */
     if(obj==='amplify') push(t('rem.botellas'), 'action', true, false, 'botellas');
-    /* TAREA: definir la cohorte de envejecimiento */
+    /* TASK: define the aging cohort */
     if(obj==='aging' && !hasCohort(cross)){
       push(t('rem.cohorte'), 'action', true, false, 'cohorte', 1e6);
     }
-    /* TAREA: pasar a comida fresca cada 2-3 d, husbandry básico, independiente del objetivo
-       (los adultos la necesitan igual aunque el objetivo sea otro, p. ej. cruza o amplificación) */
+    /* TASK: move to fresh food every 2-3 d, basic husbandry, independent of the purpose
+       (the adults need it anyway, even if the purpose is another one, e.g. a cross or amplification) */
     if(ageD >= 1){
       const flips = agingEvents(cross).filter(e=>e.flipped).map(e=> new Date(e.date).getTime());
       const lastFlip = flips.length ? Math.max(...flips) : null;
@@ -2759,12 +2762,12 @@ function fmtDT(d){
   return d.toLocaleString(localeTag(),{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})
           .replace('.','').replace(',','');
 }
-/* parsea crossDate aceptando datetime-local nuevo y fechas antiguas (solo día) */
+/* parses crossDate, accepting both the new datetime-local and old dates (day only) */
 function parseCross(cross){
   const s = cross.crossDate;
   return new Date(s.includes('T') ? s : s + 'T00:00:00');
 }
-/* datetime-local local (no UTC) a partir de un Date */
+/* local datetime-local (not UTC) from a Date */
 function toLocalInput(d){
   const p = n => String(n).padStart(2,'0');
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
@@ -2772,9 +2775,9 @@ function toLocalInput(d){
 
 /* --- Persistencia --- */
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }catch(e){ return []; } }
-/* Historial de genotipos y tipos de experimento alguna vez escritos, aparte de las tarjetas
-   ("Vaciar registros" borra las tarjetas pero no este historial, para que el autocompletado
-   no se vacíe con ellas). Se alimenta solo (cada save() suma lo nuevo); nunca se borra sola. */
+/* History of every genotype and experiment type ever typed, kept apart from the cards
+   ("Clear records" deletes the cards but not this history, so the autocomplete does not
+   empty out with them). It feeds itself (every save() adds what is new); it never clears itself. */
 const GENO_HISTORY_KEY = 'drosotrack.genoHistory.v1';
 const EXP_HISTORY_KEY = 'drosotrack.expHistory.v1';
 const COND_HISTORY_KEY = 'drosotrack.condHistory.v1';
@@ -2795,12 +2798,12 @@ function recordHistory(list){
 }
 function save(list){ localStorage.setItem(STORE_KEY, JSON.stringify(list)); recordHistory(list); }
 let crosses = load();
-recordHistory(crosses);   // sembrar el historial con las tarjetas que ya existan (usuarios que actualizan)
+recordHistory(crosses);   // seed the history with whatever cards already exist (for users upgrading)
 
-/* --- Ilustraciones SVG por estadio (estilo BioRender pastel, morfología real) --- */
+/* --- Per-stage SVG illustrations (pastel BioRender style, real morphology) --- */
 function larvaArt(scale, fill, spiracles){
   return `<svg viewBox="8.8 6.1 62.7 62.7"><g transform="translate(40 38) scale(${scale}) translate(-40 -38)">
-    <!-- cuerpo segmentado, ahusado hacia la cabeza (derecha) -->
+    <!-- segmented body, tapering towards the head (right) -->
     <path d="M16 40 C14 30 27 26 40 26 C53 26 62 31 63 39 C63 43 58 45 53 43 C49 47 41 49 33 48 C23 47 18 47 16 40 Z"
       fill="${fill}" stroke="#e2c374" stroke-width="1.8" stroke-linejoin="round"/>
     <!-- segmentos -->
@@ -2810,13 +2813,13 @@ function larvaArt(scale, fill, spiracles){
     <path d="M24 33 Q34 30 44 31" stroke="#fffdf3" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".6"/>
     <!-- ganchos bucales (cabeza, derecha) -->
     <path d="M61 37 l3.5 1.2 M61 41 l3.5 -1.2" stroke="#b07f2e" stroke-width="1.7" stroke-linecap="round"/>
-    ${spiracles?`<!-- espiráculos posteriores (cola, izquierda) -->
+    ${spiracles?`<!-- posterior spiracles (tail, left) -->
     <circle cx="18" cy="37" r="1.5" fill="#b8902f"/><circle cx="19" cy="42" r="1.5" fill="#b8902f"/>`:''}
   </g></svg>`;
 }
 function art(key){
   switch(key){
-    /* Huevos: ovalados, color crema, con filamentos dorsales (corion) */
+    /* Eggs: oval, cream coloured, with dorsal filaments (chorion) */
     case 'egg': return `<svg viewBox="8.9 9.1 64.5 64.5">
       <g transform="rotate(-13 36 44)">
         <ellipse cx="34" cy="46" rx="8.5" ry="18" fill="#fff6e3" stroke="#e7d49d" stroke-width="1.7"/>
@@ -2828,11 +2831,11 @@ function art(key){
         <ellipse cx="48" cy="39" rx="2.4" ry="6.4" fill="#fffdf6" opacity=".8"/>
         <path d="M48 29 Q47 22 44 19 M54 29 Q55 21 54 17" stroke="#e7d49d" stroke-width="1.6" fill="none" stroke-linecap="round"/>
       </g></svg>`;
-    /* Larvas L1/L2/L3: crecen en tamaño; L3 muestra espiráculos */
+    /* L1/L2/L3 larvae: they grow in size; L3 shows spiracles */
     case 'l1': return larvaArt(0.6, '#fdf7e6', false);
     case 'l2': return larvaArt(0.82, '#fbefcc', false);
     case 'l3': return larvaArt(1.0, '#f8e7ba', true);
-    /* Pupa (puparium): cápsula ambarina, segmentada, con cuernos espiraculares */
+    /* Pupa (puparium): amber capsule, segmented, with spiracular horns */
     case 'pupa': return `<svg viewBox="6.0 4.0 68.0 68.0">
       <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="#f7d4b1"/><stop offset="1" stop-color="#e2a374"/></linearGradient></defs>
@@ -2842,21 +2845,21 @@ function art(key){
       <path d="M27 32 Q40 36 53 32 M27 41 Q40 46 53 41 M29 50 Q40 54 51 50 M32 58 Q40 61 48 58"
         stroke="#cf8b5f" stroke-width="1.3" fill="none" opacity=".75"/>
       <ellipse cx="33" cy="31" rx="3" ry="9" fill="#fff" opacity=".35"/></svg>`;
-    /* Adulto: vista superior (ojos rojos, tórax, abdomen con bandas, alas y patas) */
+    /* Adult: top view (red eyes, thorax, banded abdomen, wings and legs) */
     case 'adult': return `<svg viewBox="-4.3 -7.3 88.6 88.6">
       <!-- alas -->
       <ellipse cx="25" cy="44" rx="20" ry="10" fill="#eef3fb" stroke="#cfdcec" stroke-width="1.4" opacity=".92" transform="rotate(-23 25 44)"/>
       <ellipse cx="55" cy="44" rx="20" ry="10" fill="#eef3fb" stroke="#cfdcec" stroke-width="1.4" opacity=".92" transform="rotate(23 55 44)"/>
-      <!-- patas: los 3 pares salen del tórax (cx 40 cy 31 rx 9 ry 8), no del abdomen -->
+      <!-- legs: the 3 pairs come out of the thorax (cx 40 cy 31 rx 9 ry 8), not the abdomen -->
       <g stroke="#9c7550" stroke-width="1.6" stroke-linecap="round" fill="none">
         <path d="M34 27 l-10 -7 -4 3"/><path d="M33 32 l-13 0 -3 5"/><path d="M34 37 l-10 6 -2 5"/>
         <path d="M46 27 l10 -7 4 3"/><path d="M47 32 l13 0 3 5"/><path d="M46 37 l10 6 2 5"/>
       </g>
-      <!-- abdomen con bandas -->
+      <!-- banded abdomen -->
       <path d="M40 35 C49 35 51 46 48 56 C46 62 42 66 40 66 C38 66 34 62 32 56 C29 46 31 35 40 35 Z"
         fill="#cba37c" stroke="#9c7550" stroke-width="1.6" stroke-linejoin="round"/>
       <path d="M33 43 Q40 47 47 43 M32 50 Q40 55 48 50 M34 58 Q40 61 46 58" stroke="#8a6543" stroke-width="1.7" fill="none"/>
-      <!-- tórax -->
+      <!-- thorax -->
       <ellipse cx="40" cy="31" rx="9" ry="8" fill="#bd9068" stroke="#9c7550" stroke-width="1.6"/>
       <ellipse cx="36.5" cy="28" rx="2.4" ry="3.4" fill="#fff" opacity=".3"/>
       <!-- cabeza -->
@@ -2873,31 +2876,31 @@ function art(key){
   return '';
 }
 
-/* --- Render del anillo de progreso ---
-   El color del anillo ES la información: en desarrollo, un degradé que recorre
-   los estadios (embrión→L1→L2→L3→pupa→eclosión); en adulto, un degradé de
-   envejecimiento (rosa claro→ciruela→casi negro). La perilla queda del mismo
-   color que el anillo en ese punto y marca el final de la carga.            */
+/* --- Progress-ring rendering ---
+   The ring's colour IS the information: during development, a gradient running
+   through the stages (embryo→L1→L2→L3→pupa→eclosion); in the adult, an aging
+   gradient (light pink→plum→almost black). The knob takes the same colour as the
+   ring at that point and marks the end of the fill.                          */
 
-/* Paletas: posición (fracción 0..1 de la vuelta) → color */
+/* Palettes: position (fraction 0..1 of the turn) → colour */
 const DEV_RING = [
-  { at:0.00, col:'#a9cdf0' }, // Embrión
+  { at:0.00, col:'#a9cdf0' }, // Embryo
   { at:0.10, col:'#a9cdf0' },
   { at:0.15, col:'#9fe0c9' }, // L1
   { at:0.25, col:'#7fd1ba' }, // L2
   { at:0.40, col:'#f6e0a0' }, // L3
   { at:0.75, col:'#f7c5b4' }, // Pupa
-  { at:1.00, col:'#f3b6cd' }, // eclosión → adulto
+  { at:1.00, col:'#f3b6cd' }, // eclosion → adult
 ];
 const AGE_RING = [
-  { at:0.00, col:'#f6c9d9' }, // recién eclosionado (rosa claro)
+  { at:0.00, col:'#f6c9d9' }, // newly eclosed (light pink)
   { at:0.45, col:'#c76b95' }, // rosa intenso
   { at:0.80, col:'#6e3a5a' }, // ciruela
   { at:1.00, col:'#1a1320' }, // casi negro (fin de vida estimada)
 ];
 function hexToRgb(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
 function rgbToHex(r){ return '#'+r.map(v=>Math.round(v).toString(16).padStart(2,'0')).join(''); }
-/* color interpolado de una paleta en la fracción f */
+/* colour interpolated from a palette at fraction f */
 function colorAt(pal, f){
   f = Math.min(Math.max(f,0),1);
   for(let i=1;i<pal.length;i++){
@@ -2909,7 +2912,7 @@ function colorAt(pal, f){
   }
   return pal[pal.length-1].col;
 }
-/* conic-gradient con los colores de la paleta, recortado al final de la carga */
+/* conic-gradient with the palette colours, clipped at the end of the fill */
 function conicFill(pal, frac){
   const f = Math.min(Math.max(frac,0),1);
   const fillDeg = f*360;
@@ -2917,15 +2920,15 @@ function conicFill(pal, frac){
   for(const p of pal){ if(p.at*360 < fillDeg) stops.push(`${p.col} ${(p.at*360).toFixed(1)}deg`); }
   const endc = colorAt(pal,f), fadeDeg = Math.min(fillDeg + 1.2, 360);
   stops.push(`${endc} ${fillDeg.toFixed(1)}deg`);
-  stops.push(`${endc}00 ${fadeDeg.toFixed(1)}deg`);          // fundido suave de la punta (anti-aliasing)
+  stops.push(`${endc}00 ${fadeDeg.toFixed(1)}deg`);          // soft fade at the tip (anti-aliasing)
   if(fadeDeg < 360) stops.push('transparent 360deg');
   return `conic-gradient(from 0deg, ${stops.join(', ')})`;
 }
 function ring(st){
   const pal  = st.isAdult ? AGE_RING : DEV_RING;
   const frac = st.isAdult ? st.adultFraction : st.fraction;
-  const ang  = frac*2*Math.PI - Math.PI/2;               // 0 = arriba, horario
-  const kx   = (50 + 45.7*Math.cos(ang)).toFixed(2);     // % (escala con el tamaño)
+  const ang  = frac*2*Math.PI - Math.PI/2;               // 0 = top, clockwise
+  const kx   = (50 + 45.7*Math.cos(ang)).toFixed(2);     // % (scales with the size)
   const ky   = (50 + 45.7*Math.sin(ang)).toFixed(2);
   const knobCol = colorAt(pal, frac);
   const mask = 'radial-gradient(farthest-side, #0000 calc(100% - 11.5px), #000 calc(100% - 10.5px))';
@@ -2937,10 +2940,10 @@ function ring(st){
   </div>`;
 }
 
-/* --- Render de una tarjeta --- */
-/* Pastilla de temperatura: 18°C frío (azul) → 25°C claro/neutro → 29°C calor (naranja).
-   El medio es CLARO (no marrón); el texto se pone oscuro o blanco según el fondo,
-   para que siempre se lea. Los extremos quedan distintos de los colores de estadios. */
+/* --- Rendering a card --- */
+/* Temperature pill: 18°C cold (blue) → 25°C light/neutral → 29°C hot (orange).
+   The middle is LIGHT (not brown); the text turns dark or white depending on the
+   background so it always reads. The extremes stay distinct from the stage colours. */
 function tempInfo(t){
   const cold=[74,143,208], mid=[245,242,228], warm=[224,118,44];  // 25 °C: crema apenas amarillento
   const lerp = (a,b,k)=> a.map((v,i)=> Math.round(v + (b[i]-v)*k));
@@ -2951,7 +2954,7 @@ function tempInfo(t){
   return { bg:`linear-gradient(135deg, rgb(${c[0]},${c[1]},${c[2]}), rgb(${d(c[0])},${d(c[1])},${d(c[2])}))`, text };
 }
 
-/* etiqueta legible del objetivo de la cruza */
+/* human-readable label for the purpose of the cross */
 function objLabel(cross){
   if(cross.calib) return t('obj.calibrate');
   if(!cross.objective) return '';
@@ -2970,8 +2973,8 @@ function card(cross){
     ? `<div class="day-line">${t('card.postEcl',{d:Math.round(st.adultAge)})}</div>`
     : `<div class="day-line">${t('card.dayOf',{d:Math.round(st.elapsedDays),t:Math.ceil(st.total)})}</div>`;
 
-  // Los avisos/tareas viven en el panel "Tareas pendientes", no en la tarjeta (la línea
-  // "Montar en Xh" + la insignia "Planificado" ya comunican el estado planificado).
+  // Notices/tasks live in the "Pending tasks" panel, not on the card (the "Set up in Xh"
+  // line + the "Planned" badge already communicate the planned state).
 
   // timeline
   const tl = st.bounds.map((b,i)=>{
@@ -2989,7 +2992,7 @@ function card(cross){
     <div class="tl-body"><div class="tl-name">${t('tl.eclosionAdult')}</div>
     <div class="tl-date">${fmtDate(eclDate)}${st.isAdult?' · '+t('tl.agingDay',{d:Math.floor(st.adultAge)}):''}</div></div></div>`;
 
-  // Panel "Detalles": datos adicionales que no van en la vista compacta de la tarjeta
+  // "Details" panel: extra data that does not belong in the card's compact view
   const contLabel = cross.container ? t('cont.'+cross.container) : '';
   const contStr = contLabel ? contLabel + (cross.nContainers ? ` ×${cross.nContainers}` : '') : '';
   const _f = cross.females, _m = cross.males, _tot = cross.adults;
@@ -3003,8 +3006,8 @@ function card(cross){
   if(!cross.calib){ const cs = calibStatusText(cross.genotype); if(cs) infoRows.push(`<div class="info-row"><span class="ik">${t('obj.calibrate')}</span><span class="iv">${esc(cs)}</span></div>`); }
   const infoHtml = infoRows.length ? infoRows.join('') : `<div class="hint">${t('info.empty')}</div>`;
 
-  // Acciones de la tarjeta. Los registros de calibración muestran registrar-T50 (o el resultado);
-  // el resto muestra "Nueva generación" + cronología + detalles + panel de envejecimiento.
+  // Card actions. Calibration records show record-T50 (or the result); everything else
+  // shows "New generation" + timeline + details + aging panel.
   const tlBlock = `<div class="timeline"><div class="tl-inner">${tl}${tlAdult}</div></div>`;
   let actionHtml;
   if(cross.calib){
@@ -3020,7 +3023,7 @@ function card(cross){
   } else {
     const newGenBtn = `<button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>`;
     const aging = st.isAdult && (cross.objective==='aging' || hasCohort(cross)) ? agingPanel(cross, st) : '';
-    // "Más" fusiona cronología + detalles en un solo panel (un botón en vez de dos)
+    // "More" merges timeline + details into a single panel (one button instead of two)
     actionHtml = `<div class="btn-row">
       ${newGenBtn}
       <button class="timeline-btn" onclick="toggleMore(this)" data-tip="${esc(t('tip.more2'))}">${t('card.more')}</button>
@@ -3065,8 +3068,8 @@ function card(cross){
   </div>`;
 }
 
-/* --- Tarjeta doble: los dos padres de una cruza, criándose por separado hasta "Montar la
-   cruza" (a partir de ahí pasan a ser un registro único, normal, con genotipo compuesto) --- */
+/* --- Paired card: the two parents of a cross, reared separately until "Set up the cross"
+   (from then on they become a single, normal record with a compound genotype) --- */
 function pairMiniBlock(cross, roleLabel){
   const st = computeState(cross);
   const ti = tempInfo(cross.temp);
@@ -3112,8 +3115,8 @@ function pairCard(female, male){
     </div>
   </div>`;
 }
-/* Tarjetas de una sección: las que son parte de una cruza de dos genotipos sin fusionar
-   todavía se combinan en UNA tarjeta doble (pairCard); el resto, tarjeta normal. */
+/* Cards of a section: those that are part of a two-genotype cross not merged yet are
+   combined into ONE paired card (pairCard); the rest get a normal card. */
 function renderCardsWithPairs(list){
   const seen = new Set();
   const out = [];
@@ -3128,28 +3131,28 @@ function renderCardsWithPairs(list){
         out.push(pairCard(female, male));
         return;
       }
-      // hermano ausente (p. ej. se borró a mano) → esta queda como tarjeta normal
+      // sibling missing (e.g. deleted by hand) → this one stays as a normal card
     }
     out.push(card(c));
   });
   return out.join('');
 }
 
-/* --- Panel de envejecimiento (cohortes adultas, Kaplan-Meier) ---
-   Un registro puede seguir VARIAS cohortes a la vez (hembras, machos y/o mixta) del mismo
-   genotipo y condición: cada una es un grupo con su N inicial, sus viales y sus eventos,
-   y su propia curva de supervivencia. */
+/* --- Aging panel (adult cohorts, Kaplan-Meier) ---
+   One record can follow SEVERAL cohorts at once (females, males and/or mixed) of the same
+   genotype and condition: each one is a group with its own starting N, vials and events,
+   and its own survival curve. */
 const SEX_KEY = { F:'aging.sexF', M:'aging.sexM', mixed:'aging.sexMixed' };
 const SEX_SYM = { F:'♀', M:'♂', mixed:'⚥' };
 const SEX_ORDER = ['F','M','mixed'];
-/* Colores por sexo: el mismo color base del registro, corrido en tono (no en brillo, así
-   se lee igual en modo claro y oscuro). El macho además va punteado, para que se distinga
-   también impreso en blanco y negro. */
-const SEX_HUE   = { F:0, M:-27, mixed:20 };      // grados de corrimiento de tono
-const SEX_SHADE = { F:0, M:-0.16, mixed:0.14 };  // + un toque de brillo, que ayuda en modo claro
+/* Per-sex colours: the record's own base colour, shifted in hue (not in brightness, so it
+   reads the same in light and dark mode). Males are also dashed, so they can be told apart
+   in black-and-white print too. */
+const SEX_HUE   = { F:0, M:-27, mixed:20 };      // degrees of hue shift
+const SEX_SHADE = { F:0, M:-0.16, mixed:0.14 };  // + a touch of brightness, which helps in light mode
 const SEX_DASH  = { M:'6 3' };
 const COHORT_BASE = '#d96fa0';
-/* corrimiento de tono (HSL) conservando saturación y luminosidad */
+/* hue shift (HSL) preserving saturation and lightness */
 function shiftHue(hex, deg){
   if(!deg) return hex;
   const n = parseInt(hex.slice(1), 16);
@@ -3166,7 +3169,7 @@ function shiftHue(hex, deg){
   const seg = [[c,x,0],[x,c,0],[0,c,x],[0,x,c],[x,0,c],[c,0,x]][Math.floor(h/60)%6];
   return '#' + seg.map(v=> Math.round((v+m)*255).toString(16).padStart(2,'0')).join('');
 }
-/* mezcla hacia el blanco (amt>0) o el negro (amt<0) */
+/* blend towards white (amt>0) or black (amt<0) */
 function shadeHex(hex, amt){
   if(!amt) return hex;
   const n = parseInt(hex.slice(1), 16), mix = amt>=0 ? 255 : 0, k = Math.abs(amt);
@@ -3180,7 +3183,7 @@ function ensureAging(c){
   if(!c.aging) c.aging = { groups:[] };
   const a = c.aging;
   if(!Array.isArray(a.groups)){
-    /* migración: la cohorte única de antes (startN/sex/vials/events) pasa a ser el primer grupo */
+    /* migration: the former single cohort (startN/sex/vials/events) becomes the first group */
     a.groups = [];
     if(a.startN!=null || (Array.isArray(a.events) && a.events.length)){
       a.groups.push({ sex:a.sex||'F', startN:a.startN??null, vials:a.vials??null,
@@ -3196,20 +3199,20 @@ function ensureAging(c){
   });
   return a;
 }
-/* cohortes ya cargadas de un registro, en orden ♀ ♂ ⚥ */
+/* the cohorts already loaded for a record, in ♀ ♂ ⚥ order */
 function cohortGroups(c){
   return ensureAging(c).groups.filter(g=> g.startN!=null)
     .sort((x,y)=> SEX_ORDER.indexOf(x.sex) - SEX_ORDER.indexOf(y.sex));
 }
 function hasCohort(c){ return !!(c && c.aging) && cohortGroups(c).length>0; }
-/* índice estable del grupo dentro de aging.groups (lo que viaja en los onclick) */
+/* stable index of the group inside aging.groups (what travels in the onclick handlers) */
 function cohortIndex(c, g){ return ensureAging(c).groups.indexOf(g); }
 function cohortAt(c, gi){ return ensureAging(c).groups[gi] || null; }
-/* todos los eventos del registro (para el aviso de comida fresca, que no distingue sexo) */
+/* every event of the record (for the fresh-food reminder, which does not distinguish sex) */
 function agingEvents(c){ return c && c.aging ? cohortGroups(c).flatMap(g=>g.events) : []; }
 
-/* Estimador Kaplan-Meier: S(t)=Π(1 - d_i/n_i), con censura reduciendo el grupo en riesgo.
-   `g` = cohorte (grupo) a curvar; sin ella, la primera del registro. */
+/* Kaplan-Meier estimator: S(t)=Π(1 - d_i/n_i), with censoring reducing the group at risk.
+   `g` = the cohort (group) to plot; without it, the record's first one. */
 function kmCurve(cross, st, g){
   const a = ensureAging(cross);
   const grp = g || a.groups[0] || { startN:null, events:[] };
@@ -3217,7 +3220,7 @@ function kmCurve(cross, st, g){
   const byDay = {};
   grp.events.forEach(e=>{
     const dt = new Date(e.date).getTime();
-    if(!isFinite(dt)) return;   // ignora eventos sin fecha válida (datos importados/antiguos) → evita NaN en la curva
+    if(!isFinite(dt)) return;   // ignore events with no valid date (imported/old data) → avoids NaN in the curve
     const day = Math.max((dt-ecl)/86400000, 0);
     const k = day.toFixed(3);
     (byDay[k] = byDay[k] || {day, d:0, c:0});
@@ -3244,8 +3247,8 @@ function kmCurve(cross, st, g){
   };
 }
 
-/* Mini-curva KM de la tarjeta. Acepta una curva sola o varias superpuestas
-   (una por cohorte del registro): [{km, color, dash}] */
+/* The card's mini KM curve. It accepts a single curve or several overlaid
+   (one per cohort of the record): [{km, color, dash}] */
 function survChart(series){
   const list = (Array.isArray(series) ? series : [{ km:series, color:COHORT_BASE, dash:'' }])
     .filter(s=>s && s.km);
@@ -3269,8 +3272,8 @@ function survChart(series){
   </svg></div>`;
 }
 
-/* ===== Comparación de cohortes: log-rank (Mantel–Haenszel) + p-valor χ² ===== */
-/* log Γ por Lanczos (para la gamma incompleta) */
+/* ===== Comparing cohorts: log-rank (Mantel–Haenszel) + χ² p-value ===== */
+/* log Γ by Lanczos (for the incomplete gamma) */
 function lgamma(x){
   const c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,
            -176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
@@ -3279,16 +3282,16 @@ function lgamma(x){
   for(let i=1;i<9;i++) a+=c[i]/(x+i);
   return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(tt)-tt+Math.log(a);
 }
-/* Q(s,x) = gamma incompleta superior regularizada (serie / fracción continua, Numerical Recipes) */
+/* Q(s,x) = regularized upper incomplete gamma (series / continued fraction, Numerical Recipes) */
 function gammincQ(s,x){
   if(x<=0) return 1;
   const gln=lgamma(s);
-  if(x < s+1){                                   // serie para P, Q=1-P
+  if(x < s+1){                                   // series for P, Q=1-P
     let sum=1/s, term=1/s;
     for(let k=1;k<300;k++){ term*=x/(s+k); sum+=term; if(Math.abs(term)<Math.abs(sum)*1e-14) break; }
     return 1 - sum*Math.exp(-x+s*Math.log(x)-gln);
   }
-  let b=x+1-s, c2=1e300, d2=1/b, h=d2;            // fracción continua para Q
+  let b=x+1-s, c2=1e300, d2=1/b, h=d2;            // continued fraction for Q
   for(let i=1;i<300;i++){
     const an=-i*(i-s); b+=2; d2=an*d2+b; if(Math.abs(d2)<1e-300)d2=1e-300;
     c2=b+an/c2; if(Math.abs(c2)<1e-300)c2=1e-300; d2=1/d2; const del=d2*c2; h*=del;
@@ -3296,9 +3299,9 @@ function gammincQ(s,x){
   }
   return h*Math.exp(-x+s*Math.log(x)-gln);
 }
-/* p-valor de cola superior de una χ² con df grados de libertad */
+/* upper-tail p-value of a χ² with df degrees of freedom */
 function chiSqUpper(chi2, df){ return (chi2>0 && df>0) ? gammincQ(df/2, chi2/2) : 1; }
-/* resolver Vr·x = d (eliminación gaussiana con pivoteo) y devolver dᵀ·x = dᵀ·Vr⁻¹·d */
+/* solve Vr·x = d (Gaussian elimination with pivoting) and return dᵀ·x = dᵀ·Vr⁻¹·d */
 function quadFormSolve(V, d){
   const m=d.length, A=V.map((row,i)=>row.concat([d[i]]));
   for(let col=0; col<m; col++){
@@ -3311,7 +3314,7 @@ function quadFormSolve(V, d){
   let q=0; for(let i=0;i<m;i++) q += d[i]*(A[i][m]/A[i][i]);
   return q;
 }
-/* serie de eventos de una cohorte en EDAD (días desde eclosión): {times:[{day,d,c}], n0} */
+/* event series of a cohort in AGE (days since eclosion): {times:[{day,d,c}], n0} */
 function cohortSeries(cross, g){
   const a=ensureAging(cross), grp = g || a.groups[0] || { startN:null, events:[] };
   const ecl=computeState(cross).eclosionDate, byDay={};
@@ -3322,7 +3325,7 @@ function cohortSeries(cross, g){
   });
   return { times:Object.values(byDay).sort((x,y)=>x.day-y.day), n0:grp.startN||0 };
 }
-/* Log-rank para G≥2 grupos (cada uno = {times,n0}). Devuelve {chi2, df, p, O, E} o null. */
+/* Log-rank for G≥2 groups (each one = {times,n0}). Returns {chi2, df, p, O, E} or null. */
 function logRankTest(groups){
   const G=groups.length; if(G<2) return null;
   const dayset=new Set();
@@ -3338,7 +3341,7 @@ function logRankTest(groups){
     }
     if(n<=0||dtot<=0) return;
     for(let j=0;j<G;j++){ O[j]+=dg[j]; E[j]+=dtot*ng[j]/n; }
-    if(n>1){ const f=dtot*(n-dtot)/(n-1)/(n*n);   // varianza hipergeométrica multivariada
+    if(n>1){ const f=dtot*(n-dtot)/(n-1)/(n*n);   // multivariate hypergeometric variance
       for(let j=0;j<G;j++) for(let k=0;k<G;k++) V[j][k]+= f*((j===k? ng[j]*n : 0) - ng[j]*ng[k]);
     }
   });
@@ -3348,8 +3351,8 @@ function logRankTest(groups){
   return { chi2, df:m, p:chiSqUpper(chi2, m), O, E };
 }
 
-/* ===== Planificación estadística de un experimento de supervivencia ===== */
-/* Cuantil de la normal estándar (inverso de la CDF), algoritmo de Acklam. */
+/* ===== Statistical planning of a survival experiment ===== */
+/* Standard-normal quantile (inverse CDF), Acklam's algorithm. */
 function normInv(p){
   if(p<=0) return -Infinity; if(p>=1) return Infinity;
   const a=[-3.969683028665376e1,2.209460984245205e2,-2.759285104469687e2,1.383577518672690e2,-3.066479806614716e1,2.506628277459239e0];
@@ -3361,9 +3364,9 @@ function normInv(p){
   if(p<=phigh){ q=p-0.5; r=q*q; return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1); }
   q=Math.sqrt(-2*Math.log(1-p)); return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
 }
-/* Tamaño muestral para el test de log-rank (fórmula de Schoenfeld, asignación 1:1),
-   con el tamaño de efecto expresado como dos medianas de supervivencia (modelo
-   exponencial: HR = m1/m2). pEvent = fracción esperada que muere antes del fin. */
+/* Sample size for the log-rank test (Schoenfeld's formula, 1:1 allocation), with the
+   effect size expressed as two survival medians (exponential model: HR = m1/m2).
+   pEvent = the fraction expected to die before the end. */
 function logRankPlan(m1, m2, alpha, power, pEvent){
   if(!(m1>0)||!(m2>0)||m1===m2) return null;
   const hr = m1/m2;
@@ -3373,30 +3376,30 @@ function logRankPlan(m1, m2, alpha, power, pEvent){
   const nPerGroup = Math.ceil(events/2/pe);
   return { hr, events: Math.ceil(events), nPerGroup, nTotal: nPerGroup*2, pEvent: pe };
 }
-/* Días hasta una fracción q de mortalidad, a partir de la mediana. Usa un modelo
-   de Weibull con forma > 1 (cola más corta que la exponencial), que se ajusta al
-   patrón real de Drosophila: la mortalidad se acelera con la edad (tipo Gompertz),
-   así que el 90 % de mortalidad cae a ~1.5× la mediana, no a ~3.3× (exponencial).
-   La mediana siempre se mapea a sí misma. SURV_SHAPE mayor = cola más corta. */
+/* Days to a mortality fraction q, starting from the median. It uses a Weibull model
+   with shape > 1 (a shorter tail than the exponential), which fits the real Drosophila
+   pattern: mortality accelerates with age (Gompertz-like), so 90 % mortality falls at
+   ~1.5× the median, not ~3.3× (exponential). The median always maps to itself.
+   A larger SURV_SHAPE = a shorter tail. */
 const SURV_SHAPE = 3;
 function timeToMortality(median, q){
   return (median>0 && q>0 && q<1) ? median * Math.pow(Math.log2(1/(1-q)), 1/SURV_SHAPE) : null;
 }
 
-/* ---- UI de comparación de cohortes (modal): checklist + overlay KM + log-rank ---- */
+/* ---- Cohort-comparison UI (modal): checklist + KM overlay + log-rank ---- */
 const CMP_COLORS = ['#d96fa0','#5b8fc7','#3fae8c','#c79a2e','#9b6fd9','#d98162'];
-/* _cmpDemoOverride: cuando el tutorial interactivo pasa por "Comparar cohortes (KM)",
-   pisa temporalmente la lista con 2 cohortes de ejemplo (ver buildDemoCohorts) sin
-   tocar `crosses`/localStorage; se limpia al salir de ese paso (tourResetToBaseline). */
+/* _cmpDemoOverride: when the interactive tutorial reaches "Compare cohorts (KM)", it
+   temporarily overrides the list with 2 example cohorts (see buildDemoCohorts) without
+   touching `crosses`/localStorage; it is cleared on leaving that step (tourResetToBaseline). */
 let _cmpDemoOverride = null;
-/* Una entrada por COHORTE (no por registro): un registro con hembras y machos aporta dos,
-   con el mismo color base y distinto tono. id = "<idRegistro>#<índiceDeGrupo>". */
+/* One entry per COHORT (not per record): a record with females and males contributes two,
+   with the same base colour and a different hue. id = "<recordId>#<groupIndex>". */
 function agingCohorts(){
   const src = _cmpDemoOverride || crosses.filter(c=> !c.calib);
   const out = [];
   src.forEach(c=>{
-    /* el genotipo solo no alcanza: lo habitual es comparar el MISMO genotipo entre
-       condiciones (y ahora, entre sexos), así que la etiqueta lleva las dos cosas */
+    /* the genotype alone is not enough: the usual case is comparing the SAME genotype
+       across conditions (and now, across sexes), so the label carries both */
     const name = [c.genotype||'', (c.conditions||[]).join(' · ')].filter(Boolean).join(' · ');
     cohortGroups(c).forEach(g=>{
       out.push({ id:`${c.id}#${cohortIndex(c,g)}`, cross:c, g,
@@ -3427,7 +3430,7 @@ function renderCompare(){
   const box = document.getElementById('compareResult');
   const sel = agingCohorts().filter(e=>_cmpChecked.has(e.id));
   if(!sel.length){ box.innerHTML = `<div class="hint" style="margin-top:12px">${t('cmp.pick')}</div>`; return; }
-  /* un color base por REGISTRO; dentro de él, cada sexo un tono de la misma familia */
+  /* one base colour per RECORD; within it, each sex gets a hue of the same family */
   const baseOf = {}; let bi = 0;
   sel.forEach(e=>{ if(!(e.cross.id in baseOf)) baseOf[e.cross.id] = CMP_COLORS[bi++ % CMP_COLORS.length]; });
   const cohorts = sel.map(e=>{
@@ -3470,7 +3473,7 @@ function compareChart(cohorts){
   </svg></div>`;
 }
 
-/* ---- UI de planificación estadística (modal): tamaño muestral / potencia / duración ---- */
+/* ---- Statistical-planning UI (modal): sample size / power / duration ---- */
 function openStatPlan(){ closeMenu(); renderStatPlan(); document.getElementById('statOverlay').classList.add('open'); }
 function closeStatPlan(){ document.getElementById('statOverlay').classList.remove('open'); }
 function renderStatPlan(){
@@ -3480,8 +3483,8 @@ function renderStatPlan(){
   const box = document.getElementById('statResult');
   const plan = logRankPlan(mA, mB, alpha, power, q);
   if(!plan){ box.innerHTML = `<div class="hint" style="margin-top:6px">${t('stat.needDiff')}</div>`; return; }
-  const dur = timeToMortality(Math.max(mA,mB), q) + totalDays(temp);   // hasta q% de mortalidad + desarrollo huevo→adulto
-  const fitsStd = plan.nPerGroup <= 100;      // el mínimo entra dentro del estándar de campo (≥100/condición, 10×10)
+  const dur = timeToMortality(Math.max(mA,mB), q) + totalDays(temp);   // up to q% mortality + egg→adult development
+  const fitsStd = plan.nPerGroup <= 100;      // the minimum fits within the field standard (≥100/condition, 10×10)
   box.innerHTML = `
     <div class="stat-out">
       <div class="so"><b>${plan.nPerGroup}</b><span>${t('stat.perGroup')}</span></div>
@@ -3493,8 +3496,8 @@ function renderStatPlan(){
     <div class="cmp-lr${fitsStd?' sig':''}">${fitsStd?t('stat.okStd',{n:plan.nPerGroup}):t('stat.bigN',{n:plan.nPerGroup})}</div>`;
 }
 
-/* Carga de moscas: una fila por sexo, todas a la vez. La que quede vacía no se crea
-   (y si ya existía sin datos cargados, se quita). */
+/* Entering flies: one row per sex, all at once. A row left empty is not created
+   (and if it already existed with no data entered, it is removed). */
 function cohortForm(cross){
   const a = ensureAging(cross);
   const editing = editingCohort.has(cross.id);
@@ -3520,7 +3523,7 @@ function cohortForm(cross){
   </div>`;
 }
 
-/* Bloque de una cohorte dentro del panel: métricas, densidad, mediana y sus eventos */
+/* One cohort's block inside the panel: metrics, density, median and its events */
 function cohortBlock(cross, st, k, showDel){
   const { g, gi, km, color } = k;
   const pct = g.startN ? Math.round(km.alive/g.startN*100) : 0;
@@ -3575,7 +3578,7 @@ function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 /* --- Stats superiores --- */
 function renderStats(){
   const active = crosses.length;
-  // próxima eclosión entre las que aún no son adultas
+  // the next eclosion among those that are not adults yet
   let next=null;
   crosses.forEach(c=>{
     const st=computeState(c);
@@ -3590,8 +3593,8 @@ function renderStats(){
     <div class="stat-item">${t('stat.nextEcl')}: <b>${next?fmtDate(next):'—'}</b></div>` : '';
 }
 
-/* --- Panel "Tareas pendientes" (agrega acciones de todas las cruzas) --- */
-/* --- Estado de tareas marcadas como hechas (persistente; se auto-borran tras 24 h) --- */
+/* --- "Pending tasks" panel (aggregates actions from every cross) --- */
+/* --- State of tasks marked as done (persistent; auto-cleared after 24 h) --- */
 const TASKDONE_KEY = 'drosotrack.taskdone.v1';
 const TASK_DONE_TTL = 24*3600*1000;
 function loadTaskDone(){ try{ return JSON.parse(localStorage.getItem(TASKDONE_KEY)) || {}; }catch(e){ return {}; } }
@@ -3601,20 +3604,20 @@ let _taskMap = {};
 function toggleTasksPanel(){ tasksPanelOpen = !tasksPanelOpen; renderTasks(); }
 function markTaskDone(id){
   const m = _taskMap[id]; if(!m) return;
-  // "Montar la cruza" no es un check más: fusiona los dos registros parentales, así que no
-  // se guarda como "hecha" (el par deja de existir, no tiene sentido llevar ese estado).
+  // "Set up the cross" is not just another checkbox: it merges the two parental records, so
+  // it is not stored as "done" (the pair stops existing, so keeping that state is pointless).
   if(id.endsWith(':montarcruza')){ mountCross(id.split(':')[0]); return; }
-  // Tarea recurrente: no queda "hecha" en la lista, pasa el turno al siguiente responsable
-  // (si hay varios) y reprograma la próxima fecha; simplemente deja de estar vencida.
+  // Recurring task: it does not stay "done" in the list; it passes the turn to the next
+  // person in charge (if there are several) and reschedules the next date; it simply stops being overdue.
   if(m.rec){ completeRecTask(id); renderRecTaskList(); renderTasks(); gcalMaybeAutoSync(); return; }
   const done = loadTaskDone();
   done[id] = { doneAt: Date.now(), text:m.text, c:m.c, genotype:m.genotype, crossId:m.crossId };
   saveTaskDone(done);
-  // "Retirar parentales" es una acción única/irreversible → marcar el registro y refrescar las tarjetas
+  // "Remove the parents" is a one-off/irreversible action → flag the record and refresh the cards
   if(id.endsWith(':parentales')){ const c = crosses.find(x=>x.id===m.crossId); if(c){ c.parentsRemoved = true; save(crosses); } render(); return; }
   renderTasks(); gcalMaybeAutoSync();
 }
-/* Cruzas de dos genotipos donde ambos hermanos (♀/♂) todavía existen sin fusionar */
+/* Two-genotype crosses where both siblings (♀/♂) still exist unmerged */
 function findCrossPairs(){
   const byId = {};
   crosses.forEach(c=>{ if(c.pairId) (byId[c.pairId]=byId[c.pairId]||[]).push(c); });
@@ -3623,9 +3626,9 @@ function findCrossPairs(){
     return (female && male) ? {pairId:female.pairId, female, male} : null;
   }).filter(Boolean);
 }
-/* Confirma "Montar la cruza": borra los dos registros parentales y abre "Nuevo registro"
-   precargado con el genotipo compuesto; el reloj arranca de cero (huevo, día 1) con la
-   fecha/hora que se confirme ahí, igual que cualquier registro nuevo. */
+/* Confirms "Set up the cross": deletes the two parental records and opens "New record"
+   preloaded with the compound genotype; the clock starts from zero (egg, day 1) with the
+   date/time confirmed there, just like any new record. */
 function mountCross(pairId){
   const female = crosses.find(c=>c.pairId===pairId && c.pairRole==='female');
   const male = crosses.find(c=>c.pairId===pairId && c.pairRole==='male');
@@ -3647,12 +3650,12 @@ function mountCross(pairId){
 function unmarkTask(id){ const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); gcalMaybeAutoSync(); }
 function deleteTask(id){
   const doIt = () => { const d=loadTaskDone(); delete d[id]; saveTaskDone(d); renderTasks(); };
-  // misma acción que dismissTask (quitar una fila de tareas) → misma dontAskKey, así
-  // "no volver a mostrar" vale para el ✕ tanto en pendientes como en hechas
+  // same action as dismissTask (removing a task row) → same dontAskKey, so
+  // "do not show again" applies to the ✕ in both pending and done lists
   if(isConfirmSkipped('dismissTask')){ doIt(); return; }
   askConfirm(t('cf.dismissTask'), doIt, 'task.remove', 'dismissTask');
 }
-/* ✕ en una tarea pendiente: la descarta (se oculta, no cuenta como "hecha"); reaparece a las 24 h si sigue vigente */
+/* ✕ on a pending task: dismisses it (it hides, it does not count as "done"); it comes back after 24 h if still due */
 function dismissTask(id){
   const m = _taskMap[id];
   const doIt = () => {
@@ -3668,12 +3671,12 @@ function renderTasks(){
   const el = document.getElementById('tasks');
   const done = loadTaskDone();
   const now = Date.now();
-  // auto-borrado de las hechas tras 24 h
+  // auto-clearing of the done ones after 24 h
   let changed=false;
   Object.keys(done).forEach(id=>{ if(now - done[id].doneAt > TASK_DONE_TTL){ delete done[id]; changed=true; } });
   if(changed) saveTaskDone(done);
 
-  // tareas vivas (con clave estable)
+  // live tasks (with a stable key)
   _taskMap = {};
   const live = [];
   crosses.forEach(c=>{
@@ -3686,8 +3689,8 @@ function renderTasks(){
       }
     });
   });
-  // TAREA (par de una cruza): "Montar la cruza", ambos adultos, y la ♀ con ≥2 días desde que
-  // eclosionó (ventana en la que se supone que se están recolectando vírgenes).
+  // TASK (pair of a cross): "Set up the cross", both adults, and the ♀ at least 2 days past
+  // eclosion (the window in which virgins are assumed to be being collected).
   findCrossPairs().forEach(({pairId, female, male})=>{
     const fSt = computeState(female), mSt = computeState(male);
     if(fSt.isAdult && mSt.isAdult && fSt.adultAge>=2){
@@ -3698,8 +3701,8 @@ function renderTasks(){
         r:{ t:t('rem.montarCruza'), c:'action', task:true, pulse:true, key:'montarcruza', urgency:0 } });
     }
   });
-  // TAREAS recurrentes (repique de stock, etc.): sólo entran al panel cuando faltan ≤48 h
-  // para la próxima fecha (o ya está vencida); si falta mucho todavía no hace falta verlas acá.
+  // Recurring TASKS (stock flipping, etc.): they only enter the panel when the next date is
+  // ≤48 h away (or already overdue); if it is still far off there is no need to see them here.
   recTasks.forEach(rt=>{
     const hoursUntil = (recTaskNextDueDate(rt).getTime() - now)/3600000;
     if(hoursUntil > 48) return;
@@ -3713,12 +3716,12 @@ function renderTasks(){
     live.push({ id:rt.id, crossId:rt.id, genotype:rt.title, exp:resp, rec:true,
       r:{ t:chipText, c:chipClass, task:true, pulse:hoursUntil<=0, key:null, urgency:hoursUntil } });
   });
-  // orden: más urgente arriba (menor "urgency" = antes); empates por orden de cruza
+  // order: most urgent on top (lower "urgency" = sooner); ties by cross order
   const pending = live.filter(t=> !done[t.id]).sort((a,b)=> (a.r.urgency??9e9)-(b.r.urgency??9e9));
   const doneList = Object.keys(done).filter(id=>!done[id].dismissed).map(id=>({id, ...done[id]})).sort((a,b)=> b.doneAt-a.doneAt);
 
-  const alert = pending.length>0 && !tasksPanelOpen;   // rojo pastel sólo cuando está cerrado y hay tareas
-  // genotipo (identifica la cruza) + experimento (desambigua cruzas con el mismo genotipo)
+  const alert = pending.length>0 && !tasksPanelOpen;   // pastel red only when it is closed and there are tasks
+  // genotype (identifies the cross) + experiment (disambiguates crosses with the same genotype)
   const rowName = (geno, exp)=> `<span class="tmain"><span class="tname" title="${esc(geno)}">${esc(geno)}</span>${exp?`<span class="texp" title="${esc(exp)}">${esc(exp)}</span>`:''}</span>`;
   const expOf = crossId => { const c = crosses.find(x=>x.id===crossId); return c ? (c.experiments||[]).join(', ') : ''; };
   const T_MARK = t('task.markDone'), T_UNMARK = t('task.unmark'), T_REMOVE = t('task.remove');
@@ -3754,8 +3757,8 @@ function scrollToCard(id){
     el.style.boxShadow='0 0 0 3px var(--lav)';
     setTimeout(()=>{ el.style.boxShadow=''; }, 1300); }
 }
-/* Inverso: al tocar una tarjeta, abre el panel de tareas y resalta las tareas
-   pendientes de ese registro. Ignora clics en botones/campos/paneles desplegados. */
+/* The reverse: tapping a card opens the tasks panel and highlights that record's pending
+   tasks. It ignores clicks on buttons/fields/expanded panels. */
 function cardToTasks(e, id){
   if(e.target.closest('button, input, select, textarea, a, .timeline, .info-panel, .aging-panel')) return;
   const flashRows = () => {
@@ -3765,7 +3768,7 @@ function cardToTasks(e, id){
       if(panel) panel.scrollIntoView({behavior:'smooth', block:'start'});
       rows.forEach(r=>{ r.classList.add('flash'); setTimeout(()=>r.classList.remove('flash'), 1500); });
     } else {
-      // sin tareas pendientes → destello verde en la propia tarjeta
+      // no pending tasks → green flash on the card itself
       const card = document.getElementById('card-'+id);
       if(card){ card.style.boxShadow='0 0 0 3px var(--mint)'; setTimeout(()=>{ card.style.boxShadow=''; }, 1000); }
     }
@@ -3788,11 +3791,11 @@ function render(){
     </div>`;
     return;
   }
-  // ordenar por fecha de cruza descendente y agrupar por experimento (secciones colapsables)
+  // sort by cross date descending and group by experiment (collapsible sections)
   const sorted = [...crosses].sort((a,b)=> parseCross(b)-parseCross(a));
   const groups = {}; _expOrder = [];
   sorted.forEach(c=>{
-    if(c.calib){   // los registros de calibración van a su propia sección
+    if(c.calib){   // calibration records go into their own section
       if(!groups['__calib__']){ groups['__calib__']=[]; _expOrder.push('__calib__'); }
       groups['__calib__'].push(c);
       return;
@@ -3803,7 +3806,7 @@ function render(){
       groups[exp].push(c);
     });
   });
-  if(groups['__calib__']) _expOrder = ['__calib__', ..._expOrder.filter(e=>e!=='__calib__')];   // calibración arriba de todo
+  if(groups['__calib__']) _expOrder = ['__calib__', ..._expOrder.filter(e=>e!=='__calib__')];   // calibration above everything else
   content.innerHTML = _expOrder.map((exp,i)=>{
     const cards = groups[exp];
     const title = exp==='__calib__' ? t('obj.calibrate') : exp==='__none__' ? t('group.none') : esc(exp);
@@ -3817,7 +3820,7 @@ function render(){
     </section>`;
   }).join('');
   restorePanels();
-  gcalMaybeAutoSync();   // si está conectado + auto, empuja los cambios a Google Calendar (debounced)
+  gcalMaybeAutoSync();   // if connected + auto, push the changes to Google Calendar (debounced)
 }
 let _expOrder = [];
 const collapsedExps = new Set();
@@ -3834,7 +3837,7 @@ function toggleTL(btn){
   const card = btn.closest('.card');
   const id = card ? card.id.replace('card-','') : null;
   if(id){ if(open) openTLIds.add(id); else openTLIds.delete(id); }
-  if(open) updateGridAlign(); else setTimeout(updateGridAlign, 380);  // al cerrar, esperar a que termine el colapso (no estira la vecina)
+  if(open) updateGridAlign(); else setTimeout(updateGridAlign, 380);  // on close, wait for the collapse to finish (so the neighbour is not stretched)
 }
 function toggleInfo(btn){
   const card = btn.closest('.card'); if(!card) return;
@@ -3844,7 +3847,7 @@ function toggleInfo(btn){
   if(open) openInfoIds.add(id); else openInfoIds.delete(id);
   if(open) updateGridAlign(); else setTimeout(updateGridAlign, 380);
 }
-/* "Más": abre/cierra cronología + detalles juntos (un solo botón por tarjeta) */
+/* "More": opens/closes timeline + details together (a single button per card) */
 function toggleMore(btn){
   const card = btn.closest('.card'); if(!card) return;
   const tl = card.querySelector('.timeline'), info = card.querySelector('.info-panel');
@@ -3855,8 +3858,8 @@ function toggleMore(btn){
   if(open) openMoreIds.add(id); else openMoreIds.delete(id);
   if(open) updateGridAlign(); else setTimeout(updateGridAlign, 380);
 }
-/* Marca las grillas con una cronología o panel de detalles abierto para que NO estiren las vecinas.
-   Sin nada abierto, la grilla vuelve a "stretch" y todas las tarjetas igualan altura. */
+/* Flags the grids with an open timeline or details panel so they do NOT stretch their neighbours.
+   With nothing open, the grid goes back to "stretch" and all cards match height. */
 function updateGridAlign(){
   document.querySelectorAll('.grid').forEach(g=> g.classList.toggle('tl-open', !!g.querySelector('.timeline.open, .info-panel.open, .aging-panel.open')));
 }
@@ -3875,7 +3878,7 @@ function reopenPanel(id, onclickKey){
   const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes(onclickKey));
   if(btn){ btn.nextElementSibling.classList.add('open'); btn.textContent = btn.textContent.replace('▾','▴'); }
 }
-/* re-aplica el estado abierto de los paneles colapsables tras un render (por onclick, no por texto → i18n) */
+/* re-applies the open state of the collapsible panels after a render (by onclick, not by text → i18n) */
 function restorePanels(){
   openAgingIds.forEach(id=>reopenPanel(id,'toggleAging'));
   openTLIds.forEach(id=>{
@@ -3895,14 +3898,14 @@ function restorePanels(){
   });
   updateGridAlign();
 }
-/* Nueva generación: form pre-cargado con el mismo genotipo/objetivo/temperatura,
-   pero como cruza NUEVA (reloj a cero, la fecha arranca en "ahora", editable). */
-let newGenSourceId = null;  // cruza de origen de una "nueva generación" en curso (se limpia al confirmar/cancelar)
+/* New generation: form preloaded with the same genotype/purpose/temperature,
+   but as a NEW cross (clock at zero, the date starts at "now", editable). */
+let newGenSourceId = null;  // source cross of a "new generation" in progress (cleared on confirm/cancel)
 function cloneCross(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
-  if(computeState(c).planned) return;  // "nueva generación" no aplica hasta montar la cruza
+  if(computeState(c).planned) return;  // "new generation" does not apply until the cross is set up
   openForm();
-  newGenSourceId = id;  // los parentales de `id` se retiran recién al CONFIRMAR la nueva generación (saveCross)
+  newGenSourceId = id;  // the parents of `id` are only removed when the new generation is CONFIRMED (saveCross)
   document.getElementById('modalTitle').textContent = t('form.newGenTitle');
   formExperiments = (c.experiments||[]).slice(); renderExpTags();
   formConditions = (c.conditions||[]).slice(); renderCondTags();
@@ -3910,15 +3913,15 @@ function cloneCross(id){
   document.getElementById('objective').value = c.objective||'';
   document.getElementById('dissectStage').value = c.dissectStage||'l3';
   document.getElementById('temp').value = c.temp;
-  document.getElementById('fContainer').value = c.container||'';  // el repique suele usar el mismo tipo de recipiente
+  document.getElementById('fContainer').value = c.container||'';  // flipping usually reuses the same container type
   document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on', b.dataset.t==String(c.temp)));
   onObjectiveChange();
 }
 
-/* --- Fecha de eclosión real ---
-   El modelo estima la eclosión por temperatura (y calibración del genotipo), pero un
-   tratamiento puede adelantarla o atrasarla. Cargar la fecha observada mueve el día 0 de
-   la edad adulta y de la curva de supervivencia, y reescala los estadios previos. */
+/* --- Real eclosion date ---
+   The model estimates eclosion from temperature (and the genotype's calibration), but a
+   treatment can bring it forward or delay it. Entering the observed date moves day 0 of the
+   adult age and of the survival curve, and rescales the preceding stages. */
 let eclEditId = null;
 function openEcl(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
@@ -3947,10 +3950,10 @@ function resetEcl(){
   closeEcl();
 }
 
-/* --- Acciones de envejecimiento --- */
-/* Carga las cohortes del registro de una sola pasada: hembras, machos y/o mixta.
-   Cada fila con N válido crea (o actualiza) su cohorte; la vacía no crea nada, y si esa
-   cohorte existía sin eventos cargados, se quita. */
+/* --- Aging actions --- */
+/* Loads the record's cohorts in a single pass: females, males and/or mixed.
+   Every row with a valid N creates (or updates) its cohort; an empty row creates nothing,
+   and if that cohort existed with no events entered, it is removed. */
 function setCohort(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const a = ensureAging(c);
@@ -3965,13 +3968,13 @@ function setCohort(id){
     rows.push({ sex, n, vials: v>0 ? v : null });
   });
   if(bad || !rows.some(r=>r.n)){ alert(t('al.cohortAny')); return; }
-  const kept = [];   // filas vaciadas que NO se pueden quitar así (ya tienen conteos cargados)
+  const kept = [];   // emptied rows that can NOT be removed this way (they already have counts entered)
   rows.forEach(r=>{
     const g = a.groups.find(x=>x.sex===r.sex);
     if(r.n==null){
       if(!g) return;
-      if(g.events.length) kept.push(t(SEX_KEY[g.sex]));                    // con datos → se conserva
-      else a.groups.splice(a.groups.indexOf(g), 1);                        // vacía y sin datos → se quita
+      if(g.events.length) kept.push(t(SEX_KEY[g.sex]));                    // with data → keep it
+      else a.groups.splice(a.groups.indexOf(g), 1);                        // empty and with no data → remove it
       return;
     }
     if(g){ g.startN = r.n; g.vials = r.vials; }
@@ -3983,7 +3986,7 @@ function setCohort(id){
 }
 function editCohort(id){ editingCohort.add(id); openAgingIds.add(id); render(); }
 function cancelEditCohort(id){ editingCohort.delete(id); render(); }
-/* Quita una cohorte entera (con sus eventos) del registro */
+/* Removes a whole cohort (with its events) from the record */
 function delCohort(id, gi){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const g = cohortAt(c, gi); if(!g) return;
@@ -4026,7 +4029,7 @@ function delAging(id, gi, idx){
   askConfirm(t('cf.delAging'), ()=>{ g.events.splice(idx,1); save(crosses); render(); });
 }
 
-/* --- Resguardo y exportación de datos --- */
+/* --- Data backup and export --- */
 function downloadBlob(blob, name){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -4049,7 +4052,7 @@ function importJSON(e){
       const data = JSON.parse(r.result);
       if(!Array.isArray(data)) throw new Error(t('err.notList'));
       if(data.length===0) throw new Error(t('err.empty'));
-      // validar cada entrada ANTES de tocar nada (evita romper la app con un backup dañado)
+      // validate every entry BEFORE touching anything (avoids breaking the app with a corrupt backup)
       const isValid = c => c && typeof c==='object'
         && typeof c.genotype==='string' && c.genotype.trim()!==''
         && typeof c.crossDate==='string'
@@ -4057,7 +4060,7 @@ function importJSON(e){
         && typeof c.temp==='number' && isFinite(c.temp);
       const bad = data.filter(c=>!isValid(c)).length;
       if(bad>0) throw new Error(t('err.badFormat',{bad, total:data.length}));
-      // completar campos no críticos que pudieran faltar
+      // fill in non-critical fields that might be missing
       data.forEach(c=>{
         if(!c.id) c.id = 'c'+Date.now()+Math.random().toString(36).slice(2,5);
         if(typeof c.parentsRemoved!=='boolean') c.parentsRemoved = false;
@@ -4080,7 +4083,7 @@ function resolveImportChoice(mode){
   const data = _pendingImportData; if(!data) return;
   closeImportChoice();
   if(mode==='merge'){
-    // nuevos ids para los que llegan: evita cualquier choque con los ids ya presentes
+    // new ids for the incoming ones: avoids any clash with the ids already present
     data.forEach(c=> c.id = 'c'+Date.now()+Math.random().toString(36).slice(2,5));
     crosses = crosses.concat(data);
   } else {
@@ -4089,20 +4092,20 @@ function resolveImportChoice(mode){
   save(crosses); render();
   alert(t('al.imported',{n:data.length}));
 }
-/* Exportar/Importar la calibración (observaciones crudas + referencia wild-type del lab) para
-   compartirla entre integrantes del mismo laboratorio. Cada uno la abre en su propio dispositivo
-   (localStorage, sin cuenta), así que esto reemplaza una sincronización automática: quien calibra
-   exporta el archivo, lo comparte (Slack/email/USB) y cada compañero lo importa en el suyo.
-   Se guardan las observaciones crudas, no el factor ya calculado; el estimador (shrinkage) es
-   determinístico, así que cualquiera que importe el mismo set de observaciones llega al mismo
-   número. Importar COMBINA con lo que ya haya en el dispositivo (no reemplaza), para que nadie
-   pierda tandas propias al sumar el archivo de otro. */
+/* Export/Import the calibration (raw observations + the lab's wild-type reference) so it can be
+   shared between members of the same laboratory. Everyone opens it on their own device
+   (localStorage, no account), so this stands in for automatic syncing: whoever calibrates
+   exports the file, shares it (Slack/email/USB) and each colleague imports it on theirs.
+   The raw observations are stored, not the computed factor; the (shrinkage) estimator is
+   deterministic, so anyone importing the same set of observations arrives at the same number.
+   Importing MERGES with whatever is already on the device (it does not replace), so nobody
+   loses their own batches by adding someone else's file. */
 function exportCalibJSON(){
   const payload = { calib: loadCalib(), labRef: loadLabRef() };
   downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
     `drosotracker-calibracion-${new Date().toISOString().slice(0,10)}.json`);
 }
-/* clave de una observación para detectar duplicados exactos al combinar dos sets */
+/* key of an observation, to detect exact duplicates when merging two sets */
 function obsDedupeKey(o){
   return [o.t0, o.t50, o.temp, o.method||'', o.batch||'', o.t0Mode||'', o.windowH||''].join('|');
 }
@@ -4144,7 +4147,7 @@ function importCalibJSON(e){
   r.readAsText(f);
   e.target.value='';
 }
-/* CSV listo para GraphPad Prism / R (una fila por mosca: día + estado 1=muerte 0=censura) */
+/* CSV ready for GraphPad Prism / R (one row per fly: day + status 1=death 0=censored) */
 function exportSurvivalCSV(){
   const rows = [['cross_id','cross_name','genotype','condition','sex','vials','day','status','status_label']];
   let any = false;
@@ -4152,7 +4155,7 @@ function exportSurvivalCSV(){
     if(!hasCohort(c)) return;
     const st = computeState(c); const ecl = st.eclosionDate;
     const cond = csvCell((c.conditions||[]).join('; '));
-    cohortGroups(c).forEach(g=>{     // una fila por mosca, con su sexo (cohortes separadas ♀/♂)
+    cohortGroups(c).forEach(g=>{     // one row per fly, with its sex (separate ♀/♂ cohorts)
       const base = (day,status,label)=> rows.push([c.id, csvCell(c.name||''), csvCell(c.genotype||''), cond, g.sex||'', g.vials||'', day, status, label]);
       g.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date)).forEach(e=>{
         const day = Math.max((new Date(e.date)-ecl)/86400000, 0).toFixed(2);
@@ -4163,7 +4166,7 @@ function exportSurvivalCSV(){
       const cens = g.events.reduce((s,e)=>s+(e.censored||0),0);
       const alive = Math.max(g.startN-deaths-cens, 0);
       const curDay = Math.max(st.adultAge, 0).toFixed(2);
-      for(let i=0;i<alive;i++){ base(curDay,0,'censored'); any=true; }  // vivos = censurados a la edad actual
+      for(let i=0;i<alive;i++){ base(curDay,0,'censored'); any=true; }  // alive = censored at the current age
     });
   });
   if(!any){ alert(t('al.noCohorts')); return; }
@@ -4171,8 +4174,8 @@ function exportSurvivalCSV(){
     `drosotracker-supervivencia-${new Date().toISOString().slice(0,10)}.csv`);
   closeMenu();
 }
-/* Exporta SOLO la cohorte de una cruza (una fila por mosca: día + estado 1=muerte 0=censura),
-   lista para análisis de supervivencia en GraphPad Prism / R */
+/* Exports ONLY one cross's cohort (one row per fly: day + status 1=death 0=censored),
+   ready for survival analysis in GraphPad Prism / R */
 function exportCohortCSV(id, gi=0){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const a = cohortAt(c, gi);
@@ -4187,15 +4190,15 @@ function exportCohortCSV(id, gi=0){
   });
   const alive = Math.max(a.startN-deaths-cens, 0);
   const curDay = Math.max(st.adultAge, 0).toFixed(2);
-  for(let i=0;i<alive;i++){ rows.push([curDay,0,'censored']); }  // vivos = censurados a la edad actual
-  const slug = (c.name||c.genotype||'cohorte').replace(/[^\p{L}\p{N}._-]+/gu,'_').replace(/^_+|_+$/g,'').slice(0,40) || 'cohorte';
+  for(let i=0;i<alive;i++){ rows.push([curDay,0,'censored']); }  // alive = censored at the current age
+  const slug = (c.name||c.genotype||'cohort').replace(/[^\p{L}\p{N}._-]+/gu,'_').replace(/^_+|_+$/g,'').slice(0,40) || 'cohort';
   downloadBlob(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}),
     `drosotracker-lifespan-${slug}${a.sex?'-'+a.sex:''}-${new Date().toISOString().slice(0,10)}.csv`);
 }
 function toggleMenu(){ updateLabStatus(); updateRecTaskStatus(); document.getElementById('dataMenu').classList.toggle('open'); }
 function closeMenu(){ document.getElementById('dataMenu').classList.remove('open'); }
-/* Reportar un error / sugerencia: Google Form (sin backend, no pide el mail de quien
-   reporta). FEEDBACK_FORM_URL se completa cuando esté armado el formulario. */
+/* Report a bug / suggestion: Google Form (no backend, it does not ask for the reporter's
+   email). FEEDBACK_FORM_URL is filled in once the form is set up. */
 const FEEDBACK_FORM_URL = 'https://forms.gle/4QmR48pJbSf778Jm8';
 function openFeedbackForm(){
   closeMenu();
@@ -4203,7 +4206,7 @@ function openFeedbackForm(){
   window.open(FEEDBACK_FORM_URL, '_blank', 'noopener');
 }
 
-/* --- Planificación: agenda + cálculo inverso de cruzas --- */
+/* --- Planning: schedule + reverse calculation of crosses --- */
 let planEditId = null;
 function onPlanObjChange(){
   document.getElementById('planDissectRow').style.display =
@@ -4245,7 +4248,7 @@ function computePlan(e){
   const stage = document.getElementById('planStage').value;
   const target = new Date(document.getElementById('planDate').value);
   const temp = parseFloat(document.getElementById('planTemp').value);
-  const factor = calibFactorValue(document.getElementById('planGeno').value);  // usa la calibración del genotipo si existe
+  const factor = calibFactorValue(document.getElementById('planGeno').value);  // uses the genotype's calibration if there is one
   const bounds = stageBounds(temp, factor); const total = totalDays(temp, factor);
   const stObj = stage==='adult' ? ADULT : STAGES.find(s=>s.key===stage);
   const offsetDays = stage==='adult' ? total : bounds.find(b=>b.key===stage).start;
@@ -4275,7 +4278,7 @@ function createFromPlan(dateStr, temp){
   });
   save(crosses); closePlan(); render();
 }
-/* Actualiza una cruza planificada existente (recalcula la fecha de montaje) */
+/* Updates an existing planned cross (recomputes the set-up date) */
 function updateFromPlan(id, dateStr, temp){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const genotype = document.getElementById('planGeno').value.trim();
@@ -4289,7 +4292,7 @@ function updateFromPlan(id, dateStr, temp){
   c.plan = { stage:document.getElementById('planStage').value, target:document.getElementById('planDate').value };
   save(crosses); closePlan(); render();
 }
-/* Editar una cruza planificada: abre el planificador con su objetivo cargado */
+/* Edit a planned cross: opens the planner with its purpose loaded */
 function openPlanEdit(id){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   openPlan();              // resetea (planEditId=null) y abre
@@ -4305,7 +4308,7 @@ function openPlanEdit(id){
     document.getElementById('planStage').value = c.plan.stage;
     document.getElementById('planDate').value = c.plan.target;
   } else {
-    /* sin objetivo guardado: derivar uno coherente con la fecha actual */
+    /* no stored purpose: derive one consistent with the current date */
     const stage = (c.objective==='dissect' && c.dissectStage) ? c.dissectStage : 'adult';
     const total = totalDays(c.temp), bounds = stageBounds(c.temp);
     const offset = stage==='adult' ? total : bounds.find(b=>b.key===stage).start;
@@ -4315,7 +4318,7 @@ function openPlanEdit(id){
   computePlan({preventDefault(){}});
 }
 
-/* --- Autocompletado del campo Nombre (datalist nativo) a partir del historial --- */
+/* --- Autocomplete of the Name field (native datalist) from the history --- */
 function populateDatalists(){
   const exps = [...new Set([...crosses.flatMap(c=>c.experiments||[]), ...loadHistorySet(EXP_HISTORY_KEY)].filter(Boolean).map(s=>String(s).trim()).filter(Boolean))];
   const dl = document.getElementById('expList');
@@ -4347,9 +4350,9 @@ function expInputKey(e){
   if(e.key==='Enter' || e.key===','){ e.preventDefault(); addExpTag(e.target.value); e.target.value=''; }
   else if(e.key==='Backspace' && !e.target.value && formExperiments.length){ removeExpTag(formExperiments.length-1); }
 }
-/* --- Campo de Condición(es) experimental(es) como etiquetas: mismo patrón que Experimento(s),
-   pero es un dato distinto, "Experimento(s)" agrupa las tarjetas (p. ej. "Estudio A"); "Condición(es)"
-   es el tratamiento de esa tanda en particular (p. ej. "Tratamiento X"). --- */
+/* --- Experimental condition(s) field as tags: same pattern as Experiment(s), but a different
+   piece of data. "Experiment(s)" groups the cards (e.g. "Study A"); "Condition(s)" is the
+   treatment of that particular batch (e.g. "Treatment X"). --- */
 let formConditions = [];
 function renderCondTags(){
   const box = document.getElementById('condBox'); if(!box) return;
@@ -4374,7 +4377,7 @@ function condInputKey(e){
 }
 
 /* ============================================================
-   Base de genotipos del laboratorio + autocompletado de genotipo (offline)
+   The lab's genotype database + genotype autocomplete (offline)
    ============================================================ */
 const LABDB_KEY = 'drosotrack.labdb.v1';
 function loadLabDB(){ try{ return JSON.parse(localStorage.getItem(LABDB_KEY)) || null; }catch(e){ return null; } }
@@ -4393,7 +4396,7 @@ function updateLabStatus(){
     : `<div class="lab-stat-line">${t('al.noLabDB')}</div>`;
 }
 
-/* Parser de CSV / tabulado con soporte de comillas; detecta el separador */
+/* CSV / tab-delimited parser with quote support; it detects the separator */
 function parseDelimited(text){
   text = text.replace(/^﻿/, '');
   const nl = text.indexOf('\n');
@@ -4447,16 +4450,16 @@ function openLabModal(gi){
   document.getElementById('labSub').textContent =
     t('lab.sub',{file:labImportData.file, n:labImportData.dataRows.length});
   renderLabPreview();
-  // sin columnas extra por defecto: sólo se agregan si el usuario toca "+ Agregar columna"
+  // no extra columns by default: they are only added if the user taps "+ Add column"
   _labExtraCols = [];
   renderLabExtraCols();
   document.getElementById('labOverlay').classList.add('open');
 }
-/* --- Columnas extra (opcionales) para crear tareas recurrentes desde la misma planilla:
-   se agregan de a una con "+ Agregar columna", siempre en el mismo orden fijo (bandeja/
-   tarea, responsable, frecuencia, próxima fecha, así "bandeja" queda primera). Cada fila
-   pregunta una sola cosa, igual que la del genotipo: qué columna del archivo usar, con su
-   vista previa; el rol de cada fila ya está determinado por su lugar en el orden, no se elige. */
+/* --- Extra (optional) columns for creating recurring tasks from the same spreadsheet:
+   they are added one at a time with "+ Add column", always in the same fixed order (tray/
+   task, person in charge, frequency, next date, so "tray" comes first). Each row asks a
+   single thing, just like the genotype one: which column of the file to use, with its
+   preview; each row's role is already determined by its place in the order, not chosen. */
 const RT_COL_ROLES = ['tray','resp','freq','due'];
 let _labExtraCols = [];
 function labRoleLabel(role){ return { tray:t('rti.roleTray'), resp:t('rti.roleResp'), freq:t('rti.roleFreq'), due:t('rti.roleDue') }[role]; }
@@ -4512,7 +4515,7 @@ function renderLabPreview(){
     ? sample.map(s=>`<div class="lab-pv-row">${esc(s)}</div>`).join('')
     : `<div class="hint">${t('lab.noCol')}</div>`;
 }
-/* admite fechas YYYY-MM-DD, DD/MM/YYYY o DD-MM-YYYY; null si no reconoce el formato */
+/* accepts YYYY-MM-DD, DD/MM/YYYY or DD-MM-YYYY dates; null if the format is not recognised */
 function parseDateCell(s){
   s = String(s||'').trim(); if(!s) return null;
   let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -4521,10 +4524,11 @@ function parseDateCell(s){
   if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
   return null;
 }
-/* Agrupa las filas por nombre de bandeja/tarea (una bandeja puede tener varias filas, una
-   por genotipo) y crea o actualiza (por título, sin duplicar) una tarea recurrente por grupo:
-   descripción = genotipos de esa bandeja, responsables = nombres distintos de esa columna
-   (rotan si hay más de uno), frecuencia/próxima fecha del primer valor útil del grupo. */
+/* Groups the rows by tray/task name (a tray can have several rows, one per genotype) and
+   creates or updates (by title, without duplicating) one recurring task per group:
+   description = the genotypes of that tray, people in charge = the distinct names in that
+   column (they rotate if there is more than one), frequency/next date from the first usable
+   value in the group. */
 function importStockFromLabRows(headers, dataRows, genoCol){
   const trayRow = _labExtraCols.find(r=>r.role==='tray');
   if(!trayRow) return 0;
@@ -4590,9 +4594,9 @@ function confirmLabImport(){
 function closeLabModal(){ document.getElementById('labOverlay').classList.remove('open'); }
 
 /* ============================================================
-   Tareas recurrentes (repique de bandejas de stock, limpieza, etc.):
-   independientes de las cruzas. Cada una tiene uno o más responsables
-   que se turnan (en ese orden) cada vez que se marca como hecha.
+   Recurring tasks (flipping stock trays, cleaning, etc.): independent
+   of the crosses. Each one has one or more people in charge who take
+   turns (in that order) every time it is marked as done.
    ============================================================ */
 const RECTASKS_KEY = 'drosotrack.rectasks.v1';
 const RESP_HISTORY_KEY = 'drosotrack.respHistory.v1';
@@ -4602,8 +4606,9 @@ let recTasks = loadRecTasks();
 function toLocalDateInput(d){ const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
 function recTaskNextDueDate(rt){ return new Date((rt.nextDue || toLocalDateInput(new Date()))+'T00:00:00'); }
 function recTaskResponsible(rt){ return (rt.responsibles && rt.responsibles[rt.turn % rt.responsibles.length]) || ''; }
-/* Al marcarse hecha: si tiene varios responsables, pasa el turno al siguiente; siempre reprograma
-   +freqDays desde HOY (no desde la fecha vencida, para no acumular atraso si se marca tarde). */
+/* When marked done: if it has several people in charge, the turn passes to the next one; it always
+   reschedules +freqDays from TODAY (not from the overdue date, so no backlog builds up if it is
+   marked late). */
 function completeRecTask(id){
   const rt = recTasks.find(r=>r.id===id); if(!rt) return;
   if(rt.responsibles.length>1) rt.turn = (rt.turn+1) % rt.responsibles.length;
@@ -4632,7 +4637,7 @@ function openRecTaskList(){
   document.getElementById('recTaskListOverlay').classList.add('open');
 }
 function closeRecTaskList(){ document.getElementById('recTaskListOverlay').classList.remove('open'); _rtSelected.clear(); }
-/* --- Selección múltiple: asignar el mismo responsable a varias tareas de una --- */
+/* --- Multi-select: assign the same person in charge to several tasks at once --- */
 let _rtSelected = new Set();
 function toggleRtSelect(id, checked){
   if(checked) _rtSelected.add(id); else _rtSelected.delete(id);
@@ -4684,8 +4689,8 @@ function renderRecTaskList(){
   box.innerHTML = rowsHtml + bulkBarHtml;
 }
 
-/* --- Campo de Responsable(s) como etiquetas: mismo patrón que Experimento(s)/Condición(es),
-   pero el orden importa acá, define en qué orden se turnan. --- */
+/* --- Person(s) in charge field as tags: same pattern as Experiment(s)/Condition(s), but here
+   the order matters: it defines the order in which they take turns. --- */
 let formResponsibles = [];
 function renderRespTags(){
   const box = document.getElementById('respBox'); if(!box) return;
@@ -4778,10 +4783,10 @@ const GENO_COMPONENTS = [
   /* Sistemas binarios / herramientas */
   'LexAop-','QUAS-','QF2','LexA','tub-GAL80ts','GAL80ts','hs-FLP','UAS-FLP','FRT19A','FRT40A','FRT42D','FRT80B','FRT82B','FRT2A',
 ];
-/* corta un genotipo en componentes por los separadores típicos */
+/* splits a genotype into components at the usual separators */
 function genoTokens(g){ return String(g).split(/[\s;\/,+]+/).map(t=>t.trim()).filter(t=>t.length>=2); }
 
-/* caché de sugerencias (se reconstruye al abrir el formulario o cambiar la base) */
+/* suggestion cache (rebuilt when the form opens or the database changes) */
 let _acFull = [], _acComps = [];
 function rebuildAutocompleteCache(){
   const fset=new Set(), cset=new Set();
@@ -4793,16 +4798,16 @@ function rebuildAutocompleteCache(){
   _acFull=[...fset]; _acComps=[...cset];
 }
 
-/* token actual = texto entre el último separador y el cursor */
+/* current token = the text between the last separator and the cursor */
 function genoCurToken(input){
   const cur = input.selectionStart==null ? input.value.length : input.selectionStart;
   const m = input.value.slice(0, cur).match(/[^\s;\/,+]*$/);
   const token = m ? m[0] : '';
   return { token, start: cur - token.length, cur };
 }
-/* Autocompletado inteligente de genotipo: genérico por (inputId, popId) para poder usarlo tanto
-   en el campo único como en Genotipo A/B de una cruza (misma fuente de sugerencias, _acFull/
-   _acComps), un solo popup activo a la vez (identificado por genoAC.inputId/popId). */
+/* Smart genotype autocomplete: generic over (inputId, popId) so it can be used both in the
+   single field and in Genotype A/B of a cross (same suggestion source, _acFull/_acComps),
+   with a single popup active at a time (identified by genoAC.inputId/popId). */
 const genoAC = { items: [], active: -1, inputId: 'genotype', popId: 'genoAC' };
 function buildGenoSuggestions(input){
   const val = input.value.trim(), lc = val.toLowerCase();
@@ -4874,12 +4879,12 @@ attachGenoAC('genotypeB', 'genoACB');
 function openForm(id){
   if(id){
     const c0 = crosses.find(x=>x.id===id);
-    if(c0 && computeState(c0).planned){ openPlanEdit(id); return; }  // planificadas → editar en el planificador
+    if(c0 && computeState(c0).planned){ openPlanEdit(id); return; }  // planned ones → edit in the planner
   }
   const ov=document.getElementById('overlay');
   document.getElementById('crossForm').reset();
-  setCrossPairMode(false);  // editar un registro (incluso uno que fue parte de una cruza) siempre abre en modo simple
-  newGenSourceId = null;  // por defecto un form nuevo no es una "nueva generación"
+  setCrossPairMode(false);  // editing a record (even one that was part of a cross) always opens in simple mode
+  newGenSourceId = null;  // by default a fresh form is not a "new generation"
   populateDatalists();
   rebuildAutocompleteCache();
   hideGenoAC();
@@ -4919,25 +4924,25 @@ function openForm(id){
 }
 function closeForm(){ document.getElementById('overlay').classList.remove('open'); newGenSourceId = null; }
 
-/* Autocompleta "total" sumando ♀+♂ cuando se carga al menos uno de los dos; si ninguno
-   tiene valor, no toca "total" (el usuario puede seguir cargándolo directo, sin desglose). */
+/* Autocompletes "total" by adding ♀+♂ when at least one of the two is entered; if neither
+   has a value it leaves "total" alone (the user can still enter it directly, without a breakdown). */
 function syncAdultsTotal(totalId, femId, maleId){
   const fRaw = document.getElementById(femId).value, mRaw = document.getElementById(maleId).value;
   if(fRaw==='' && mRaw==='') return;
   const f = parseInt(fRaw,10), m = parseInt(mRaw,10);
   document.getElementById(totalId).value = (isNaN(f)?0:f) + (isNaN(m)?0:m);
 }
-/* muestra el selector de estadio sólo si el objetivo es disección larval */
+/* shows the stage selector only when the purpose is larval dissection */
 function onObjectiveChange(){
   const obj = document.getElementById('objective').value;
   document.getElementById('dissectRow').style.display = obj==='dissect' ? 'block' : 'none';
-  // Elegir "Cruza genética" despliega directamente los dos genotipos (♀/♂); "✕ Quitar el
-  // segundo genotipo" es la salida manual a modo simple si de verdad hace falta.
+  // Choosing "Genetic cross" reveals both genotypes (♀/♂) straight away; "✕ Remove the second
+  // genotype" is the manual way back to simple mode if it is really needed.
   setCrossPairMode(obj==='cross');
 }
-/* Cruza con dos genotipos: ♀ vírgenes de uno, ♂ del otro. Cada uno queda como un registro
-   normal e independiente (propia fecha/temperatura/adultos), unidos por un pairId compartido
-   hasta que se confirma "Montar la cruza" (ver mountCross). */
+/* Cross with two genotypes: virgin ♀ from one, ♂ from the other. Each stays a normal,
+   independent record (its own date/temperature/adults), joined by a shared pairId until
+   "Set up the cross" is confirmed (see mountCross). */
 function setCrossPairMode(on){
   const obj = document.getElementById('objective').value;
   document.getElementById('genoSingleBlock').style.display = on ? 'none' : 'block';
@@ -4974,13 +4979,13 @@ function saveCross(e){
   e.preventDefault();
   const id = document.getElementById('editId').value;
   const objective = document.getElementById('objective').value;
-  addExpTag(document.getElementById('expInput').value); document.getElementById('expInput').value=''; // capturar texto sin Enter
+  addExpTag(document.getElementById('expInput').value); document.getElementById('expInput').value=''; // capture text typed without pressing Enter
   addCondTag(document.getElementById('condInput').value); document.getElementById('condInput').value='';
   const numOr = v => { v = String(v).trim(); if(v==='') return null; const n = parseInt(v,10); return (isNaN(n) || n<0) ? null : n; };
 
-  /* Cruza con dos genotipos: crea DOS registros normales e independientes, unidos por un
-     pairId compartido; cada uno sigue su propio desarrollo con toda la lógica existente
-     (retirar parentales, etc.); "recolectar vírgenes" y "Montar la cruza" saben leer pairRole. */
+  /* Cross with two genotypes: it creates TWO normal, independent records joined by a shared
+     pairId; each one follows its own development with all the existing logic (removing the
+     parents, etc.); "collect virgins" and "Set up the cross" know how to read pairRole. */
   if(!id && document.getElementById('crossPairBlock').style.display!=='none'){
     const roleA = document.getElementById('sexRoleA').value, roleB = document.getElementById('sexRoleB').value;
     if(roleA===roleB){ alert(t('al.crossSameSex')); return; }
@@ -5026,7 +5031,7 @@ function saveCross(e){
     Object.assign(c, data);
   } else {
     crosses.push({ id:'c'+Date.now()+Math.random().toString(36).slice(2,5), parentsRemoved:false, ...data });
-    // nueva generación CONFIRMADA → recién ahora se retiran los parentales de la cruza de origen
+    // new generation CONFIRMED → only now are the parents of the source cross removed
     if(newGenSourceId){ const src = crosses.find(x=>x.id===newGenSourceId); if(src) src.parentsRemoved = true; }
   }
   newGenSourceId = null;
@@ -5040,8 +5045,8 @@ function delCross(id){
     save(crosses); render();
   });
 }
-/* Borra las DOS mitades (♀/♂) de una cruza sin montar todavía, de una sola vez. Evita tener que
-   borrar cada tarjeta parental por separado. */
+/* Deletes BOTH halves (♀/♂) of a cross that has not been set up yet, in one go. It saves having
+   to delete each parental card separately. */
 function delCrossPair(pairId){
   const pair = crosses.filter(c=>c.pairId===pairId); if(!pair.length) return;
   const female = pair.find(c=>c.pairRole==='female'), male = pair.find(c=>c.pairRole==='male');
@@ -5051,8 +5056,9 @@ function delCrossPair(pairId){
     save(crosses); render();
   });
 }
-/* Vaciar todos los registros (acción destructiva → confirma). Conserva la base del lab
-   y las calibraciones por genotipo; limpia lo que queda huérfano (notificados/tareas hechas). */
+/* Clear all records (a destructive action → it asks for confirmation). It keeps the lab
+   database and the per-genotype calibrations; it cleans up what is left orphaned
+   (notified flags / done tasks). */
 function clearAllRecords(){
   if(!crosses.length){ alert(t('al.noRecords')); return; }
   askConfirm(t('cf.clearAll',{n:crosses.length}), ()=>{
@@ -5069,7 +5075,7 @@ function markParents(id){
   save(crosses); render();
 }
 
-/* cerrar modales al click fuera */
+/* close modals on an outside click */
 document.getElementById('overlay').addEventListener('click',e=>{
   if(e.target.id==='overlay') closeForm();
 });
@@ -5092,18 +5098,18 @@ document.getElementById('recTaskFormOverlay').addEventListener('click',e=>{
   if(e.target.id==='recTaskFormOverlay') closeRecTaskForm();
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); closeImportChoice(); closeInstallNotice(); closeRecTaskList(); closeRecTaskForm(); } });
-/* cerrar el menú de datos al click fuera. Mientras el tutorial está activo, el propio motor
-   del tour controla cuándo el menú "Más ▾" se abre y se cierra (ver tourResetToBaseline);
-   sin esta guarda, el click en "Continuar"/"Atrás" del tour burbujea hasta acá y cierra el
-   menú al instante siguiente de que el paso lo abrió, dejando el resaltado apuntando a un
-   menú ya cerrado. */
+/* close the data menu on an outside click. While the tutorial is running, the tour engine
+   itself controls when the "More ▾" menu opens and closes (see tourResetToBaseline); without
+   this guard, the click on the tour's "Continue"/"Back" bubbles up here and closes the menu
+   the instant after the step opened it, leaving the highlight pointing at an already closed
+   menu. */
 document.addEventListener('click',e=>{
   if(document.getElementById('tourWrap').style.display !== 'none') return;
   if(!e.target.closest('.menu')) closeMenu();
 });
 
-/* Aviso único de recalibración del modelo: sólo si el usuario ya tenía registros
-   guardados (a esos les cambian las fechas). Descartable; no vuelve a aparecer. */
+/* One-off model-recalibration notice: only if the user already had saved records
+   (those are the ones whose dates change). Dismissible; it never comes back. */
 const MODEL_NOTICE_KEY = 'drosotrack.modelnotice.v1';
 function renderModelNotice(){
   const box = document.getElementById('modelNotice');
@@ -5116,11 +5122,11 @@ function renderModelNotice(){
 function dismissModelNotice(){ localStorage.setItem(MODEL_NOTICE_KEY, '1'); renderModelNotice(); }
 
 /* ============================================================
-   Aviso de instalación como PWA: se muestra una sola vez (descartable) si la app se está
-   usando desde el navegador y todavía no está instalada. Si el navegador ofrece el prompt
-   nativo (beforeinstallprompt, Chrome/Edge, escritorio y Android), un botón lo dispara
-   directo; si no (Safari/iOS, Firefox), se explican los pasos manuales según plataforma.
-   Nunca compite con la apertura automática del tutorial inicial en la primera visita. ============================================================ */
+   PWA install prompt: shown once (dismissible) if the app is being used from the browser
+   and is not installed yet. If the browser offers the native prompt (beforeinstallprompt,
+   Chrome/Edge, desktop and Android), a button fires it directly; if not (Safari/iOS,
+   Firefox), the manual steps are explained per platform.
+   It never competes with the automatic opening of the initial tutorial on the first visit. ============================================================ */
 const INSTALL_NOTICE_KEY = 'drosotrack.installnotice.v1';
 let _deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', e=>{
@@ -5175,12 +5181,12 @@ async function doInstallPrompt(){
 function maybeAutoShowInstallNotice(){
   if(isStandalonePWA()) return;
   if(localStorage.getItem(INSTALL_NOTICE_KEY)) return;
-  if(!localStorage.getItem(TUTORIAL_KEY) && !crosses.length) return;   // no competir con el tutorial en la primera visita
+  if(!localStorage.getItem(TUTORIAL_KEY) && !crosses.length) return;   // do not compete with the tutorial on the first visit
   openInstallNotice();
 }
 
-/* refrescar periódicamente para que los recordatorios estén al día,
-   sin redibujar (y borrar) lo que se está escribiendo en un campo */
+/* refresh periodically so the reminders stay up to date, without redrawing
+   (and wiping) whatever is being typed into a field */
 function autoRender(){
   const el = document.activeElement;
   if(el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
@@ -5199,8 +5205,8 @@ if(!localStorage.getItem(TUTORIAL_KEY) && !crosses.length) openTutorial();
 else maybeAutoShowInstallNotice();
 setInterval(autoRender, 60000);
 
-/* ---- Tooltips propios: hover (desktop) o mantener apretado (touch) ----
-   Leen el texto de data-tip (ya traducido); funcionan en cualquier dispositivo. */
+/* ---- Custom tooltips: hover (desktop) or long-press (touch) ----
+   They read the text from data-tip (already translated); they work on any device. */
 (function(){
   const tip = document.createElement('div');
   tip.className = 'tip';
@@ -5215,15 +5221,15 @@ setInterval(autoRender, 60000);
     let left = r.left + r.width/2 - tr.width/2;
     left = Math.max(8, Math.min(left, window.innerWidth - tr.width - 8));
     let top = r.top - tr.height - 9;
-    if(top < 6) top = r.bottom + 9;                    // si no entra arriba, aparece abajo
+    if(top < 6) top = r.bottom + 9;                    // if it does not fit above, it shows below
     tip.style.left = Math.round(left) + 'px';
     tip.style.top  = Math.round(top) + 'px';
     tip.classList.add('show');
   }
   function hide(){ clearTimeout(hoverTimer); clearTimeout(hideTimer); tip.classList.remove('show'); }
   function scheduleHide(ms){ clearTimeout(hideTimer); hideTimer = setTimeout(hide, ms); }
-  // Desktop: hover con retardo de 0,5 s (estándar: rápido pero no instantáneo,
-  // no molesta al pasar el cursor de largo). Ignora los mouse "fantasma" del touch.
+  // Desktop: hover with a 0.5 s delay (the standard: quick but not instant, so it does not
+  // get in the way when the cursor just passes by). It ignores the "ghost" mouse events from touch.
   document.addEventListener('mouseover', e=>{
     if(Date.now()-lastTouch < 800) return;
     const el = e.target.closest('[data-tip]'); if(!el) return;
@@ -5233,12 +5239,12 @@ setInterval(autoRender, 60000);
   document.addEventListener('mouseout', e=>{
     const el = e.target.closest('[data-tip]'); if(el && !el.contains(e.relatedTarget)) hide();
   });
-  // Touch: mantener apretado. Android "se roba" el gesto del long-press (vibra y suele
-  // disparar touchcancel), así que mostramos el tooltip por CUALQUIERA de estas vías:
-  //  (a) temporizador propio (~0,5 s) → funciona en iOS/Safari;
-  //  (b) touchcancel del navegador → es la señal del long-press en Android;
-  //  (c) evento contextmenu, si el navegador lo lanza.
-  // Un scroll real (movimiento > 12px) lo cancela; el temblor del dedo no.
+  // Touch: long-press. Android "steals" the long-press gesture (it vibrates and usually
+  // fires touchcancel), so we show the tooltip through ANY of these paths:
+  //  (a) our own timer (~0.5 s) → works on iOS/Safari;
+  //  (b) the browser's touchcancel → that is the long-press signal on Android;
+  //  (c) the contextmenu event, if the browser fires it.
+  // A real scroll (movement > 12px) cancels it; a shaky finger does not.
   function longShow(){ if(pressEl && !moved){ longPressed = true; show(pressEl); scheduleHide(3000); } }
   document.addEventListener('touchstart', e=>{
     lastTouch = Date.now(); clearTimeout(pressTimer); longPressed = false; moved = false;
@@ -5256,22 +5262,22 @@ setInterval(autoRender, 60000);
   document.addEventListener('touchcancel', ()=>{ lastTouch = Date.now(); clearTimeout(pressTimer); longShow(); pressEl = null; });
   document.addEventListener('contextmenu', e=>{
     if(!e.target.closest('[data-tip]')) return;
-    e.preventDefault();                                  // sin menú del sistema
+    e.preventDefault();                                  // no system menu
     if(!pressEl) pressEl = e.target.closest('[data-tip]');
     longShow();
-    if(Date.now()-lastTouch < 1200) longPressed = true;  // solo en touch: no activar el botón al soltar
+    if(Date.now()-lastTouch < 1200) longPressed = true;  // touch only: do not trigger the button on release
   });
-  // Un tooltip abierto por long-press NO debe activar el botón
+  // A tooltip opened by long-press must NOT trigger the button
   document.addEventListener('click', e=>{ hide(); if(longPressed){ longPressed = false; e.preventDefault(); e.stopPropagation(); } }, true);
   window.addEventListener('scroll', hide, {passive:true});
   window.addEventListener('resize', hide);
 })();
 
-/* PWA: registrar el service worker. Solo cuando la app está ALOJADA (http/https);
-   si la abrís como archivo local (file://) no hace nada y todo sigue igual. */
+/* PWA: register the service worker. Only when the app is HOSTED (http/https);
+   if you open it as a local file (file://) it does nothing and everything still works. */
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  // Si ya había un SW controlando la página y se activa uno nuevo, recargar una vez
-  // para tomar la versión actualizada al instante (evita quedarse en una versión vieja).
+  // If a SW was already controlling the page and a new one activates, reload once to pick
+  // up the updated version immediately (avoids getting stuck on an old version).
   if (navigator.serviceWorker.controller) {
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {

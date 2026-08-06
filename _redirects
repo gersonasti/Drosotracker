@@ -1,6 +1,6 @@
-# La app vive en la raíz (index.html). Estas reglas mandan las URLs viejas
-# (/DrosoTracker, /DrosoTracker.html) al dominio pelado, para bookmarks y
-# para las PWA ya instaladas con el start_url anterior.
+# The app lives at the root (index.html). These rules send the old URLs
+# (/DrosoTracker, /DrosoTracker.html) to the bare domain, for bookmarks and
+# for PWAs already installed with the previous start_url.
 /DrosoTracker         /    301
 /DrosoTracker.html    /    301
 /DrosoTracker/*       /    301
