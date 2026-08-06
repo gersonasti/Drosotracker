@@ -210,6 +210,9 @@
   .meta-row:last-child{border-bottom:none}
   .meta-row .k{color:var(--ink-soft)}
   .meta-row .v{font-weight:700;color:var(--ink)}
+  /* fecha de eclosión: editable (se puede cargar la real si el tratamiento la corrió) */
+  .ecl-edit{color:inherit;text-decoration:none;border-bottom:1.5px dotted var(--ink-soft);cursor:pointer}
+  .ecl-edit.set{color:var(--lav);border-bottom-style:solid;border-bottom-color:var(--lav-soft)}
 
   /* Reminders */
   .reminders{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
@@ -345,8 +348,17 @@
   .checkbox-row label{margin:0;font-weight:600}
   .cohort-form{display:flex;flex-direction:column;gap:8px}
   .cf-row{display:flex;align-items:center;gap:10px}
-  .cf-row label{flex:none;width:74px;font-weight:700;font-size:.82rem;color:var(--ink-soft)}
-  .cf-row input,.cf-row select{flex:1;padding:9px 11px;border-radius:11px;border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;background:var(--bg-2);color:var(--ink)}
+  .cf-row label{flex:none;width:90px;font-weight:700;font-size:.82rem;color:var(--ink-soft);display:flex;align-items:center;gap:6px}
+  .cf-row label .sw{width:9px;height:9px;border-radius:3px;flex:none}
+  .cf-row input,.cf-row select{flex:1;min-width:0;padding:9px 11px;border-radius:11px;border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;background:var(--bg-2);color:var(--ink)}
+  .cf-row.cf-head{gap:10px;margin-bottom:-2px}
+  .cf-row.cf-head span{flex:1;min-width:0;font-size:.72rem;font-weight:700;color:var(--ink-soft);padding-left:2px}
+  /* una cohorte (♀ / ♂ / ⚥) dentro del panel de envejecimiento */
+  .ag-group + .ag-group{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+  .ag-head{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:.85rem;font-weight:700;color:var(--ink)}
+  .ag-head .sw{width:11px;height:11px;border-radius:4px;flex:none}
+  .ag-head .nm{flex:1;min-width:0}
+  .ag-head a{color:var(--lav);font-weight:700;text-decoration:none;font-size:.8rem}
   .aging-inner .hint a{color:var(--lav);font-weight:700;text-decoration:none}
 
   /* ---------- Menú de datos ---------- */
@@ -948,6 +960,28 @@
   </div>
 </div>
 
+<!-- Modal fecha de eclosión (cargar la real, que puede no coincidir con la estimada) -->
+<div class="overlay" id="eclOverlay">
+  <div class="modal">
+    <h2 data-i18n="ecl.title">Eclosion date</h2>
+    <div class="sub" id="eclSub"></div>
+    <form id="eclForm" onsubmit="saveEcl(event)">
+      <div class="field">
+        <label for="eclDate" data-i18n="ecl.date">Observed eclosion (date and time)</label>
+        <input id="eclDate" type="datetime-local" required />
+        <div class="hint" data-i18n="ecl.hint">Day 0 of adult age and of the survival curve. The stages before it are rescaled proportionally.</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="eclReset" onclick="resetEcl()" data-i18n="ecl.reset">Back to estimate</button>
+        <button type="submit" class="btn" data-i18n="cohort.save">Save</button>
+      </div>
+      <div class="modal-actions" style="margin-top:8px">
+        <button type="button" class="btn ghost" onclick="closeEcl()" style="flex:1;justify-content:center" data-i18n="form.cancel">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal envejecimiento -->
 <div class="overlay" id="agingOverlay">
   <div class="modal">
@@ -1358,8 +1392,13 @@ const I18N = {
     'aging.densHigh':'⚠ High density ({d}/vial) · recommended ≤25–30/vial','aging.median':'Median survival: <b>{d} d</b>','aging.medianNone':'Median: — (still >50% alive)','aging.maxObs':'Max observed: <b>{d} d</b>',
     'aging.noRecords':'No records yet.','aging.evDelete':'Delete','aging.addRecord':'+ Log flip / count','aging.exportCohort':'⬇ Export survival table (CSV)',
     'surv.day0':'day 0','surv.dayN':'day {n}',
-    'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Define cohort','cohort.save':'Save','cohort.cancel':'Cancel',
+    'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Load flies','cohort.save':'Save','cohort.cancel':'Cancel',
     'cohort.hint':'Log the adult cohort to follow its survival curve (Kaplan-Meier). Recommended density: ≤25–30 flies/vial.','cohort.nPh':'e.g. 100','cohort.vialsPh':'optional',
+    'cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
+    // fecha de eclosión real
+    'card.metaEclReal':'Eclosion (recorded)','tip.eclEdit':'Set the actual eclosion date: a treatment can bring it forward or push it back.',
+    'ecl.title':'Eclosion date','ecl.sub':'{geno} · model estimate: {d}','ecl.date':'Observed eclosion (date and time)',
+    'ecl.hint':'Day 0 of adult age and of the survival curve. The stages before it are rescaled proportionally.','ecl.reset':'Back to estimate',
     // form nueva cruza
     'form.newTitle':'New record','form.editTitle':'Edit record','form.newGenTitle':'New generation','form.sub':'Enter the genotype, set-up date and incubation temperature.',
     'form.experiments':'Experiment(s)','form.expPh':'e.g. Eye phenotype…','form.expHint':'Group records by experiment. You can add more than one (Enter or comma). Optional.',
@@ -1436,10 +1475,11 @@ const I18N = {
     'al.crossSameSex':'Pick one genotype as females (♀) and the other as males (♂); a cross needs both.',
     'menu.feedback':'📝 Report a bug / suggest an improvement','tip.feedback':'Opens a short form (no account, no email required), goes straight to the developer.',
     'al.feedbackNotReady':'This isn\'t wired up yet, coming soon.',
-    'al.cohortN':'Enter a valid initial N of adults.','import.choiceMsg':'You have {n} current records and the backup has {m}. What do you want to do?','import.merge':'Add to current records','import.replace':'Replace all records','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
+    'al.cohortAny':'Enter a valid initial N in at least one row (females, males or mixed).','al.eclBad':'The eclosion date has to fall after the set-up date.',
+    'al.cohortKeep':'The {s} cohort already has entries logged, so it was kept. To remove it (with everything logged), use the ✕ next to its name.','import.choiceMsg':'You have {n} current records and the backup has {m}. What do you want to do?','import.merge':'Add to current records','import.replace':'Replace all records','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
-    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','confirm.dontAskAgain':'Don\'t show this again','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
+    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','confirm.dontAskAgain':'Don\'t show this again','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.delCohort':'Remove the {s} cohort and everything logged for it? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
     // tutorial guiado
     'menu.tutorial':'Starter tutorial','tip.tutorial':'An interactive guided tour of the basics: creating a new record (genetic cross example), planning an experiment backward, and comparing cohorts (Kaplan-Meier).',
     'menu.tutorialAdvanced':'Advanced tutorial','tip.tutorialAdvanced':'A guided tour of the less common features: importing/exporting data, Google Calendar sync, sample size, and reporting a bug.',
@@ -1525,8 +1565,12 @@ const I18N = {
     'aging.densHigh':'⚠ Densidad alta ({d}/vial) · recomendado ≤25–30/vial','aging.median':'Mediana de supervivencia: <b>{d} d</b>','aging.medianNone':'Mediana: — (aún >50% vivos)','aging.maxObs':'Máx. observado: <b>{d} d</b>',
     'aging.noRecords':'Sin registros todavía.','aging.evDelete':'Borrar','aging.addRecord':'+ Registrar pase / conteo','aging.exportCohort':'⬇ Exportar tabla de supervivencia (CSV)',
     'surv.day0':'día 0','surv.dayN':'día {n}',
-    'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Definir cohorte','cohort.save':'Guardar','cohort.cancel':'Cancelar',
+    'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Cargar moscas','cohort.save':'Guardar','cohort.cancel':'Cancelar',
     'cohort.hint':'Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.','cohort.nPh':'ej. 100','cohort.vialsPh':'opcional',
+    'cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
+    'card.metaEclReal':'Eclosión (cargada)','tip.eclEdit':'Cargá la fecha real de eclosión: un tratamiento puede adelantarla o atrasarla.',
+    'ecl.title':'Fecha de eclosión','ecl.sub':'{geno} · estimada por el modelo: {d}','ecl.date':'Eclosión observada (fecha y hora)',
+    'ecl.hint':'Es el día 0 de la edad adulta y de la curva de supervivencia. Los estadios previos se reescalan en proporción.','ecl.reset':'Volver a la estimada',
     'form.newTitle':'Nuevo registro','form.editTitle':'Editar registro','form.newGenTitle':'Nueva generación','form.sub':'Registrá el genotipo, la fecha de montaje y la temperatura de incubación.',
     'form.experiments':'Experimento(s)','form.expPh':'ej. Fenotipo del ojo…','form.expHint':'Agrupá los registros por experimento. Podés agregar más de uno (Enter o coma). Opcional.',
     'form.conditions':'Condición(es)','form.condPh':'ej. Tratamiento X…','form.condHint':'El tratamiento con el que se crió esta tanda, distinto de "Experimento(s)", que es el proyecto/estudio al que pertenece (ej. Experimento: "Estudio A"; Condición: "Tratamiento X"). Podés agregar más de una (Enter o coma). Opcional.',
@@ -1598,10 +1642,11 @@ const I18N = {
     'al.crossSameSex':'Elegí un genotipo como hembras (♀) y el otro como machos (♂); una cruza necesita los dos.',
     'menu.feedback':'📝 Reportar un error / sugerir una mejora','tip.feedback':'Abre un formulario corto (sin cuenta, sin pedir tu mail), llega directo al desarrollador.',
     'al.feedbackNotReady':'Todavía no está conectado, pronto va a estar.',
-    'al.cohortN':'Ingresá un N inicial válido de adultos.','import.choiceMsg':'Tenés {n} registros cargados y el backup trae {m}. ¿Qué querés hacer?','import.merge':'Sumar a los registros actuales','import.replace':'Reemplazar todos los registros','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
+    'al.cohortAny':'Ingresá un N inicial válido en al menos una fila (hembras, machos o mixto).','al.eclBad':'La fecha de eclosión tiene que caer después de la fecha de montaje.',
+    'al.cohortKeep':'La cohorte de {s} ya tiene conteos cargados, así que se conservó. Para quitarla (con todo lo cargado) usá la ✕ que está al lado de su nombre.','import.choiceMsg':'Tenés {n} registros cargados y el backup trae {m}. ¿Qué querés hacer?','import.merge':'Sumar a los registros actuales','import.replace':'Reemplazar todos los registros','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
-    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','confirm.dontAskAgain':'No volver a mostrar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
+    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','confirm.dontAskAgain':'No volver a mostrar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.delCohort':'¿Quitar la cohorte de {s} y todo lo cargado en ella? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
     // tutorial guiado
     'menu.tutorial':'Tutorial inicial','tip.tutorial':'Un recorrido interactivo por lo básico: crear un registro nuevo (con el ejemplo de una cruza genética), planificar un experimento hacia atrás, y comparar cohortes (Kaplan-Meier).',
     'menu.tutorialAdvanced':'Tutorial avanzado','tip.tutorialAdvanced':'Un recorrido guiado por las funciones menos frecuentes: importar/exportar datos, sincronización con Google Calendar, tamaño muestral, y cómo reportar un error.',
@@ -1686,9 +1731,9 @@ function buildDemoCohorts(){
   const crossDateISO = new Date(Date.now() - 70*86400000).toISOString();
   function mk(id, genoKey, startN, deathSchedule){
     const cross = { id, genotype:t(genoKey), objective:'aging', experiments:[], conditions:[],
-      crossDate:crossDateISO, temp:25, notes:'', aging:{ startN, sex:'F', vials:2, events:[] } };
+      crossDate:crossDateISO, temp:25, notes:'', aging:{ groups:[{ sex:'F', startN, vials:2, events:[] }] } };
     const ecl = computeState(cross).eclosionDate.getTime();
-    cross.aging.events = deathSchedule.map(([day,deaths])=>
+    cross.aging.groups[0].events = deathSchedule.map(([day,deaths])=>
       ({ date:new Date(ecl + day*86400000).toISOString(), deaths, censored:0 }));
     return cross;
   }
@@ -2400,9 +2445,11 @@ function totalDays(temp, factor=1){
   return factor * DEGREE_DAYS / (t - T0);
 }
 
-/* Devuelve límites cumulativos de cada estadio (en días) para una temperatura */
-function stageBounds(temp, factor=1){
-  const scale = totalDays(temp, factor) / REF_TOTAL;
+/* Devuelve límites cumulativos de cada estadio (en días) para una temperatura.
+   totalOverride: duración huevo→adulto medida a mano (ver eclosionOverrideDays); si viene,
+   manda sobre el modelo y los estadios se reescalan proporcionalmente. */
+function stageBounds(temp, factor=1, totalOverride=null){
+  const scale = (totalOverride>0 ? totalOverride : totalDays(temp, factor)) / REF_TOTAL;
   let acc = 0;
   return STAGES.map(s=>{
     const start = acc * scale;
@@ -2568,14 +2615,29 @@ function computeT50FromCounts(counts, total){
 }
 function clearCalib(geno){ const all = loadCalib(); delete all[normGeno(geno)]; saveCalib(all); }
 
+/* Fecha de eclosión REAL cargada a mano (cross.eclosionActual). El modelo estima cuándo
+   deberían eclosionar, pero un tratamiento (compuesto, dieta, etc.) puede adelantarla o
+   atrasarla: si se carga la fecha observada, manda sobre la estimación y el desarrollo
+   previo se reescala proporcionalmente (mismos porcentajes por estadio, otra duración).
+   Devuelve la duración huevo→adulto en días, o null si no hay fecha cargada/es inválida. */
+function eclosionOverrideDays(cross, start){
+  const s = cross.eclosionActual;
+  if(!s) return null;
+  const d = new Date(s.includes('T') ? s : s + 'T00:00:00');
+  if(!isFinite(d)) return null;
+  const days = (d - start) / 86400000;
+  return days > 0.2 ? days : null;      // tiene que caer después de la puesta
+}
+
 /* --- Cálculo del estado actual de una cruza --- */
 function computeState(cross, now=new Date()){
   const start = parseCross(cross);
   const elapsedMs = now - start;
   const elapsedDays = elapsedMs / 86400000;
   const factor = calibFactorValue(cross.genotype);   // corrección por genotipo si está calibrado
-  const total = totalDays(cross.temp, factor);
-  const bounds = stageBounds(cross.temp, factor);
+  const ovr = eclosionOverrideDays(cross, start);    // eclosión observada (pisa la estimación)
+  const total = ovr!=null ? ovr : totalDays(cross.temp, factor);
+  const bounds = stageBounds(cross.temp, factor, ovr);
 
   if(elapsedDays < 0){
     /* cruza PLANIFICADA (fecha futura): todavía no se montó */
@@ -2667,13 +2729,13 @@ function buildReminders(cross, st, now=new Date()){
     /* TAREA: amplificación → pasar adultos a botellas nuevas */
     if(obj==='amplify') push(t('rem.botellas'), 'action', true, false, 'botellas');
     /* TAREA: definir la cohorte de envejecimiento */
-    if(obj==='aging' && (!cross.aging || cross.aging.startN==null)){
+    if(obj==='aging' && !hasCohort(cross)){
       push(t('rem.cohorte'), 'action', true, false, 'cohorte', 1e6);
     }
     /* TAREA: pasar a comida fresca cada 2-3 d, husbandry básico, independiente del objetivo
        (los adultos la necesitan igual aunque el objetivo sea otro, p. ej. cruza o amplificación) */
     if(ageD >= 1){
-      const flips = (cross.aging && cross.aging.events || []).filter(e=>e.flipped).map(e=> new Date(e.date).getTime());
+      const flips = agingEvents(cross).filter(e=>e.flipped).map(e=> new Date(e.date).getTime());
       const lastFlip = flips.length ? Math.max(...flips) : null;
       const daysSinceFlip = lastFlip ? (now - lastFlip)/86400000 : ageD;
       if(daysSinceFlip >= 2) push(t('rem.comida'), 'action', true, false, 'comida');
@@ -2957,7 +3019,7 @@ function card(cross){
     }
   } else {
     const newGenBtn = `<button class="timeline-btn gen-btn" ${st.planned ? `disabled title="${esc(t('tip.newGenOff'))}"` : `onclick="cloneCross('${cross.id}')" data-tip="${esc(t('tip.newGen'))}"`}>${t('card.newGen')}</button>`;
-    const aging = st.isAdult && (cross.objective==='aging' || (cross.aging && cross.aging.startN!=null)) ? agingPanel(cross, st) : '';
+    const aging = st.isAdult && (cross.objective==='aging' || hasCohort(cross)) ? agingPanel(cross, st) : '';
     // "Más" fusiona cronología + detalles en un solo panel (un botón en vez de dos)
     actionHtml = `<div class="btn-row">
       ${newGenBtn}
@@ -2991,7 +3053,10 @@ function card(cross){
         ${dayLine}
         <div class="meta-table">
           <div class="meta-row"><span class="k">${st.planned?t('card.metaSetup'):t('card.metaCross')}</span><span class="v">${fmtDate(start)}</span></div>
-          <div class="meta-row"><span class="k">${st.isAdult?t('card.metaEclosed'):t('card.metaEclEst')}</span><span class="v">${fmtDate(eclDate)}</span></div>
+          <div class="meta-row"><span class="k">${cross.eclosionActual?t('card.metaEclReal'):(st.isAdult?t('card.metaEclosed'):t('card.metaEclEst'))}</span><span class="v">${
+            cross.calib ? fmtDate(eclDate)
+            : `<a href="#" class="ecl-edit${cross.eclosionActual?' set':''}" onclick="openEcl('${cross.id}');return false" data-tip="${esc(t('tip.eclEdit'))}">${fmtDate(eclDate)}</a>`
+          }</span></div>
         </div>
       </div>
     </div>
@@ -3070,24 +3135,87 @@ function renderCardsWithPairs(list){
   return out.join('');
 }
 
-/* --- Panel de envejecimiento (cohortes adultas, Kaplan-Meier) --- */
+/* --- Panel de envejecimiento (cohortes adultas, Kaplan-Meier) ---
+   Un registro puede seguir VARIAS cohortes a la vez (hembras, machos y/o mixta) del mismo
+   genotipo y condición: cada una es un grupo con su N inicial, sus viales y sus eventos,
+   y su propia curva de supervivencia. */
 const SEX_KEY = { F:'aging.sexF', M:'aging.sexM', mixed:'aging.sexMixed' };
+const SEX_SYM = { F:'♀', M:'♂', mixed:'⚥' };
+const SEX_ORDER = ['F','M','mixed'];
+/* Colores por sexo: el mismo color base del registro, corrido en tono (no en brillo, así
+   se lee igual en modo claro y oscuro). El macho además va punteado, para que se distinga
+   también impreso en blanco y negro. */
+const SEX_HUE   = { F:0, M:-27, mixed:20 };      // grados de corrimiento de tono
+const SEX_SHADE = { F:0, M:-0.16, mixed:0.14 };  // + un toque de brillo, que ayuda en modo claro
+const SEX_DASH  = { M:'6 3' };
+const COHORT_BASE = '#d96fa0';
+/* corrimiento de tono (HSL) conservando saturación y luminosidad */
+function shiftHue(hex, deg){
+  if(!deg) return hex;
+  const n = parseInt(hex.slice(1), 16);
+  const r=((n>>16)&255)/255, g=((n>>8)&255)/255, b=(n&255)/255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2, d=mx-mn;
+  let h=0;
+  if(d){
+    h = mx===r ? ((g-b)/d + (g<b?6:0)) : mx===g ? ((b-r)/d + 2) : ((r-g)/d + 4);
+    h *= 60;
+  }
+  const s = d ? d/(1-Math.abs(2*l-1)) : 0;
+  h = ((h + deg) % 360 + 360) % 360;
+  const c = (1-Math.abs(2*l-1))*s, x = c*(1-Math.abs((h/60)%2-1)), m = l-c/2;
+  const seg = [[c,x,0],[x,c,0],[0,c,x],[0,x,c],[x,0,c],[c,0,x]][Math.floor(h/60)%6];
+  return '#' + seg.map(v=> Math.round((v+m)*255).toString(16).padStart(2,'0')).join('');
+}
+/* mezcla hacia el blanco (amt>0) o el negro (amt<0) */
+function shadeHex(hex, amt){
+  if(!amt) return hex;
+  const n = parseInt(hex.slice(1), 16), mix = amt>=0 ? 255 : 0, k = Math.abs(amt);
+  return '#' + [ (n>>16)&255, (n>>8)&255, n&255 ]
+    .map(v=> Math.round(v + (mix-v)*k).toString(16).padStart(2,'0')).join('');
+}
+function sexColor(base, sex){ return shadeHex(shiftHue(base, SEX_HUE[sex]||0), SEX_SHADE[sex]||0); }
 const editingCohort = new Set();
 
 function ensureAging(c){
-  if(!c.aging) c.aging = { startN:null, sex:'F', vials:null, events:[] };
-  if(!Array.isArray(c.aging.events)) c.aging.events = [];
-  if(c.aging.sex===undefined) c.aging.sex='F';
-  if(c.aging.vials===undefined) c.aging.vials=null;
-  return c.aging;
+  if(!c.aging) c.aging = { groups:[] };
+  const a = c.aging;
+  if(!Array.isArray(a.groups)){
+    /* migración: la cohorte única de antes (startN/sex/vials/events) pasa a ser el primer grupo */
+    a.groups = [];
+    if(a.startN!=null || (Array.isArray(a.events) && a.events.length)){
+      a.groups.push({ sex:a.sex||'F', startN:a.startN??null, vials:a.vials??null,
+                      events:Array.isArray(a.events)?a.events:[] });
+    }
+    delete a.startN; delete a.sex; delete a.vials; delete a.events;
+  }
+  a.groups.forEach(g=>{
+    if(!Array.isArray(g.events)) g.events = [];
+    if(g.sex===undefined) g.sex = 'F';
+    if(g.vials===undefined) g.vials = null;
+    if(g.startN===undefined) g.startN = null;
+  });
+  return a;
 }
+/* cohortes ya cargadas de un registro, en orden ♀ ♂ ⚥ */
+function cohortGroups(c){
+  return ensureAging(c).groups.filter(g=> g.startN!=null)
+    .sort((x,y)=> SEX_ORDER.indexOf(x.sex) - SEX_ORDER.indexOf(y.sex));
+}
+function hasCohort(c){ return !!(c && c.aging) && cohortGroups(c).length>0; }
+/* índice estable del grupo dentro de aging.groups (lo que viaja en los onclick) */
+function cohortIndex(c, g){ return ensureAging(c).groups.indexOf(g); }
+function cohortAt(c, gi){ return ensureAging(c).groups[gi] || null; }
+/* todos los eventos del registro (para el aviso de comida fresca, que no distingue sexo) */
+function agingEvents(c){ return c && c.aging ? cohortGroups(c).flatMap(g=>g.events) : []; }
 
-/* Estimador Kaplan-Meier: S(t)=Π(1 - d_i/n_i), con censura reduciendo el grupo en riesgo */
-function kmCurve(cross, st){
+/* Estimador Kaplan-Meier: S(t)=Π(1 - d_i/n_i), con censura reduciendo el grupo en riesgo.
+   `g` = cohorte (grupo) a curvar; sin ella, la primera del registro. */
+function kmCurve(cross, st, g){
   const a = ensureAging(cross);
+  const grp = g || a.groups[0] || { startN:null, events:[] };
   const ecl = st.eclosionDate;
   const byDay = {};
-  a.events.forEach(e=>{
+  grp.events.forEach(e=>{
     const dt = new Date(e.date).getTime();
     if(!isFinite(dt)) return;   // ignora eventos sin fecha válida (datos importados/antiguos) → evita NaN en la curva
     const day = Math.max((dt-ecl)/86400000, 0);
@@ -3097,7 +3225,7 @@ function kmCurve(cross, st){
     byDay[k].c += e.censored||0;
   });
   const times = Object.values(byDay).sort((x,y)=> x.day-y.day);
-  let n = a.startN, S = 1, median = null, maxLife = 0;
+  let n = grp.startN, S = 1, median = null, maxLife = 0;
   const points = [{day:0, surv:1}];
   times.forEach(t=>{
     if(n>0 && t.d>0){ S *= (1 - t.d/n); if(median===null && S<=0.5) median = t.day; if(t.d>0) maxLife = Math.max(maxLife, t.day); }
@@ -3106,30 +3234,36 @@ function kmCurve(cross, st){
   });
   const curDay = Math.max(st.adultAge, 0);
   if(curDay > points[points.length-1].day) points.push({day:curDay, surv:Math.max(S,0)});
-  const deaths = a.events.reduce((s,e)=>s+(e.deaths||0),0);
-  const censored = a.events.reduce((s,e)=>s+(e.censored||0),0);
+  const deaths = grp.events.reduce((s,e)=>s+(e.deaths||0),0);
+  const censored = grp.events.reduce((s,e)=>s+(e.censored||0),0);
   return {
     points, deaths, censored,
-    alive: Math.max(a.startN-deaths-censored, 0),
+    alive: Math.max(grp.startN-deaths-censored, 0),
     median: median!=null ? Math.round(median) : null,
     maxLife: Math.round(maxLife),
   };
 }
 
-function survChart(km){
-  const pts = km.points;
+/* Mini-curva KM de la tarjeta. Acepta una curva sola o varias superpuestas
+   (una por cohorte del registro): [{km, color, dash}] */
+function survChart(series){
+  const list = (Array.isArray(series) ? series : [{ km:series, color:COHORT_BASE, dash:'' }])
+    .filter(s=>s && s.km);
   const W=300, H=82, pad=8;
-  const maxDay = Math.max(...pts.map(p=>p.day).filter(Number.isFinite), 1);
+  const maxDay = Math.max(...list.flatMap(s=>s.km.points.map(p=>p.day)).filter(Number.isFinite), 1);
   const X = d => pad + d/maxDay*(W-2*pad);
   const Y = s => pad + (1-s)*(H-2*pad-10);
   // escalonado (paso) propio de Kaplan-Meier
-  let poly = '';
-  pts.forEach((p,i)=>{ if(i){ poly += ` ${X(p.day).toFixed(1)},${Y(pts[i-1].surv).toFixed(1)}`; } poly += ` ${X(p.day).toFixed(1)},${Y(p.surv).toFixed(1)}`; });
+  const curves = list.map(s=>{
+    let poly = '';
+    s.km.points.forEach((p,i)=>{ if(i){ poly += ` ${X(p.day).toFixed(1)},${Y(s.km.points[i-1].surv).toFixed(1)}`; } poly += ` ${X(p.day).toFixed(1)},${Y(p.surv).toFixed(1)}`; });
+    return `<polyline points="${poly.trim()}" fill="none" stroke="${s.color||COHORT_BASE}" stroke-width="2.5"${s.dash?` stroke-dasharray="${s.dash}"`:''} stroke-linejoin="round" stroke-linecap="round"/>`;
+  }).join('');
   const y50 = Y(0.5);
   return `<div class="surv-chart"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:82px">
     <line x1="${pad}" y1="${y50.toFixed(1)}" x2="${W-pad}" y2="${y50.toFixed(1)}" stroke="var(--line)" stroke-dasharray="4 4"/>
     <text x="${W-pad}" y="${(y50-3).toFixed(1)}" font-size="7.5" fill="#8b86a3" text-anchor="end">50%</text>
-    <polyline points="${poly.trim()}" fill="none" stroke="#d96fa0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${curves}
     <text x="${pad}" y="${H-1}" font-size="8" fill="#8b86a3">${t('surv.day0')}</text>
     <text x="${W-pad}" y="${H-1}" font-size="8" fill="#8b86a3" text-anchor="end">${t('surv.dayN',{n:Math.round(maxDay)})}</text>
   </svg></div>`;
@@ -3178,14 +3312,15 @@ function quadFormSolve(V, d){
   return q;
 }
 /* serie de eventos de una cohorte en EDAD (días desde eclosión): {times:[{day,d,c}], n0} */
-function cohortSeries(cross){
-  const a=ensureAging(cross), ecl=computeState(cross).eclosionDate, byDay={};
-  a.events.forEach(e=>{
+function cohortSeries(cross, g){
+  const a=ensureAging(cross), grp = g || a.groups[0] || { startN:null, events:[] };
+  const ecl=computeState(cross).eclosionDate, byDay={};
+  grp.events.forEach(e=>{
     const dt=new Date(e.date).getTime(); if(!isFinite(dt)||!ecl) return;
     const day=Math.max((dt-ecl)/86400000,0), k=day.toFixed(3);
     (byDay[k]=byDay[k]||{day,d:0,c:0}); byDay[k].d+=e.deaths||0; byDay[k].c+=e.censored||0;
   });
-  return { times:Object.values(byDay).sort((x,y)=>x.day-y.day), n0:a.startN||0 };
+  return { times:Object.values(byDay).sort((x,y)=>x.day-y.day), n0:grp.startN||0 };
 }
 /* Log-rank para G≥2 grupos (cada uno = {times,n0}). Devuelve {chi2, df, p, O, E} o null. */
 function logRankTest(groups){
@@ -3254,12 +3389,27 @@ const CMP_COLORS = ['#d96fa0','#5b8fc7','#3fae8c','#c79a2e','#9b6fd9','#d98162']
    pisa temporalmente la lista con 2 cohortes de ejemplo (ver buildDemoCohorts) sin
    tocar `crosses`/localStorage; se limpia al salir de ese paso (tourResetToBaseline). */
 let _cmpDemoOverride = null;
-function agingCohorts(){ return _cmpDemoOverride || crosses.filter(c=> !c.calib && c.aging && c.aging.startN!=null); }
+/* Una entrada por COHORTE (no por registro): un registro con hembras y machos aporta dos,
+   con el mismo color base y distinto tono. id = "<idRegistro>#<índiceDeGrupo>". */
+function agingCohorts(){
+  const src = _cmpDemoOverride || crosses.filter(c=> !c.calib);
+  const out = [];
+  src.forEach(c=>{
+    /* el genotipo solo no alcanza: lo habitual es comparar el MISMO genotipo entre
+       condiciones (y ahora, entre sexos), así que la etiqueta lleva las dos cosas */
+    const name = [c.genotype||'', (c.conditions||[]).join(' · ')].filter(Boolean).join(' · ');
+    cohortGroups(c).forEach(g=>{
+      out.push({ id:`${c.id}#${cohortIndex(c,g)}`, cross:c, g,
+                 label:`${name} ${SEX_SYM[g.sex]||''}`.trim() });
+    });
+  });
+  return out;
+}
 let _cmpChecked = new Set();
 function openCompare(){
   closeMenu();
   const list = agingCohorts();
-  _cmpChecked = new Set(list.filter(c=> (c.aging.events||[]).some(e=>e.deaths>0)).map(c=>c.id));
+  _cmpChecked = new Set(list.filter(e=> e.g.events.some(ev=>ev.deaths>0)).map(e=>e.id));
   renderCompareList(); renderCompare();
   document.getElementById('compareOverlay').classList.add('open');
 }
@@ -3268,22 +3418,26 @@ function toggleCmp(id){ _cmpChecked.has(id) ? _cmpChecked.delete(id) : _cmpCheck
 function renderCompareList(){
   const list = agingCohorts(), box = document.getElementById('compareList');
   if(!list.length){ box.innerHTML = `<div class="hint">${t('cmp.none')}</div>`; return; }
-  box.innerHTML = list.map(c=>{
-    const meta = `${c.temp}°C · N=${c.aging.startN}`;
-    return `<label class="cmp-row"><input type="checkbox" ${_cmpChecked.has(c.id)?'checked':''} onchange="toggleCmp('${c.id}')"><span class="cmp-name" title="${esc(c.genotype)}">${esc(c.genotype)}</span><span class="cmp-meta">${esc(meta)}</span></label>`;
+  box.innerHTML = list.map(e=>{
+    const meta = `${e.cross.temp}°C · N=${e.g.startN}`;
+    return `<label class="cmp-row"><input type="checkbox" ${_cmpChecked.has(e.id)?'checked':''} onchange="toggleCmp('${e.id}')"><span class="cmp-name" title="${esc(e.label)}">${esc(e.label)}</span><span class="cmp-meta">${esc(meta)}</span></label>`;
   }).join('');
 }
 function renderCompare(){
   const box = document.getElementById('compareResult');
-  const sel = agingCohorts().filter(c=>_cmpChecked.has(c.id));
+  const sel = agingCohorts().filter(e=>_cmpChecked.has(e.id));
   if(!sel.length){ box.innerHTML = `<div class="hint" style="margin-top:12px">${t('cmp.pick')}</div>`; return; }
-  const cohorts = sel.map((c,i)=>{
-    const km = kmCurve(c, computeState(c));
-    return { color:CMP_COLORS[i%CMP_COLORS.length], km, series:cohortSeries(c), label:c.genotype, median:km.median };
+  /* un color base por REGISTRO; dentro de él, cada sexo un tono de la misma familia */
+  const baseOf = {}; let bi = 0;
+  sel.forEach(e=>{ if(!(e.cross.id in baseOf)) baseOf[e.cross.id] = CMP_COLORS[bi++ % CMP_COLORS.length]; });
+  const cohorts = sel.map(e=>{
+    const km = kmCurve(e.cross, computeState(e.cross), e.g);
+    return { color:sexColor(baseOf[e.cross.id], e.g.sex), dash:SEX_DASH[e.g.sex]||'',
+             km, series:cohortSeries(e.cross, e.g), label:e.label, median:km.median };
   });
   let html = compareChart(cohorts)
     + `<div class="cmp-legend">` + cohorts.map(co=>
-        `<div class="cmp-leg"><span class="cmp-sw" style="background:${co.color}"></span><span class="cmp-lg-name" title="${esc(co.label)}">${esc(co.label)}</span><span class="cmp-lg-med">${co.median!=null?t('cmp.med',{d:co.median}):t('cmp.medNone')}</span></div>`
+        `<div class="cmp-leg"><span class="cmp-sw" style="${co.dash?`background:repeating-linear-gradient(90deg,${co.color} 0 4px,transparent 4px 7px)`:`background:${co.color}`}"></span><span class="cmp-lg-name" title="${esc(co.label)}">${esc(co.label)}</span><span class="cmp-lg-med">${co.median!=null?t('cmp.med',{d:co.median}):t('cmp.medNone')}</span></div>`
       ).join('') + `</div>`;
   if(sel.length>=2){
     const lr = logRankTest(cohorts.map(co=>co.series));
@@ -3308,7 +3462,7 @@ function compareChart(cohorts){
   cohorts.forEach(co=>{
     const pts=co.km.points; let poly='';
     pts.forEach((p,i)=>{ if(i) poly+=` ${X(p.day).toFixed(1)},${Y(pts[i-1].surv).toFixed(1)}`; poly+=` ${X(p.day).toFixed(1)},${Y(p.surv).toFixed(1)}`; });
-    curves+=`<polyline points="${poly.trim()}" fill="none" stroke="${co.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    curves+=`<polyline points="${poly.trim()}" fill="none" stroke="${co.color}" stroke-width="2.2"${co.dash?` stroke-dasharray="${co.dash}"`:''} stroke-linejoin="round" stroke-linecap="round"/>`;
   });
   return `<div class="cmp-chart"><svg viewBox="0 0 ${W} ${H}" style="width:100%">${g}${curves}
     <text x="${padL}" y="${H-5}" font-size="8" fill="#8b86a3">0</text>
@@ -3339,16 +3493,25 @@ function renderStatPlan(){
     <div class="cmp-lr${fitsStd?' sig':''}">${fitsStd?t('stat.okStd',{n:plan.nPerGroup}):t('stat.bigN',{n:plan.nPerGroup})}</div>`;
 }
 
+/* Carga de moscas: una fila por sexo, todas a la vez. La que quede vacía no se crea
+   (y si ya existía sin datos cargados, se quita). */
 function cohortForm(cross){
   const a = ensureAging(cross);
   const editing = editingCohort.has(cross.id);
+  const bySex = {};
+  a.groups.forEach(g=>{ if(bySex[g.sex]===undefined) bySex[g.sex] = g; });
+  const row = sex => {
+    const g = bySex[sex] || {};
+    return `<div class="cf-row">
+      <label><span class="sw" style="background:${sexColor(COHORT_BASE, sex)}"></span>${t(SEX_KEY[sex])}</label>
+      <input type="number" min="1" step="1" id="cohortN-${sex}-${cross.id}" value="${g.startN??''}" placeholder="${t('cohort.nPh')}" />
+      <input type="number" min="1" step="1" id="cohortV-${sex}-${cross.id}" value="${g.vials??''}" placeholder="${t('cohort.vialsPh')}" />
+    </div>`;
+  };
   return `<div class="cohort-form">
-    <div class="cf-row"><label>${t('cohort.n')}</label><input type="number" min="1" step="1" id="cohortN-${cross.id}" value="${a.startN??''}" placeholder="${t('cohort.nPh')}" /></div>
-    <div class="cf-row"><label>${t('cohort.sex')}</label><select id="cohortSex-${cross.id}">
-      <option value="F"${a.sex==='F'?' selected':''}>${t('aging.sexF')}</option>
-      <option value="M"${a.sex==='M'?' selected':''}>${t('aging.sexM')}</option>
-      <option value="mixed"${a.sex==='mixed'?' selected':''}>${t('aging.sexMixed')}</option></select></div>
-    <div class="cf-row"><label>${t('cohort.vials')}</label><input type="number" min="1" step="1" id="cohortVials-${cross.id}" value="${a.vials??''}" placeholder="${t('cohort.vialsPh')}" /></div>
+    <div class="cf-row cf-head"><label></label><span>${t('cohort.n')}</span><span>${t('cohort.vials')}</span></div>
+    ${SEX_ORDER.map(row).join('')}
+    <div class="hint">${t('cohort.rowHint')}</div>
     <div style="display:flex;gap:8px;margin-top:6px">
       <button class="mini-btn" style="flex:1" onclick="setCohort('${cross.id}')">${editing?t('cohort.save'):t('cohort.define')}</button>
       ${editing?`<button class="btn ghost" style="flex:1;padding:9px;font-size:.82rem" onclick="cancelEditCohort('${cross.id}')">${t('cohort.cancel')}</button>`:''}
@@ -3357,32 +3520,51 @@ function cohortForm(cross){
   </div>`;
 }
 
+/* Bloque de una cohorte dentro del panel: métricas, densidad, mediana y sus eventos */
+function cohortBlock(cross, st, k, showDel){
+  const { g, gi, km, color } = k;
+  const pct = g.startN ? Math.round(km.alive/g.startN*100) : 0;
+  const evs = g.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date));
+  const dens = g.vials ? g.startN/g.vials : null;
+  const densStr = dens!=null ? (Number.isInteger(dens) ? dens : dens.toFixed(1)) : null;
+  const densHigh = dens!=null && dens > 30;
+  return `<div class="ag-group">
+    <div class="ag-head"><span class="sw" style="${SEX_DASH[g.sex]?`background:repeating-linear-gradient(90deg,${color} 0 4px,transparent 4px 7px)`:`background:${color}`}"></span>
+      <span class="nm">${t(SEX_KEY[g.sex])}</span>
+      <a href="#" onclick="editCohort('${cross.id}');return false">${t('aging.edit')}</a>
+      ${showDel?`<button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="${esc(t('cohort.del'))}" onclick="delCohort('${cross.id}',${gi})">✕</button>`:''}
+    </div>
+    <div class="aging-metrics">
+      <div class="m"><b>${km.alive}/${g.startN}</b><span>${t('aging.mAlive')}</span></div>
+      <div class="m"><b>${pct}%</b><span>${t('aging.mSurv')}</span></div>
+      <div class="m"><b>${Math.floor(st.adultAge)} d</b><span>${t('aging.mAge')}</span></div>
+    </div>
+    <div class="hint" style="margin:-4px 0 ${densHigh?'4px':'10px'}">${[
+      g.vials ? `${g.vials} ${t('aging.vials')} · ${densStr}/vial` : '',
+      km.censored ? `${km.censored} ${t('aging.censored')}` : '',
+      km.median!=null ? t('aging.median',{d:km.median}) : t('aging.medianNone'),
+    ].filter(Boolean).join(' · ')}</div>
+    ${densHigh?`<div class="hint" style="margin:0 0 10px;color:#d98162;font-weight:700">${t('aging.densHigh',{d:densStr})}</div>`:''}
+    <div class="aging-events">${evs.length ? evs.map(e=>`
+      <div class="aging-ev"><span class="d">${fmtDT(new Date(e.date))} · ${e.deaths||0}✝${e.censored?` · ${e.censored} cens.`:''}${e.flipped?' · 🔄':''}${e.note?' · '+esc(e.note):''}</span>
+      <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="${t('aging.evDelete')}" onclick="delAging('${cross.id}',${gi},${g.events.indexOf(e)})">✕</button></div>`).join('') : `<div class="hint">${t('aging.noRecords')}</div>`}</div>
+    <button class="mini-btn" style="margin-top:12px;width:100%" onclick="openAging('${cross.id}',${gi})">${t('aging.addRecord')}</button>
+    <button class="mini-btn" style="margin-top:8px;width:100%;background:var(--mint-soft);color:#3fae8c" onclick="exportCohortCSV('${cross.id}',${gi})">${t('aging.exportCohort')}</button>
+  </div>`;
+}
+
 function agingPanel(cross, st){
-  const a = ensureAging(cross);
+  const groups = cohortGroups(cross);
   let body;
-  if(a.startN==null || editingCohort.has(cross.id)){
+  if(!groups.length || editingCohort.has(cross.id)){
     body = cohortForm(cross);
   } else {
-    const km = kmCurve(cross, st);
-    const pct = a.startN ? Math.round(km.alive/a.startN*100) : 0;
-    const evs = a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date));
-    const dens = a.vials ? a.startN/a.vials : null;
-    const densStr = dens!=null ? (Number.isInteger(dens) ? dens : dens.toFixed(1)) : null;
-    const densHigh = dens!=null && dens > 30;
-    body = `<div class="aging-metrics">
-        <div class="m"><b>${km.alive}/${a.startN}</b><span>${t('aging.mAlive')}</span></div>
-        <div class="m"><b>${pct}%</b><span>${t('aging.mSurv')}</span></div>
-        <div class="m"><b>${Math.floor(st.adultAge)} d</b><span>${t('aging.mAge')}</span></div>
-      </div>
-      <div class="hint" style="margin:-4px 0 ${densHigh?'4px':'10px'}">${SEX_KEY[a.sex]?t(SEX_KEY[a.sex]):''}${a.vials?` · ${a.vials} ${t('aging.vials')} · ${densStr}/vial`:''}${km.censored?` · ${km.censored} ${t('aging.censored')}`:''} · <a href="#" onclick="editCohort('${cross.id}');return false">${t('aging.edit')}</a></div>
-      ${densHigh?`<div class="hint" style="margin:0 0 10px;color:#d98162;font-weight:700">${t('aging.densHigh',{d:densStr})}</div>`:''}
-      ${survChart(km)}
-      <div class="hint" style="margin-bottom:10px">${km.median!=null?t('aging.median',{d:km.median}):t('aging.medianNone')}${km.maxLife?` · ${t('aging.maxObs',{d:km.maxLife})}`:''}</div>
-      <div class="aging-events">${evs.length ? evs.map(e=>`
-        <div class="aging-ev"><span class="d">${fmtDT(new Date(e.date))} · ${e.deaths||0}✝${e.censored?` · ${e.censored} cens.`:''}${e.flipped?' · 🔄':''}${e.note?' · '+esc(e.note):''}</span>
-        <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="${t('aging.evDelete')}" onclick="delAging('${cross.id}',${a.events.indexOf(e)})">✕</button></div>`).join('') : `<div class="hint">${t('aging.noRecords')}</div>`}</div>
-      <button class="mini-btn" style="margin-top:12px;width:100%" onclick="openAging('${cross.id}')">${t('aging.addRecord')}</button>
-      <button class="mini-btn" style="margin-top:8px;width:100%;background:var(--mint-soft);color:#3fae8c" onclick="exportCohortCSV('${cross.id}')">${t('aging.exportCohort')}</button>`;
+    const ks = groups.map(g=>({ g, gi:cohortIndex(cross,g), km:kmCurve(cross,st,g),
+                                color:sexColor(COHORT_BASE, g.sex), dash:SEX_DASH[g.sex]||'' }));
+    const maxLife = Math.max(...ks.map(k=>k.km.maxLife||0));
+    body = survChart(ks)
+      + (maxLife?`<div class="hint" style="margin:-4px 0 10px">${t('aging.maxObs',{d:maxLife})}</div>`:'')
+      + ks.map(k=> cohortBlock(cross, st, k, true)).join('');
   }
   return `<button class="timeline-btn" onclick="toggleAging('${cross.id}', this)" data-tip="${esc(t('tip.aging'))}">${t('aging.toggle')}</button>
     <div class="aging-panel"><div class="aging-inner">${body}</div></div>`;
@@ -3733,25 +3915,88 @@ function cloneCross(id){
   onObjectiveChange();
 }
 
+/* --- Fecha de eclosión real ---
+   El modelo estima la eclosión por temperatura (y calibración del genotipo), pero un
+   tratamiento puede adelantarla o atrasarla. Cargar la fecha observada mueve el día 0 de
+   la edad adulta y de la curva de supervivencia, y reescala los estadios previos. */
+let eclEditId = null;
+function openEcl(id){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  eclEditId = id;
+  const start = parseCross(c);
+  const est = addDays(start, totalDays(c.temp, calibFactorValue(c.genotype)));
+  const cur = eclosionOverrideDays(c, start)!=null ? new Date(c.eclosionActual.includes('T') ? c.eclosionActual : c.eclosionActual+'T00:00:00') : est;
+  document.getElementById('eclSub').textContent = t('ecl.sub', { geno: c.genotype||'', d: fmtDT(est) });
+  document.getElementById('eclDate').value = toLocalInput(cur);
+  document.getElementById('eclReset').style.display = c.eclosionActual ? '' : 'none';
+  document.getElementById('eclOverlay').classList.add('open');
+}
+function closeEcl(){ document.getElementById('eclOverlay').classList.remove('open'); }
+function saveEcl(e){
+  e.preventDefault();
+  const c = crosses.find(x=>x.id===eclEditId); if(!c) return;
+  const v = document.getElementById('eclDate').value;
+  const d = v ? new Date(v) : null;
+  if(!d || !isFinite(d) || (d - parseCross(c))/86400000 <= 0.2){ alert(t('al.eclBad')); return; }
+  c.eclosionActual = v;
+  save(crosses); render(); closeEcl();
+}
+function resetEcl(){
+  const c = crosses.find(x=>x.id===eclEditId);
+  if(c){ delete c.eclosionActual; save(crosses); render(); }
+  closeEcl();
+}
+
 /* --- Acciones de envejecimiento --- */
+/* Carga las cohortes del registro de una sola pasada: hembras, machos y/o mixta.
+   Cada fila con N válido crea (o actualiza) su cohorte; la vacía no crea nada, y si esa
+   cohorte existía sin eventos cargados, se quita. */
 function setCohort(id){
-  const n = parseInt(document.getElementById('cohortN-'+id).value);
-  if(!n || n<1){ alert(t('al.cohortN')); return; }
-  const c = crosses.find(x=>x.id===id); ensureAging(c);
-  c.aging.startN = n;
-  c.aging.sex = document.getElementById('cohortSex-'+id).value;
-  const v = parseInt(document.getElementById('cohortVials-'+id).value);
-  c.aging.vials = v>0 ? v : null;
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const a = ensureAging(c);
+  const rows = [];
+  let bad = false;
+  SEX_ORDER.forEach(sex=>{
+    const raw = (document.getElementById(`cohortN-${sex}-${id}`).value||'').trim();
+    if(!raw){ rows.push({ sex, n:null }); return; }
+    const n = parseInt(raw);
+    if(!n || n<1){ bad = true; return; }
+    const v = parseInt(document.getElementById(`cohortV-${sex}-${id}`).value);
+    rows.push({ sex, n, vials: v>0 ? v : null });
+  });
+  if(bad || !rows.some(r=>r.n)){ alert(t('al.cohortAny')); return; }
+  const kept = [];   // filas vaciadas que NO se pueden quitar así (ya tienen conteos cargados)
+  rows.forEach(r=>{
+    const g = a.groups.find(x=>x.sex===r.sex);
+    if(r.n==null){
+      if(!g) return;
+      if(g.events.length) kept.push(t(SEX_KEY[g.sex]));                    // con datos → se conserva
+      else a.groups.splice(a.groups.indexOf(g), 1);                        // vacía y sin datos → se quita
+      return;
+    }
+    if(g){ g.startN = r.n; g.vials = r.vials; }
+    else a.groups.push({ sex:r.sex, startN:r.n, vials:r.vials, events:[] });
+  });
   editingCohort.delete(id); openAgingIds.add(id);
   save(crosses); render();
+  if(kept.length) alert(t('al.cohortKeep',{s:kept.join(', ')}));
 }
 function editCohort(id){ editingCohort.add(id); openAgingIds.add(id); render(); }
 function cancelEditCohort(id){ editingCohort.delete(id); render(); }
-function openAging(id){
+/* Quita una cohorte entera (con sus eventos) del registro */
+function delCohort(id, gi){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const g = cohortAt(c, gi); if(!g) return;
+  askConfirm(t('cf.delCohort',{s:t(SEX_KEY[g.sex])}), ()=>{
+    ensureAging(c).groups.splice(gi,1); save(crosses); render();
+  });
+}
+function openAging(id, gi=0){
   const c = crosses.find(x=>x.id===id);
+  const g = cohortAt(c, gi);
   document.getElementById('agingForm').reset();
-  document.getElementById('agingId').value = id;
-  document.getElementById('agingSub').textContent = c.genotype || '';
+  document.getElementById('agingId').value = `${id}#${gi}`;
+  document.getElementById('agingSub').textContent = [c.genotype||'', g?t(SEX_KEY[g.sex]):''].filter(Boolean).join(' · ');
   document.getElementById('agingDate').value = toLocalInput(new Date());
   document.getElementById('agingDeaths').value = 0;
   document.getElementById('agingCensored').value = 0;
@@ -3761,9 +4006,10 @@ function openAging(id){
 function closeAging(){ document.getElementById('agingOverlay').classList.remove('open'); }
 function saveAgingEntry(e){
   e.preventDefault();
-  const id = document.getElementById('agingId').value;
-  const c = crosses.find(x=>x.id===id); ensureAging(c);
-  c.aging.events.push({
+  const [id, giRaw] = document.getElementById('agingId').value.split('#');
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const g = cohortAt(c, parseInt(giRaw)||0); if(!g) return;
+  g.events.push({
     date: document.getElementById('agingDate').value,
     deaths: parseInt(document.getElementById('agingDeaths').value)||0,
     censored: parseInt(document.getElementById('agingCensored').value)||0,
@@ -3773,10 +4019,11 @@ function saveAgingEntry(e){
   openAgingIds.add(id);
   save(crosses); render(); closeAging();
 }
-function delAging(id, idx){
+function delAging(id, gi, idx){
   const c = crosses.find(x=>x.id===id);
-  if(!(c && c.aging && c.aging.events[idx]!==undefined)) return;
-  askConfirm(t('cf.delAging'), ()=>{ c.aging.events.splice(idx,1); save(crosses); render(); });
+  const g = c ? cohortAt(c, gi) : null;
+  if(!g || g.events[idx]===undefined) return;
+  askConfirm(t('cf.delAging'), ()=>{ g.events.splice(idx,1); save(crosses); render(); });
 }
 
 /* --- Resguardo y exportación de datos --- */
@@ -3902,20 +4149,22 @@ function exportSurvivalCSV(){
   const rows = [['cross_id','cross_name','genotype','condition','sex','vials','day','status','status_label']];
   let any = false;
   crosses.forEach(c=>{
-    const a = c.aging; if(!a || a.startN==null) return;
+    if(!hasCohort(c)) return;
     const st = computeState(c); const ecl = st.eclosionDate;
     const cond = csvCell((c.conditions||[]).join('; '));
-    const base = (day,status,label)=> rows.push([c.id, csvCell(c.name||''), csvCell(c.genotype||''), cond, a.sex||'', a.vials||'', day, status, label]);
-    a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date)).forEach(e=>{
-      const day = Math.max((new Date(e.date)-ecl)/86400000, 0).toFixed(2);
-      for(let i=0;i<(e.deaths||0);i++){ base(day,1,'death'); any=true; }
-      for(let i=0;i<(e.censored||0);i++){ base(day,0,'censored'); any=true; }
+    cohortGroups(c).forEach(g=>{     // una fila por mosca, con su sexo (cohortes separadas ♀/♂)
+      const base = (day,status,label)=> rows.push([c.id, csvCell(c.name||''), csvCell(c.genotype||''), cond, g.sex||'', g.vials||'', day, status, label]);
+      g.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date)).forEach(e=>{
+        const day = Math.max((new Date(e.date)-ecl)/86400000, 0).toFixed(2);
+        for(let i=0;i<(e.deaths||0);i++){ base(day,1,'death'); any=true; }
+        for(let i=0;i<(e.censored||0);i++){ base(day,0,'censored'); any=true; }
+      });
+      const deaths = g.events.reduce((s,e)=>s+(e.deaths||0),0);
+      const cens = g.events.reduce((s,e)=>s+(e.censored||0),0);
+      const alive = Math.max(g.startN-deaths-cens, 0);
+      const curDay = Math.max(st.adultAge, 0).toFixed(2);
+      for(let i=0;i<alive;i++){ base(curDay,0,'censored'); any=true; }  // vivos = censurados a la edad actual
     });
-    const deaths = a.events.reduce((s,e)=>s+(e.deaths||0),0);
-    const cens = a.events.reduce((s,e)=>s+(e.censored||0),0);
-    const alive = Math.max(a.startN-deaths-cens, 0);
-    const curDay = Math.max(st.adultAge, 0).toFixed(2);
-    for(let i=0;i<alive;i++){ base(curDay,0,'censored'); any=true; }  // vivos = censurados a la edad actual
   });
   if(!any){ alert(t('al.noCohorts')); return; }
   downloadBlob(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}),
@@ -3924,9 +4173,9 @@ function exportSurvivalCSV(){
 }
 /* Exporta SOLO la cohorte de una cruza (una fila por mosca: día + estado 1=muerte 0=censura),
    lista para análisis de supervivencia en GraphPad Prism / R */
-function exportCohortCSV(id){
+function exportCohortCSV(id, gi=0){
   const c = crosses.find(x=>x.id===id); if(!c) return;
-  const a = c.aging;
+  const a = cohortAt(c, gi);
   if(!a || a.startN==null){ alert(t('al.defineCohort')); return; }
   const st = computeState(c); const ecl = st.eclosionDate;
   const rows = [['day','status','status_label']];
@@ -4826,6 +5075,9 @@ document.getElementById('overlay').addEventListener('click',e=>{
 });
 document.getElementById('agingOverlay').addEventListener('click',e=>{
   if(e.target.id==='agingOverlay') closeAging();
+});
+document.getElementById('eclOverlay').addEventListener('click',e=>{
+  if(e.target.id==='eclOverlay') closeEcl();
 });
 document.getElementById('planOverlay').addEventListener('click',e=>{
   if(e.target.id==='planOverlay') closePlan();

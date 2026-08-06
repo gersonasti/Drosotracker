@@ -48,13 +48,16 @@ const code = [
   grabConst('CALIB_KEY'), grabConst('LABREF_KEY'), grabConst('CALIB_MIN'),
   grabConst('CALIB_SIGMA_T50'), grabConst('CALIB_SIGMA_BATCH'), grabConst('CALIB_PRIOR_SD'),
   grabConst('CALIB_SIGMA_T0_CROSSDAY'), grabConst('CALIB_SIGMA_T0_UNKNOWN'),
-  grabFn('totalDays'), grabFn('stageBounds'), grabFn('ensureAging'), grabFn('kmCurve'), grabFn('computeT50FromCounts'),
+  grabConst('SEX_ORDER'),
+  grabFn('totalDays'), grabFn('stageBounds'), grabFn('eclosionOverrideDays'),
+  grabFn('ensureAging'), grabFn('cohortGroups'), grabFn('hasCohort'), grabFn('cohortIndex'), grabFn('cohortAt'), grabFn('agingEvents'),
+  grabFn('kmCurve'), grabFn('computeT50FromCounts'),
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
   grabFn('loadLabRef'), grabFn('saveLabRef'), grabFn('isLabRef'), grabFn('labFactorValue'), grabFn('calibInfoFor'),
   grabFn('lgamma'), grabFn('gammincQ'), grabFn('chiSqUpper'), grabFn('quadFormSolve'), grabFn('logRankTest'),
   grabConst('SURV_SHAPE'), grabFn('normInv'), grabFn('logRankPlan'), grabFn('timeToMortality'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, ensureAging, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, SEX_ORDER, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, eclosionOverrideDays, ensureAging, cohortGroups, hasCohort, cohortIndex, cohortAt, agingEvents, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -83,6 +86,25 @@ group('Modelo de desarrollo (suma térmica, Powsner 1935 · ~15–28 °C)', () =
   ok(near(b[4].start, 4.80, 0.05), 'pupación a 25 °C ≈ día 4.8 (fin de L3, casi sin cambio)');
   ok(near(b[4].end - b[4].start, 4.00, 0.05), 'pupa a 25 °C dura ~4.0 d (antes 5.0 · sobreestimada ~25 %)');
   ok(near(b[0].end, 0.86, 0.03), 'embrión a 25 °C ≈ 0.86 d');
+});
+
+/* =============== 1b) ECLOSIÓN CARGADA A MANO (pisa la estimación del modelo) =============== */
+group('Eclosión observada (un tratamiento puede adelantarla o atrasarla)', () => {
+  const start = new Date('2025-01-01T09:00:00');
+  const days = s => M.eclosionOverrideDays({ eclosionActual: s }, start);
+  ok(M.eclosionOverrideDays({}, start) === null, 'sin fecha cargada → null (manda el modelo)');
+  ok(near(days('2025-01-13T09:00:00'), 12), 'fecha cargada → duración huevo→adulto en días (12)');
+  ok(near(days('2025-01-13'), 11.625), 'acepta fecha sin hora (medianoche)');
+  ok(days('2025-01-01T10:00:00') === null, 'una eclosión el mismo día del montaje se descarta');
+  ok(days('2024-12-30T09:00:00') === null, 'una eclosión anterior al montaje se descarta');
+  ok(days('cualquier cosa') === null, 'fecha inválida → null');
+
+  // los estadios se reescalan a la duración observada, manteniendo sus proporciones
+  const base = M.stageBounds(25), obs = M.stageBounds(25, 1, 12);
+  ok(near(obs[obs.length - 1].end, 12), 'con eclosión observada los estadios terminan en la fecha cargada');
+  ok(obs.every((b, i) => near(b.end / obs[obs.length - 1].end, base[i].end / base[base.length - 1].end)),
+     'las proporciones por estadio no cambian (sólo se estira/comprime la escala)');
+  ok(near(M.stageBounds(25, 1, null)[4].end, M.totalDays(25)), 'sin fecha cargada, los límites son los del modelo');
 });
 
 /* ============================ 2) KAPLAN–MEIER ============================ */
@@ -152,6 +174,33 @@ group('Kaplan–Meier — contraste contra referencia independiente', () => {
     const allDays = [...new Set(data.map(e => e.day))];
     ok(allDays.every(d => near(survAt(km, d), ref.S[d])), `dataset ${i + 1}: S(t) coincide con la referencia en todos los tiempos`);
   });
+});
+
+/* ================= 2b) COHORTES POR SEXO DENTRO DE UN MISMO REGISTRO ================= */
+group('Cohortes ♀/♂ separadas en un registro', () => {
+  const ev = (day, deaths) => ({ date: new Date(ECL + day * 86400000).toISOString(), deaths, censored: 0 });
+  // registro viejo (una sola cohorte, formato anterior) → migra a groups sin perder datos
+  const legacy = mkCross([{ day: 5, deaths: 2 }], 10);
+  const a = M.ensureAging(legacy);
+  ok(Array.isArray(a.groups) && a.groups.length === 1, 'un registro viejo migra a una cohorte');
+  ok(a.groups[0].sex === 'F' && a.groups[0].startN === 10 && a.groups[0].events.length === 1, 'conserva sexo, N y eventos');
+  ok(a.startN === undefined && a.events === undefined, 'los campos viejos se retiran tras migrar');
+  ok(near(M.kmCurve(legacy, st).points.pop().surv, 0.8), 'la curva del registro migrado no cambia (S = 0.8)');
+
+  // registro nuevo: hembras y machos a la vez, con curvas independientes
+  const c = { aging: { groups: [
+    { sex: 'M', startN: 20, vials: 1, events: [ev(10, 10)] },
+    { sex: 'F', startN: 20, vials: 1, events: [ev(10, 5)] },
+  ] } };
+  const gs = M.cohortGroups(c);
+  ok(M.hasCohort(c) && gs.length === 2, 'las dos cohortes cuentan como cargadas');
+  ok(gs[0].sex === 'F' && gs[1].sex === 'M', 'se ordenan ♀ y después ♂ (no en orden de carga)');
+  ok(M.cohortIndex(c, gs[0]) === 1 && M.cohortAt(c, 1).sex === 'F', 'el índice apunta al grupo real dentro de aging.groups');
+  ok(near(M.kmCurve(c, st, gs[0]).points.pop().surv, 0.75), '♀: S = 0.75 (5 muertes de 20)');
+  ok(near(M.kmCurve(c, st, gs[1]).points.pop().surv, 0.5), '♂: S = 0.5 (10 muertes de 20), independiente de ♀');
+  ok(M.kmCurve(c, st, gs[0]).alive === 15 && M.kmCurve(c, st, gs[1]).alive === 10, 'los vivos se cuentan por cohorte');
+  ok(M.agingEvents(c).length === 2, 'los eventos de todas las cohortes se ven juntos (aviso de comida fresca)');
+  ok(!M.hasCohort({ aging: { groups: [{ sex: 'F', startN: null, events: [] }] } }), 'una fila sin N no cuenta como cohorte cargada');
 });
 
 /* ============================ 3) T50 POR CONTEO (interpolación) ============================ */
