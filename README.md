@@ -1,5 +1,9 @@
 # DrosoTracker
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21867404.svg)](https://doi.org/10.5281/zenodo.21867404)
+[![tests](https://github.com/gersonasti/Drosotracker/actions/workflows/tests.yml/badge.svg)](https://github.com/gersonasti/Drosotracker/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A web application with a self-calibrating thermal model for husbandry scheduling and lifespan
 analysis in *Drosophila melanogaster*. It predicts development from an explicit thermal-summation
 model fitted to published primary data, corrects that model with your own laboratory's and
@@ -107,8 +111,15 @@ If you use DrosoTracker in published work, please cite the preprint:
 > thermal model for husbandry scheduling and lifespan analysis in *Drosophila melanogaster*.
 > Preprint. (DOI to be added.)
 
-See [`CITATION.cff`](CITATION.cff) for machine-readable metadata. An archived release will be
-deposited in Zenodo with its own DOI on publication.
+Please also cite the archived software release:
+
+> Asti Tello GS, Melani M, Liberman AC. DrosoTracker: a web application with a self-calibrating
+> thermal model for husbandry scheduling and lifespan analysis in *Drosophila melanogaster*.
+> Zenodo; 2026. doi:10.5281/zenodo.21867404
+
+That DOI is the *concept* DOI: it always resolves to the most recent archived version. To cite
+this exact release instead, use `10.5281/zenodo.21867405` (v1.0). See
+[`CITATION.cff`](CITATION.cff) for machine-readable metadata.
 
 ## License
 

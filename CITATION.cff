@@ -15,7 +15,7 @@ version: "1.0"
 date-released: "2026-08-10"
 repository-code: "https://github.com/gersonasti/Drosotracker"
 url: "https://drosotracker.maimonides.edu"
-# doi: 10.5281/zenodo.XXXXXXX   # concept DOI — uncomment and fill after the first Zenodo release
+doi: "10.5281/zenodo.21867404"   # concept DOI: always resolves to the latest archived version
 keywords:
   - Drosophila melanogaster
   - thermal-summation model
