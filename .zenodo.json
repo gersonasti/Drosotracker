@@ -1,0 +1,45 @@
+{
+  "title": "DrosoTracker: a web application with a self-calibrating thermal model for husbandry scheduling and lifespan analysis in Drosophila melanogaster",
+  "upload_type": "software",
+  "license": "mit",
+  "access_right": "open",
+  "version": "1.0",
+  "language": "eng",
+  "description": "<p>DrosoTracker is a self-contained web application that predicts <i>Drosophila melanogaster</i> development from an explicit thermal-summation model and turns those predictions into a husbandry schedule.</p><p>The base model was recalibrated by linear regression of developmental rate against temperature on the author-verified transcription of Powsner (1935), over the linear range ~15-28 &deg;C (T<sub>0</sub> = 11.78 &deg;C, DD = 116.38 &deg;C&middot;days, R&sup2; = 0.997, n = 13). On top of it, an optional two-level calibration learns from the user's own observations: a wild-type reference strain absorbs what is specific to a laboratory, and each genotype is then estimated against that baseline with a random-effects shrinkage estimator that accounts for measurement error and between-batch variability.</p><p>The application also derives husbandry tasks from each cross, analyses adult cohort survival with the Kaplan-Meier estimator and the log-rank test, and sizes lifespan experiments with Schoenfeld's formula. It runs entirely in the browser, stores data locally, works offline as a Progressive Web App, and is available in English and Spanish.</p><p>This release is the version described in the accompanying preprint. It includes the application, the R calibration script and the transcribed primary data, two simulation studies of the calibration estimator, and a dependency-free suite of 130 automated checks that run against the released HTML file.</p>",
+  "creators": [
+    {
+      "name": "Asti Tello, Gerson Smith",
+      "affiliation": "Centro de Estudios Biomedicos, Basicos, Aplicados y Desarrollo (CEBBAD), Universidad Maimonides, Buenos Aires, Argentina",
+      "orcid": "0009-0007-5106-0387"
+    },
+    {
+      "name": "Melani, Mariana",
+      "affiliation": "Fundacion Instituto Leloir, Buenos Aires, Argentina",
+      "orcid": "0000-0002-9491-932X"
+    },
+    {
+      "name": "Liberman, Ana Clara",
+      "affiliation": "Centro de Estudios Biomedicos, Basicos, Aplicados y Desarrollo (CEBBAD), Universidad Maimonides, Buenos Aires, Argentina",
+      "orcid": "0000-0001-9316-3893"
+    }
+  ],
+  "keywords": [
+    "Drosophila melanogaster",
+    "thermal-summation model",
+    "degree-days",
+    "development scheduling",
+    "laboratory software",
+    "Kaplan-Meier survival analysis",
+    "log-rank test",
+    "experiment planning",
+    "progressive web app"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://drosotracker.maimonides.edu",
+      "relation": "isIdenticalTo",
+      "resource_type": "software",
+      "scheme": "url"
+    }
+  ]
+}
