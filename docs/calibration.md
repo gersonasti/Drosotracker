@@ -165,9 +165,10 @@ per-genotype / per-lab calibration. *(Figure 2 of the manuscript.)*
 9. **The L1/L2/L3 subdivision comes from a source other than Powsner** (the
    FlyBase developmental staging, 25 : 23 : 48 h at 25 °C), since Powsner measures
    the larval period as a single block. The subdivision is not a parameter fitted
-   by the model, and it depends on rearing conditions: on a pure yeast diet
-   Parkin & Burnet (1986) report a proportionally longer third instar,
-   ≈ 1 : 0.9 : 2.5.
+   by the model, and it depends on rearing conditions: individually reared larvae
+   followed by automated tracking on a yeast-supplemented medium show molts at
+   1.9 and 3.5 d and pupariation at 7.8 d after hatching, i.e. a proportionally
+   longer third instar, ≈ 1 : 0.8 : 2.3 (Schumann & Triphan 2020, [24]).
 10. **The model is very sensitive near the lower threshold.** Below ~18 °C, as θ
     approaches T₀, dividing by `(θ − T₀)` makes the duration grow quickly and
     amplifies a small temperature error. Use the predictions with caution near
@@ -210,20 +211,26 @@ Numbering follows the DrosoTracker manuscript.
   (Origin of the thermal-summation model.)
 - [12] Davidson, J. (1944). On the relationship between temperature and rate of development of
   insects at constant temperatures. *J. Anim. Ecol.* **13**(1): 26–38.
-- [20] AL-Saffar, Z.Y., Grainger, J.N.R. & Aldrich, J. (1995). Influence of constant and changing
-  temperature and humidity on the development and survival of the eggs and pupae of
-  *Drosophila melanogaster* (Meigen). *J. Therm. Biol.* **20**(5): 389–397.
-  doi:10.1016/0306-4565(94)00075-T
+- [20] AL-Saffar, Z.Y., Grainger, J.N.R. & Aldrich, J. (1995). Effects of constant and fluctuating
+  temperature on development from egg to adult of *Drosophila melanogaster* (Meigen).
+  *Biol. Environ.: Proc. R. Ir. Acad.* **95B**(2): 119–122. (JSTOR 20504505.)
+  This is the source of the egg→adult totals in `alsaffar1995_total.csv` and of the comparison
+  in §4. A companion paper by the same authors, on the eggs and pupae alone
+  (*J. Therm. Biol.* **20**(5): 389–397, doi:10.1016/0306-4565(94)00075-T), is the source of
+  `alsaffar1995_egg_pupa.csv` but is not cited in the manuscript.
 - [23] Worner, S.P. (1992). Performance of phenological models under variable temperature
   regimes: consequences of the Kaufmann or rate summation effect. *Environ. Entomol.*
   **21**(4): 689–699.
-- [24] Parkin, C.A. & Burnet, B. (1986). Growth arrest of *Drosophila melanogaster* on erg-2 and
-  erg-6 sterol mutant strains of *Saccharomyces cerevisiae*. *J. Insect Physiol.* **32**(6): 463–471.
+- [24] Schumann, I. & Triphan, T. (2020). The PEDtracker: an automatic staging approach for
+  *Drosophila melanogaster* larvae. *Front. Behav. Neurosci.* **14**: 612313.
+  (Molts at 1.9 and 3.5 d and pupariation at 7.8 d after hatching, individually reared at
+  25 °C, i.e. L1 : L2 : L3 ≈ 1 : 0.8 : 2.3, a proportionally longer third instar than the
+  FlyBase staging. This is the source used for caveat 9.)
 
-Also transcribed here, and used for the between-source comparison of §4 but not cited in the
-manuscript: AL-Saffar, Z.Y., Grainger, J.N.R. & Aldrich, J. (1995), *Biol. Environ.: Proc. R.
-Ir. Acad.* **95B**(2): 119–122 (JSTOR 20504505), the source of the egg→adult totals in
-`alsaffar1995_total.csv`.
+Also consulted, but not used as a source here: Parkin, C.A. & Burnet, B. (1986), *J. Insect
+Physiol.* **32**(6): 463–471, sometimes cited for larval instar durations on a yeast diet. We
+could not verify a published L1 : L2 : L3 proportion in that paper, so caveat 9 cites [24]
+instead.
 
 ### Correspondence with the app code
 

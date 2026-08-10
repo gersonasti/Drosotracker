@@ -60,6 +60,7 @@ Opening `index.html` straight from the filesystem also works, except that the se
 | `analysis/calibration.R` | Reproduces the constants from the primary data and draws Figure 1 |
 | `analysis/data/` | Transcribed primary data (Powsner 1935, Al-Saffar 1995, BDSC) |
 | `analysis/estimator_simulation.mjs` | Simulation study of the calibration estimator |
+| `analysis/estimator_sensitivity.mjs` | Misspecification study: how the estimator behaves when its assumed constants are wrong |
 | `tests/` | Test suite and the cross-check against R's `survival` package |
 | `CITATION.cff` | Machine-readable citation metadata |
 
