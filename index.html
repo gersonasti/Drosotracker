@@ -563,6 +563,10 @@
   .calib-help.open{display:block}
   .calib-help b{color:var(--ink)}
   .calib-help ol{margin:8px 0 0 18px;display:flex;flex-direction:column;gap:6px}
+  /* First-visit notice explaining what "stored in your browser" means (same look as .calib-help) */
+  .storage-note{background:var(--bg-1);border-radius:14px;padding:14px 16px;margin:2px 0 6px;font-size:.86rem;line-height:1.5;color:var(--ink-soft)}
+  .storage-note b{color:var(--ink)}
+  .storage-note ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:10px}
   .calib-status{font-size:.78rem;margin-top:6px;color:var(--ink-soft);line-height:1.4}
   .calib-status b{color:var(--ink)}
   .calib-list-title{font-size:1rem;margin:20px 0 8px}
@@ -703,6 +707,7 @@
           <button onclick="openTutorial()" data-i18n="menu.tutorial" data-tip-key="tip.tutorial">Tutorial</button>
           <button onclick="openAdvancedTutorial()" data-i18n="menu.tutorialAdvanced" data-tip-key="tip.tutorialAdvanced">Advanced tutorial</button>
           <button id="installMenuBtn" onclick="openInstallNotice()" data-i18n="menu.install" data-tip-key="tip.install">How to install the app</button>
+          <button onclick="openStorageNotice()" data-i18n="menu.storage" data-tip-key="tip.storage">Where your data is stored</button>
           <div class="menu-sep"></div>
           <button class="set-group" onclick="toggleSetGroup(this)">🌐 <span data-i18n="set.language">Language</span><span class="set-caret">▾</span></button>
           <div class="set-sub">
@@ -1301,6 +1306,19 @@
   </div>
 </div>
 
+<!-- What "your data is stored in your browser" actually means, in plain language: shown once on
+     the first visit (before the tutorial) and reopenable from the gear menu at any time. -->
+<div class="overlay" id="storageOverlay" onclick="if(event.target===this)closeStorageNotice()">
+  <div class="modal">
+    <h2 data-i18n="storage.title">Before you start: where your data lives</h2>
+    <div class="sub" data-i18n="storage.sub"></div>
+    <div class="storage-note" data-i18n-html="storage.body"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" onclick="closeStorageNotice()" data-i18n="storage.ok">Got it</button>
+    </div>
+  </div>
+</div>
+
 <!-- Reusable confirmation (deleting cards / tasks) -->
 <div class="overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm()">
   <div class="modal confirm-modal">
@@ -1491,6 +1509,19 @@ const I18N = {
     'install.body.android':'On Android: tap your browser\'s <b>⋮</b> menu (top right) and choose <b>"Install app"</b> or <b>"Add to Home screen"</b>.',
     'install.body.desktop':'On desktop (Chrome / Edge): look at the right end of the address bar for a small icon of a monitor with a down arrow, next to the star. Click it and choose <b>Install</b>. Don\'t see it? Open the <b>⋮</b> menu and choose <b>"Install DrosoTracker…"</b>. On Safari (Mac): <b>File → Add to Dock</b>.',
     'install.later':'Not now','install.now':'Install now',
+    // first-visit notice: what local storage means for someone who has never heard of it
+    'menu.storage':'Where your data is stored','tip.storage':'How DrosoTracker keeps your data in this browser: no account, no sync between devices, and why it is worth exporting a backup now and then.',
+    'storage.title':'Before you start: where your data lives',
+    'storage.sub':'DrosoTracker has no accounts and no server. Everything you enter stays in this browser. That has real advantages and one real risk, so it is worth reading this once.',
+    'storage.body':'<ul>'
+      +'<li><b>Your records are saved in this browser, on this device.</b> They live in a small storage space that every browser keeps for each website (its technical name is <i>localStorage</i>). There is nothing to sign up for, no password, and no copy of your data on our side.</li>'
+      +'<li><b>Only you can see them.</b> Nothing you write is sent to us or to anybody else. If a colleague opens DrosoTracker, they get their own empty app, not yours: there is no shared lab view. The only data that ever leaves your device is what you send yourself, that is, the optional Google Calendar sync (only the events DrosoTracker creates, on your own calendar) and the backup file you export.</li>'
+      +'<li><b>They do not follow you to other devices.</b> Open the app on your phone or on another computer and it will look empty. The same happens in a different browser on the same machine (Chrome and Firefox each keep their own storage) and in private/incognito windows, which forget everything as soon as you close them. Moving your data across devices is done by hand, with a backup file (see below).</li>'
+      +'<li><b>Clearing your browsing data erases them.</b> Choosing "clear cookies and site data", running a cleaning tool, resetting the browser or switching to a new computer all wipe your records for good, and we have no copy to restore. The same is true of "Clear all records" and of deleting a single record: there is no undo.</li>'
+      +'<li><b>So export a backup every now and then.</b> <b>More &#9662; &rarr; Export backup</b> saves one file with everything (records, tasks, calibrations, imported genotypes). Keep it wherever you keep your lab files. To bring it back, or to copy your data to another computer or phone, use <b>More &#9662; &rarr; Import backup</b>. A good habit is to export after any session in which you added or finished records.</li>'
+      +'<li><b>Installing the app changes none of this.</b> Even added to your desktop or home screen, DrosoTracker uses that same browser storage, so backups stay just as important.</li>'
+      +'</ul>',
+    'storage.ok':'Got it',
     'tour.back':'Back','tour.next':'Continue','tour.done':'Got it','tour.skip':'Exit tutorial','tour.count':'Step {i} of {n}',
     'tour.t0':'Welcome to DrosoTracker','tour.b0':'Quick tour: creating a record (genetic cross example), planning an experiment backward, and comparing cohorts with survival curves. You can go back anytime or exit whenever you like. Hit <b>Continue</b> to start.',
     'tour.t1':'Calibrate','tour.b1':'First things first: every line develops a bit faster or slower than the base model. Calibrating is what improves the accuracy of every date you see in the app the most.',
@@ -1659,6 +1690,19 @@ const I18N = {
     'install.body.android':'En Android: tocá el menú <b>⋮</b> de tu navegador (arriba a la derecha) y elegí <b>«Instalar app»</b> o <b>«Agregar a pantalla de inicio»</b>.',
     'install.body.desktop':'En la computadora (Chrome / Edge): mirá el extremo derecho de la barra de direcciones, buscá un ícono chico con forma de pantalla con una flecha hacia abajo, al lado de la estrella. Hacé clic ahí y elegí <b>Instalar</b>. ¿No lo ves? Abrí el menú <b>⋮</b> y elegí <b>«Instalar DrosoTracker…»</b>. En Safari (Mac): menú <b>Archivo → Agregar al Dock</b>.',
     'install.later':'Ahora no','install.now':'Instalar ahora',
+    // aviso de la primera visita: qué significa el almacenamiento local para quien nunca lo escuchó
+    'menu.storage':'¿Dónde se guardan tus datos?','tip.storage':'Cómo guarda DrosoTracker tus datos en este navegador: sin cuenta, sin sincronización entre dispositivos, y por qué conviene exportar un backup cada tanto.',
+    'storage.title':'Antes de empezar: dónde viven tus datos',
+    'storage.sub':'DrosoTracker no tiene cuentas ni servidor. Todo lo que cargues queda guardado en este navegador. Eso tiene ventajas reales y un riesgo real, así que vale la pena leer esto una vez.',
+    'storage.body':'<ul>'
+      +'<li><b>Tus registros se guardan en este navegador, en este dispositivo.</b> Viven en un espacio chico que todo navegador reserva para cada sitio web (su nombre técnico es <i>localStorage</i>). No hay que registrarse, no hay contraseña, y no queda ninguna copia de tus datos de nuestro lado.</li>'
+      +'<li><b>Solo vos los ves.</b> Nada de lo que escribís se nos envía a nosotros ni a nadie más. Si un colega abre DrosoTracker, ve su propia app vacía, no la tuya: no existe una vista compartida del lab. Lo único que sale de tu dispositivo es lo que vos mandás, es decir, la sincronización opcional con Google Calendar (solo los eventos que crea DrosoTracker, en tu propio calendario) y el archivo de backup que exportás.</li>'
+      +'<li><b>No te siguen a otros dispositivos.</b> Si abrís la app en el celular o en otra computadora, la vas a ver vacía. Lo mismo pasa en otro navegador de la misma máquina (Chrome y Firefox guardan cada uno lo suyo) y en las ventanas privadas o de incógnito, que se olvidan de todo al cerrarlas. Pasar tus datos de un dispositivo a otro se hace a mano, con un archivo de backup (mirá abajo).</li>'
+      +'<li><b>Si borrás los datos de navegación, se borran.</b> Elegir «borrar cookies y datos de sitios», usar un programa de limpieza, resetear el navegador o cambiar de computadora borra tus registros para siempre, y no tenemos ninguna copia para devolvértelos. Lo mismo vale para «Borrar todos los registros» y para eliminar un registro suelto: no hay deshacer.</li>'
+      +'<li><b>Por eso, exportá un backup cada tanto.</b> <b>Más &#9662; &rarr; Exportar backup</b> guarda un archivo con todo (registros, tareas, calibraciones, genotipos importados). Guardalo donde tengas el resto de los archivos del lab. Para recuperarlo, o para copiar tus datos a otra computadora o al celular, usá <b>Más &#9662; &rarr; Importar backup</b>. Una buena costumbre es exportar después de cada sesión en la que cargaste o cerraste registros.</li>'
+      +'<li><b>Instalar la app no cambia nada de esto.</b> Aunque la agregues al escritorio o a la pantalla de inicio, DrosoTracker usa ese mismo almacenamiento del navegador, así que los backups siguen siendo igual de importantes.</li>'
+      +'</ul>',
+    'storage.ok':'Entendido',
     'tour.back':'Atrás','tour.next':'Continuar','tour.done':'Entendido','tour.skip':'Salir del tutorial','tour.count':'Paso {i} de {n}',
     'tour.t0':'Bienvenido a DrosoTracker','tour.b0':'Te muestro rápido cómo crear un registro (ejemplo de cruza genética), planificar un experimento hacia atrás, y comparar cohortes con curvas de supervivencia. Podés volver atrás cuando quieras o salir en cualquier momento. Tocá <b>Continuar</b> para arrancar.',
     'tour.t1':'Calibrar','tour.b1':'Antes que nada: cada línea se desarrolla un poco más rápido o más lento que el modelo base. Calibrar es lo que más mejora la precisión de las fechas que ves en toda la app.',
@@ -5100,7 +5144,7 @@ document.getElementById('recTaskListOverlay').addEventListener('click',e=>{
 document.getElementById('recTaskFormOverlay').addEventListener('click',e=>{
   if(e.target.id==='recTaskFormOverlay') closeRecTaskForm();
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); closeImportChoice(); closeInstallNotice(); closeRecTaskList(); closeRecTaskForm(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); closeImportChoice(); closeInstallNotice(); closeStorageNotice(); closeRecTaskList(); closeRecTaskForm(); } });
 /* close the data menu on an outside click. While the tutorial is running, the tour engine
    itself controls when the "More ▾" menu opens and closes (see tourResetToBaseline); without
    this guard, the click on the tour's "Continue"/"Back" bubbles up here and closes the menu
@@ -5123,6 +5167,26 @@ function renderModelNotice(){
     + `<button class="mn-x" onclick="dismissModelNotice()" title="${esc(t('notice.dismiss'))}">${esc(t('notice.dismiss'))}</button></div>`;
 }
 function dismissModelNotice(){ localStorage.setItem(MODEL_NOTICE_KEY, '1'); renderModelNotice(); }
+
+/* ============================================================
+   First-visit storage notice: explains, in plain language, that the data lives in this
+   browser (no account, no sync, cache-clearing wipes it, export a backup). On the very first
+   visit it opens BEFORE the tutorial and, when closed, hands over to it; afterwards it stays
+   available from the gear menu. ============================================================ */
+const STORAGE_NOTICE_KEY = 'drosotrack.storagenotice.v1';
+function openStorageNotice(){
+  document.getElementById('settingsPop').classList.remove('open');
+  document.getElementById('storageOverlay').classList.add('open');
+}
+function closeStorageNotice(){
+  const ov = document.getElementById('storageOverlay');
+  if(!ov.classList.contains('open')) return;
+  ov.classList.remove('open');
+  const firstTime = !localStorage.getItem(STORAGE_NOTICE_KEY);
+  localStorage.setItem(STORAGE_NOTICE_KEY, '1');
+  // only the first visit continues into the tutorial; reopening it from the menu does not
+  if(firstTime && !localStorage.getItem(TUTORIAL_KEY) && !crosses.length) openTutorial();
+}
 
 /* ============================================================
    PWA install prompt: shown once (dismissible) if the app is being used from the browser
@@ -5204,7 +5268,11 @@ updateLabStatus();
 rebuildAutocompleteCache();
 render();
 renderModelNotice();
-if(!localStorage.getItem(TUTORIAL_KEY) && !crosses.length) openTutorial();
+/* First visit: the storage notice comes first and chains into the tutorial when closed */
+if(!localStorage.getItem(TUTORIAL_KEY) && !crosses.length){
+  if(localStorage.getItem(STORAGE_NOTICE_KEY)) openTutorial();
+  else openStorageNotice();
+}
 else maybeAutoShowInstallNotice();
 setInterval(autoRender, 60000);
 
