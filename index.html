@@ -243,15 +243,17 @@
   .btn-row .timeline-btn{flex:1;margin-top:0;padding:11px 8px;font-size:.83rem}
   .timeline-btn:disabled{cursor:not-allowed}
   .timeline-btn:disabled:hover{background:var(--bg-1);color:var(--ink-soft)}
+  /* The open height is measured from the content (openPanel/closePanel); the cap here is only
+     the collapsed state and a no-JS fallback, never a limit on how tall the panel may grow. */
   .timeline{max-height:0;overflow:hidden;transition:max-height .35s ease}
-  .timeline.open{max-height:680px}
+  .timeline.open{max-height:none}
   .tl-inner{padding-top:14px}
   /* section heading inside the "More" panel (timeline / details) */
   .more-h{font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);opacity:.8;margin:0 0 8px}
   .info-inner .more-h{margin-top:2px}
   /* "Details" panel (extra info that would otherwise clutter the card) */
   .info-panel{max-height:0;overflow:hidden;transition:max-height .35s ease}
-  .info-panel.open{max-height:600px}
+  .info-panel.open{max-height:none}
   .info-inner{padding-top:14px;display:flex;flex-direction:column;gap:9px}
   .info-row{display:flex;gap:10px;font-size:.85rem;align-items:baseline}
   .info-row .ik{flex:none;width:112px;color:var(--ink-soft);font-weight:700}
@@ -328,7 +330,7 @@
 
   /* ---------- Panel envejecimiento ---------- */
   .aging-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
-  .aging-panel.open{max-height:1000px}
+  .aging-panel.open{max-height:none}
   .aging-inner{padding-top:14px}
   .aging-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
   .aging-metrics .m{background:var(--bg-1);border-radius:12px;padding:9px 6px;text-align:center}
@@ -3876,7 +3878,7 @@ function toggleExp(i){
 
 function toggleTL(btn){
   const tl = btn.closest('.card').querySelector('.timeline');
-  const open = tl.classList.toggle('open');
+  const open = togglePanel(tl);
   btn.textContent = open ? t('card.hideTimeline') : t('card.viewTimeline');
   const card = btn.closest('.card');
   const id = card ? card.id.replace('card-','') : null;
@@ -3885,7 +3887,7 @@ function toggleTL(btn){
 }
 function toggleInfo(btn){
   const card = btn.closest('.card'); if(!card) return;
-  const open = card.querySelector('.info-panel').classList.toggle('open');
+  const open = togglePanel(card.querySelector('.info-panel'));
   btn.textContent = open ? t('card.hideInfo') : t('card.info');
   const id = card.id.replace('card-','');
   if(open) openInfoIds.add(id); else openInfoIds.delete(id);
@@ -3896,7 +3898,7 @@ function toggleMore(btn){
   const card = btn.closest('.card'); if(!card) return;
   const tl = card.querySelector('.timeline'), info = card.querySelector('.info-panel');
   const open = !tl.classList.contains('open');
-  tl.classList.toggle('open', open); if(info) info.classList.toggle('open', open);
+  togglePanel(tl, open); if(info) togglePanel(info, open);
   btn.textContent = open ? t('card.less') : t('card.more');
   const id = card.id.replace('card-','');
   if(open) openMoreIds.add(id); else openMoreIds.delete(id);
@@ -3907,12 +3909,36 @@ function toggleMore(btn){
 function updateGridAlign(){
   document.querySelectorAll('.grid').forEach(g=> g.classList.toggle('tl-open', !!g.querySelector('.timeline.open, .info-panel.open, .aging-panel.open')));
 }
+/* The collapsible panels animate on max-height, so their open height has to come from the
+   content itself: a fixed cap clipped whatever grew past it (an aging cohort with several
+   sexes and many logged events would lose the last block, a long note the end of the details).
+   Opening animates up to the measured height and then releases the cap. */
+function openPanel(el, animate){
+  clearTimeout(el._panelT);
+  el.classList.add('open');
+  if(!animate){ el.style.maxHeight = 'none'; return; }
+  el.style.maxHeight = el.scrollHeight + 'px';
+  el._panelT = setTimeout(()=>{ if(el.classList.contains('open')) el.style.maxHeight = 'none'; }, 450);
+}
+function closePanel(el){
+  clearTimeout(el._panelT);
+  el.style.maxHeight = el.scrollHeight + 'px';  // from the real height, so the collapse animates
+  void el.offsetHeight;                         // forced reflow before dropping to 0
+  el.classList.remove('open');
+  el.style.maxHeight = '';
+}
+/* Opens or closes and returns the resulting state (true = open) */
+function togglePanel(el, open){
+  if(open===undefined) open = !el.classList.contains('open');
+  if(open) openPanel(el, true); else closePanel(el);
+  return open;
+}
 const openAgingIds = new Set();
 const openTLIds = new Set();
 const openInfoIds = new Set();
 const openMoreIds = new Set();
 function toggleAging(id, btn){
-  const open = btn.nextElementSibling.classList.toggle('open');
+  const open = togglePanel(btn.nextElementSibling);
   btn.textContent = btn.textContent.replace(open?'▾':'▴', open?'▴':'▾');
   if(open) openAgingIds.add(id); else openAgingIds.delete(id);
   if(open) updateGridAlign(); else setTimeout(updateGridAlign, 420);
@@ -3920,7 +3946,7 @@ function toggleAging(id, btn){
 function reopenPanel(id, onclickKey){
   const card = document.getElementById('card-'+id); if(!card) return;
   const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes(onclickKey));
-  if(btn){ btn.nextElementSibling.classList.add('open'); btn.textContent = btn.textContent.replace('▾','▴'); }
+  if(btn){ openPanel(btn.nextElementSibling, false); btn.textContent = btn.textContent.replace('▾','▴'); }
 }
 /* re-applies the open state of the collapsible panels after a render (by onclick, not by text → i18n) */
 function restorePanels(){
@@ -3928,17 +3954,17 @@ function restorePanels(){
   openTLIds.forEach(id=>{
     const card = document.getElementById('card-'+id); if(!card) return;
     const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleTL'));
-    if(btn){ card.querySelector('.timeline').classList.add('open'); btn.textContent=t('card.hideTimeline'); }
+    if(btn){ openPanel(card.querySelector('.timeline'), false); btn.textContent=t('card.hideTimeline'); }
   });
   openInfoIds.forEach(id=>{
     const card = document.getElementById('card-'+id); if(!card) return;
     const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleInfo'));
-    if(btn){ card.querySelector('.info-panel').classList.add('open'); btn.textContent=t('card.hideInfo'); }
+    if(btn){ openPanel(card.querySelector('.info-panel'), false); btn.textContent=t('card.hideInfo'); }
   });
   openMoreIds.forEach(id=>{
     const card = document.getElementById('card-'+id); if(!card) return;
     const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleMore'));
-    if(btn){ card.querySelector('.timeline').classList.add('open'); const ip=card.querySelector('.info-panel'); if(ip) ip.classList.add('open'); btn.textContent=t('card.less'); }
+    if(btn){ openPanel(card.querySelector('.timeline'), false); const ip=card.querySelector('.info-panel'); if(ip) openPanel(ip, false); btn.textContent=t('card.less'); }
   });
   updateGridAlign();
 }
