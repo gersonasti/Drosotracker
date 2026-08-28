@@ -3,13 +3,14 @@
    - The HTML (navigation): NETWORK first, cache as fallback → online you always get the
      latest version; offline, it opens the last one saved.
    - Icons / manifest / fonts: CACHE first, refreshed in the background.
-   VERSION only names the cache bucket. Bumping it drops the stored copies and fetches them
-   again -- which the app itself never needs, since the HTML is network-first and a normal
-   reload always brings the latest code. Bump it when one of the ASSETS below changes (icons,
-   manifest), or to force every installed PWA to drop its offline copy. NOT on every deploy:
-   it is not a release number, and the released version lives in CITATION.cff / Zenodo. */
-const VERSION = 'v15';
-const CACHE = 'drosotracker-' + VERSION;
+   ASSETS_REV is NOT the version of DrosoTracker: that one is v1 (Zenodo / the preprint), and
+   v2 is the release for Fly. This only names the bucket the icons and the manifest are kept
+   in, and it is dated rather than numbered precisely so the two can never be read as the same
+   thing. The app itself does not need it touched -- the HTML is network-first, so a plain
+   reload already brings the latest code. Change it only when one of the ASSETS below changes,
+   or to make every installed PWA drop its offline copy. Never as part of a deploy. */
+const ASSETS_REV = '2026-08-28';
+const CACHE = 'drosotracker-assets-' + ASSETS_REV;
 const ASSETS = [
   './',
   'manifest.webmanifest',
