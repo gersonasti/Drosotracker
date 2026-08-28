@@ -2071,18 +2071,31 @@ document.addEventListener('click', e=>{
    stored in localStorage and the dialog is skipped outright from then on. */
 function isConfirmSkipped(key){ try{ return localStorage.getItem('drosotrack.skipConfirm.'+key)==='1'; }catch(e){ return false; } }
 function setConfirmSkipped(key){ try{ localStorage.setItem('drosotrack.skipConfirm.'+key, '1'); }catch(e){} }
-let _confirmCb = null, _confirmDontAskKey = null;
+/* The dialog opens centred, which on a phone puts "Delete" right where the ✕ that opened it
+   was (the ✕ of a logged entry in the aging panel lands inside that button). A double tap, or
+   the ghost click a touchscreen fires after one, would then confirm as part of the very same
+   gesture: the dialog flashes by and the entry is gone, exactly as if nothing had been asked.
+   Every button is inert for a moment after it opens, so deleting always takes a second,
+   deliberate tap. */
+const CONFIRM_GUARD_MS = 500;
+let _confirmCb = null, _confirmDontAskKey = null, _confirmOpenedAt = 0;
+function confirmIsSettling(){ return Date.now() - _confirmOpenedAt < CONFIRM_GUARD_MS; }
 function askConfirm(message, onYes, okKey, dontAskKey){
   _confirmCb = onYes;
   _confirmDontAskKey = dontAskKey || null;
+  _confirmOpenedAt = Date.now();
   document.getElementById('confirmMsg').textContent = message;
   document.getElementById('confirmOkBtn').textContent = t(okKey || 'confirm.delete');
   document.getElementById('confirmDontAskRow').style.display = dontAskKey ? 'flex' : 'none';
   document.getElementById('confirmDontAsk').checked = false;
   document.getElementById('confirmOverlay').classList.add('open');
 }
-function closeConfirm(){ document.getElementById('confirmOverlay').classList.remove('open'); _confirmCb = null; _confirmDontAskKey = null; }
+function closeConfirm(){
+  if(confirmIsSettling()) return;   // the tap that opened it must not dismiss it either
+  document.getElementById('confirmOverlay').classList.remove('open'); _confirmCb = null; _confirmDontAskKey = null;
+}
 function doConfirm(){
+  if(confirmIsSettling()) return;
   const cb = _confirmCb;
   if(_confirmDontAskKey && document.getElementById('confirmDontAsk').checked) setConfirmSkipped(_confirmDontAskKey);
   closeConfirm();
