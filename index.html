@@ -391,6 +391,16 @@
   .vial-row .bar{flex:1;height:7px;border-radius:4px;background:var(--bg-1);overflow:hidden}
   .vial-row .bar i{display:block;height:100%;border-radius:4px}
   .vial-row .vn{flex:none;width:58px;text-align:right;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  .vial-row{flex-wrap:wrap}
+  .vial-row a{flex:none;color:var(--lav);font-weight:700;text-decoration:none;font-size:.72rem}
+  .vial-row .why{flex-basis:100%;font-size:.72rem;color:var(--ink-soft);padding:2px 0 2px 40px;line-height:1.35}
+  .vial-row.flag .vl{color:#d98162}
+  .vial-row.flag .why{color:#d98162}
+  .vial-row.out .vl,.vial-row.out .vn{color:var(--ink-soft);opacity:.6;text-decoration:line-through}
+  .vial-row.out .bar{opacity:.45}
+  .vex-opt{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:12px;border:1.5px solid var(--line);
+    background:var(--bg-2);font-size:.87rem;cursor:pointer}
+  .vex-opt input{width:16px;height:16px;flex:none;accent-color:var(--lav)}
   .cf-row.cf-head span{flex:1;min-width:0;font-size:.72rem;font-weight:700;color:var(--ink-soft);padding-left:2px}
   /* one cohort (♀ / ♂ / ⚥) inside the aging panel */
   .ag-group + .ag-group{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
@@ -1387,6 +1397,30 @@
   </div>
 </div>
 
+<!-- Taking a vial out of the analysis: the reason is required, it is written down with the day,
+     and nothing is deleted -- the vial can be put back at any time -->
+<div class="overlay" id="vialExOverlay" onclick="if(event.target===this)closeExcludeVial()">
+  <div class="modal">
+    <h2 data-i18n="vex.title">Leave this vial out</h2>
+    <div class="sub" id="vialExSub"></div>
+    <form id="vialExForm" onsubmit="saveExcludeVial(event)">
+      <div class="field">
+        <label data-i18n="vex.reason">Why is it being left out?</label>
+        <div class="t50-opts" id="vialExReasons"></div>
+      </div>
+      <div class="field">
+        <label for="vialExNote" data-i18n="vex.note">Detail (optional)</label>
+        <input id="vialExNote" maxlength="80" data-i18n-ph="vex.notePh" placeholder="e.g. mould on the food from day 22" />
+      </div>
+      <div class="hint" data-i18n="vex.warn">Decide this on something you saw in the vial, not on how the curve looks. It is written down with the day and reported alongside the result.</div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" onclick="closeExcludeVial()" data-i18n="form.cancel">Cancel</button>
+        <button type="submit" class="btn" data-i18n="vex.save">Leave it out</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Import a backup: merge with what is already there, or replace everything -->
 <div class="overlay" id="importChoiceOverlay" onclick="if(event.target===this)closeImportChoice()">
   <div class="modal confirm-modal">
@@ -1466,7 +1500,7 @@ const I18N = {
     'surv.day0':'day 0','surv.dayN':'day {n}',
     'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Load flies','cohort.save':'Save','cohort.cancel':'Cancel',
     'cohort.hint':'Log the adult cohort to follow its survival curve (Kaplan-Meier). Recommended density: ≤25–30 flies/vial.','cohort.nPh':'e.g. 100','cohort.vialsPh':'optional',
-    'cohort.byVial':'Follow each vial separately','cohort.byVialRunning':'This cohort is already running, so what is split are the {n} flies alive today; the history logged so far stays in the curve untouched.','cohort.byVialNeeds':'Enter an N and 2 or more vials in a row to break it down.','aging.vialsN':'Vials ({n})','aging.vialUnassigned':'{n} logged before the split by vial (not assigned to any).','agm.perVial':'Vial by vial','agm.total':'total','al.vialSplit':'The vials of {sex} add up to {s} and the cohort has {n}. Adjust them so they match.','al.vialTooMany':'{v} only has {n} flies alive; it cannot lose more than that at one check.','al.vialNothing':'Nothing to log: enter the deaths or censors of at least one vial.','cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
+    'aging.vialsOut1':'1 vial left out','aging.vialsOutN':'{n} vials left out','aging.vialApart':'stands apart from the rest (p = {p})','aging.vialShift':'median {a} d → {b} d without it','aging.vialApartHint':'A flag is a reason to go and look at the vial, not to drop it: with one test per vial some cross 0.05 on chance alone.','vex.title':'Leave this vial out','vex.reason':'Why is it being left out?','vex.note':'Detail (optional)','vex.notePh':'e.g. mould on the food from day 22','vex.save':'Leave it out','vex.exclude':'leave out','vex.undo':'put back','vex.onDay':'day {d}','vex.warn':'Decide this on something you saw in the vial, not on how the curve looks. It is written down with the day and reported alongside the result.','vex.r.mould':'Contamination / mould','vex.r.food':'Food dried out or collapsed','vex.r.plug':'Plug fell out or came loose','vex.r.escape':'Mass escape','vex.r.other':'Other','cohort.byVial':'Follow each vial separately','cohort.byVialRunning':'This cohort is already running, so what is split are the {n} flies alive today; the history logged so far stays in the curve untouched.','cohort.byVialNeeds':'Enter an N and 2 or more vials in a row to break it down.','aging.vialsN':'Vials ({n})','aging.vialUnassigned':'{n} logged before the split by vial (not assigned to any).','agm.perVial':'Vial by vial','agm.total':'total','al.vialSplit':'The vials of {sex} add up to {s} and the cohort has {n}. Adjust them so they match.','al.vialTooMany':'{v} only has {n} flies alive; it cannot lose more than that at one check.','al.vialNothing':'Nothing to log: enter the deaths or censors of at least one vial.','cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
     // real eclosion date
     'card.metaEclReal':'Eclosion (recorded)','tip.eclEdit':'Set the actual eclosion date: a treatment can bring it forward or push it back.',
     'ecl.title':'Eclosion date','ecl.sub':'{geno} · model estimate: {d}','ecl.date':'Observed eclosion (date and time)',
@@ -1653,7 +1687,7 @@ const I18N = {
     'surv.day0':'día 0','surv.dayN':'día {n}',
     'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Cargar moscas','cohort.save':'Guardar','cohort.cancel':'Cancelar',
     'cohort.hint':'Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.','cohort.nPh':'ej. 100','cohort.vialsPh':'opcional',
-    'cohort.byVial':'Seguir cada vial por separado','cohort.byVialRunning':'Esta cohorte ya viene andando, así que se reparten las {n} moscas vivas de hoy; lo cargado hasta acá queda en la curva tal como está.','cohort.byVialNeeds':'Poné un N y 2 o más viales en alguna fila para poder desglosarla.','aging.vialsN':'Viales ({n})','aging.vialUnassigned':'{n} cargadas antes de separar por vial (sin asignar a ninguno).','agm.perVial':'Vial por vial','agm.total':'total','al.vialSplit':'Los viales de {sex} suman {s} y la cohorte tiene {n}. Ajustalos para que coincidan.','al.vialTooMany':'{v} tiene sólo {n} moscas vivas; no puede perder más que eso en un recuento.','al.vialNothing':'No hay nada para registrar: cargá las muertes o censuras de al menos un vial.','cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
+    'aging.vialsOut1':'1 vial excluido','aging.vialsOutN':'{n} viales excluidos','aging.vialApart':'se aparta del resto (p = {p})','aging.vialShift':'mediana {a} d → {b} d sin él','aging.vialApartHint':'La marca es motivo para ir a mirar el vial, no para descartarlo: con un test por vial, alguno cruza 0,05 por puro azar.','vex.title':'Dejar este vial afuera','vex.reason':'¿Por qué se deja afuera?','vex.note':'Detalle (opcional)','vex.notePh':'ej. hongo en la comida desde el día 22','vex.save':'Dejarlo afuera','vex.exclude':'dejar afuera','vex.undo':'reincorporar','vex.onDay':'día {d}','vex.warn':'Decidilo por algo que viste en el vial, no por cómo se ve la curva. Queda registrado con el día y se reporta junto al resultado.','vex.r.mould':'Contaminación / hongo','vex.r.food':'Comida seca o colapsada','vex.r.plug':'Se salió o aflojó el tapón','vex.r.escape':'Escape masivo','vex.r.other':'Otro','cohort.byVial':'Seguir cada vial por separado','cohort.byVialRunning':'Esta cohorte ya viene andando, así que se reparten las {n} moscas vivas de hoy; lo cargado hasta acá queda en la curva tal como está.','cohort.byVialNeeds':'Poné un N y 2 o más viales en alguna fila para poder desglosarla.','aging.vialsN':'Viales ({n})','aging.vialUnassigned':'{n} cargadas antes de separar por vial (sin asignar a ninguno).','agm.perVial':'Vial por vial','agm.total':'total','al.vialSplit':'Los viales de {sex} suman {s} y la cohorte tiene {n}. Ajustalos para que coincidan.','al.vialTooMany':'{v} tiene sólo {n} moscas vivas; no puede perder más que eso en un recuento.','al.vialNothing':'No hay nada para registrar: cargá las muertes o censuras de al menos un vial.','cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
     'card.metaEclReal':'Eclosión (cargada)','tip.eclEdit':'Cargá la fecha real de eclosión: un tratamiento puede adelantarla o atrasarla.',
     'ecl.title':'Fecha de eclosión','ecl.sub':'{geno} · estimada por el modelo: {d}','ecl.date':'Eclosión observada (fecha y hora)',
     'ecl.hint':'Es el día 0 de la edad adulta y de la curva de supervivencia. Los estadios previos se reescalan en proporción.','ecl.reset':'Volver a la estimada',
@@ -3339,6 +3373,65 @@ function vialUnassigned(g){
   g.events.forEach(e=>{ if(!e.perVial){ deaths += e.deaths||0; censored += e.censored||0; } });
   return { deaths, censored };
 }
+/* a subset of vials shaped like a group, so kmCurve and cohortSeries work on it unchanged */
+function vialGroup(g, labels){
+  const set = new Set(labels), events = [];
+  g.events.forEach(e=>{
+    if(!e.perVial) return;                       // logged before the split: cannot be attributed
+    let d = 0, c = 0;
+    Object.keys(e.perVial).forEach(lb=>{
+      if(!set.has(lb)) return;
+      d += e.perVial[lb].deaths||0; c += e.perVial[lb].censored||0;
+    });
+    if(d || c) events.push({ date:e.date, deaths:d, censored:c });
+  });
+  const startN = vialsOf(g).filter(v=> set.has(v.label)).reduce((s,v)=> s + (v.startN||0), 0);
+  return { sex:g.sex, startN, events };
+}
+/* The cohort as it counts for the curve. An excluded vial takes its flies AND its deaths out;
+   what was logged before the split has no vial attached, so it stays in rather than being
+   guessed at. Nothing is deleted -- excluding is a view, and it is reversible. */
+function activeGroup(g){
+  const ex = vialsOf(g).filter(v=> v.excluded);
+  if(!ex.length) return g;
+  const set = new Set(ex.map(v=> v.label));
+  const events = g.events.map(e=>{
+    if(!e.perVial) return e;
+    let d = e.deaths||0, c = e.censored||0;
+    Object.keys(e.perVial).forEach(lb=>{
+      if(!set.has(lb)) return;
+      d -= e.perVial[lb].deaths||0; c -= e.perVial[lb].censored||0;
+    });
+    return { ...e, deaths:Math.max(d,0), censored:Math.max(c,0) };
+  });
+  const startN = Math.max((g.startN||0) - ex.reduce((s,v)=> s + (v.startN||0), 0), 0);
+  return { ...g, startN, events };
+}
+/* Screening flag: every vial against the pool of the others, by log-rank. It says "go and look
+   at this one", never "this one is bad" -- one test per vial means some will cross 0.05 on
+   chance alone, and the reason to drop a vial has to be something you can see at the incubator
+   (mould, dry food, a plug on the floor), not the p-value itself. */
+function vialOutliers(cross, g){
+  const out = {};
+  const vl = vialsOf(g).filter(v=> !v.excluded);
+  if(vl.length < 3) return out;                                  // nothing to stand out from
+  const deaths = vl.reduce((s,v)=> s + vialTally(g, v).deaths, 0);
+  if(deaths < 10) return out;                                    // too early to read anything into it
+  vl.forEach(v=>{
+    const rest = vl.filter(x=> x.label !== v.label).map(x=> x.label);
+    const lr = logRankTest([ cohortSeries(cross, vialGroup(g, [v.label])),
+                             cohortSeries(cross, vialGroup(g, rest)) ]);
+    if(lr && lr.p < 0.05) out[v.label] = lr.p;
+  });
+  return out;
+}
+/* what the cohort's median becomes with one vial left out (the honest way to see how much a
+   single vial is driving the result, without touching the data) */
+function medianWithout(cross, st, g, label){
+  const keep = vialsOf(g).filter(v=> !v.excluded && v.label !== label).map(v=> v.label);
+  if(!keep.length) return null;
+  return kmCurve(cross, st, vialGroup(g, keep)).median;
+}
 /* splits N across n vials as evenly as it goes; the remainder lands on the first ones */
 function splitVials(total, n){
   const t = Math.max(total||0, 0), base = Math.floor(t/n), rem = t % n;
@@ -3360,7 +3453,7 @@ function agingEvents(c){ return c && c.aging ? cohortGroups(c).flatMap(g=>g.even
    `g` = the cohort (group) to plot; without it, the record's first one. */
 function kmCurve(cross, st, g){
   const a = ensureAging(cross);
-  const grp = g || a.groups[0] || { startN:null, events:[] };
+  const grp = activeGroup(g || a.groups[0] || { startN:null, events:[] });
   const ecl = st.eclosionDate;
   const byDay = {};
   grp.events.forEach(e=>{
@@ -3405,7 +3498,7 @@ function survChart(series){
   const curves = list.map(s=>{
     let poly = '';
     s.km.points.forEach((p,i)=>{ if(i){ poly += ` ${X(p.day).toFixed(1)},${Y(s.km.points[i-1].surv).toFixed(1)}`; } poly += ` ${X(p.day).toFixed(1)},${Y(p.surv).toFixed(1)}`; });
-    return `<polyline points="${poly.trim()}" fill="none" stroke="${s.color||COHORT_BASE}" stroke-width="2.5"${s.dash?` stroke-dasharray="${s.dash}"`:''} stroke-linejoin="round" stroke-linecap="round"/>`;
+    return `<polyline points="${poly.trim()}" fill="none" stroke="${s.color||COHORT_BASE}" stroke-width="${s.faint?1.5:2.5}"${s.faint?' stroke-opacity=".35"':''}${s.dash?` stroke-dasharray="${s.dash}"`:''} stroke-linejoin="round" stroke-linecap="round"/>`;
   }).join('');
   const y50 = Y(0.5);
   return `<div class="surv-chart"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:82px">
@@ -3461,7 +3554,7 @@ function quadFormSolve(V, d){
 }
 /* event series of a cohort in AGE (days since eclosion): {times:[{day,d,c}], n0} */
 function cohortSeries(cross, g){
-  const a=ensureAging(cross), grp = g || a.groups[0] || { startN:null, events:[] };
+  const a=ensureAging(cross), grp = activeGroup(g || a.groups[0] || { startN:null, events:[] });
   const ecl=computeState(cross).eclosionDate, byDay={};
   grp.events.forEach(e=>{
     const dt=new Date(e.date).getTime(); if(!isFinite(dt)||!ecl) return;
@@ -3730,21 +3823,79 @@ function renderVialSplitSums(crossId){
 /* How each vial is doing, folded away so the panel stays as short as it is today. What it is
    for is spotting the odd one out: a vial well below the others is the one worth walking to
    the incubator to look at. */
-function vialStrip(g, color){
+function vialStrip(cross, st, g, gi, color){
   const vl = vialsOf(g);
   if(!vl.length) return '';
-  const rows = vl.map(v=>{
+  const flagged = vialOutliers(cross, g);
+  const km = kmCurve(cross, st, g);
+  const rows = vl.map((v,vi)=>{
     const tl = vialTally(g, v);
     const pct = v.startN ? Math.round(tl.alive / v.startN * 100) : 0;
-    return `<div class="vial-row"><span class="vl">${esc(v.label)}</span>
+    const p = flagged[v.label];
+    if(v.excluded){
+      return `<div class="vial-row out">
+        <span class="vl">${esc(v.label)}</span>
+        <span class="bar"><i style="width:${pct}%;background:var(--line)"></i></span>
+        <span class="vn">${tl.alive}/${v.startN}</span>
+        <a href="#" onclick="includeVial('${cross.id}',${gi},${vi});return false">${t('vex.undo')}</a>
+        <div class="why">${esc(t('vex.r.'+v.excluded.reason) || v.excluded.reason)}${v.excluded.note?' · '+esc(v.excluded.note):''} · ${t('vex.onDay',{d:v.excluded.day})}</div>
+      </div>`;
+    }
+    const shift = p!=null ? medianWithout(cross, st, g, v.label) : null;
+    return `<div class="vial-row${p!=null?' flag':''}">
+      <span class="vl">${esc(v.label)}</span>
       <span class="bar"><i style="width:${pct}%;background:${color}"></i></span>
-      <span class="vn">${tl.alive}/${v.startN}</span></div>`;
+      <span class="vn">${tl.alive}/${v.startN}</span>
+      <a href="#" onclick="askExcludeVial('${cross.id}',${gi},${vi});return false">${t('vex.exclude')}</a>
+      ${p!=null?`<div class="why">${t('aging.vialApart',{p: p<0.001 ? '&lt;0.001' : p.toFixed(3)})}${
+        shift!=null||km.median!=null ? ' · '+t('aging.vialShift',{a: km.median!=null?km.median:'—', b: shift!=null?shift:'—'}) : ''}</div>`:''}
+    </div>`;
   }).join('');
   const un = vialUnassigned(g);
-  const unRow = (un.deaths || un.censored)
-    ? `<div class="hint" style="margin:6px 0 0">${t('aging.vialUnassigned',{n:un.deaths+un.censored})}</div>` : '';
+  const notes = [];
+  if(un.deaths || un.censored) notes.push(t('aging.vialUnassigned',{n:un.deaths+un.censored}));
+  if(Object.keys(flagged).length) notes.push(t('aging.vialApartHint'));
   return `<button class="vial-toggle" onclick="toggleVialList(this)">▸ ${t('aging.vialsN',{n:vl.length})}</button>
-    <div class="vial-list">${rows}${unRow}</div>`;
+    <div class="vial-list">${rows}${notes.map(n=>`<div class="hint" style="margin:6px 0 0">${n}</div>`).join('')}</div>`;
+}
+/* Leaving a vial out and putting it back. Both are reversible and neither deletes a thing:
+   what changes is which vials the curve is built from. */
+const VIAL_REASONS = ['mould','food','plug','escape','other'];
+let _vexTarget = null;
+function askExcludeVial(id, gi, vi){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const g = cohortAt(c, gi); const v = vialsOf(g)[vi]; if(!v) return;
+  _vexTarget = { id, gi, vi };
+  document.getElementById('vialExSub').textContent =
+    [c.genotype||'', t(SEX_KEY[g.sex]), v.label].filter(Boolean).join(' · ');
+  document.getElementById('vialExForm').reset();
+  document.getElementById('vialExReasons').innerHTML = VIAL_REASONS.map((r,i)=>
+    `<label class="vex-opt"><input type="radio" name="vexReason" value="${r}"${i===0?' checked':''} /><span>${t('vex.r.'+r)}</span></label>`).join('');
+  document.getElementById('vialExOverlay').classList.add('open');
+}
+function closeExcludeVial(){ document.getElementById('vialExOverlay').classList.remove('open'); _vexTarget = null; }
+function saveExcludeVial(e){
+  e.preventDefault();
+  if(!_vexTarget) return;
+  const { id, gi, vi } = _vexTarget;
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const g = cohortAt(c, gi); const v = vialsOf(g)[vi]; if(!v) return;
+  const picked = document.querySelector('#vialExReasons input[name="vexReason"]:checked');
+  v.excluded = {
+    reason: picked ? picked.value : 'other',
+    note: document.getElementById('vialExNote').value.trim(),
+    date: new Date().toISOString(),
+    day: Math.max(Math.floor(computeState(c).adultAge), 0),   // cohort day it was taken out on
+  };
+  openAgingIds.add(id);
+  save(crosses); render(); closeExcludeVial();
+}
+function includeVial(id, gi, vi){
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const g = cohortAt(c, gi); const v = vialsOf(g)[vi]; if(!v || !v.excluded) return;
+  delete v.excluded;
+  openAgingIds.add(id);
+  save(crosses); render();
 }
 function toggleVialList(btn){
   const open = btn.nextElementSibling.classList.toggle('open');
@@ -3753,9 +3904,14 @@ function toggleVialList(btn){
 /* One cohort's block inside the panel: metrics, density, median and its events */
 function cohortBlock(cross, st, k, showDel){
   const { g, gi, km, color } = k;
-  const pct = g.startN ? Math.round(km.alive/g.startN*100) : 0;
+  /* an excluded vial is out of the N, the density and the curve alike, so what the block shows
+     is the cohort as it is actually being analysed */
+  const act = activeGroup(g);
+  const gone = vialsOf(g).filter(v=> v.excluded);
+  const nVials = vialsOf(g).length ? vialsOf(g).length - gone.length : g.vials;
+  const pct = act.startN ? Math.round(km.alive/act.startN*100) : 0;
   const evs = g.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date));
-  const dens = g.vials ? g.startN/g.vials : null;
+  const dens = nVials ? act.startN/nVials : null;
   const densStr = dens!=null ? (Number.isInteger(dens) ? dens : dens.toFixed(1)) : null;
   const densHigh = dens!=null && dens > 30;
   return `<div class="ag-group">
@@ -3765,17 +3921,18 @@ function cohortBlock(cross, st, k, showDel){
       ${showDel?`<button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="${esc(t('cohort.del'))}" onclick="delCohort('${cross.id}',${gi})">✕</button>`:''}
     </div>
     <div class="aging-metrics">
-      <div class="m"><b>${km.alive}/${g.startN}</b><span>${t('aging.mAlive')}</span></div>
+      <div class="m"><b>${km.alive}/${act.startN}</b><span>${t('aging.mAlive')}</span></div>
       <div class="m"><b>${pct}%</b><span>${t('aging.mSurv')}</span></div>
       <div class="m"><b>${Math.floor(st.adultAge)} d</b><span>${t('aging.mAge')}</span></div>
     </div>
     <div class="hint" style="margin:-4px 0 ${densHigh?'4px':'10px'}">${[
-      g.vials ? `${g.vials} ${t('aging.vials')} · ${densStr}/vial` : '',
+      nVials ? `${nVials} ${t('aging.vials')} · ${densStr}/vial` : '',
+      gone.length ? t(gone.length===1?'aging.vialsOut1':'aging.vialsOutN',{n:gone.length}) : '',
       km.censored ? `${km.censored} ${t('aging.censored')}` : '',
       km.median!=null ? t('aging.median',{d:km.median}) : t('aging.medianNone'),
     ].filter(Boolean).join(' · ')}</div>
     ${densHigh?`<div class="hint" style="margin:0 0 10px;color:#d98162;font-weight:700">${t('aging.densHigh',{d:densStr})}</div>`:''}
-    ${vialStrip(g, color)}
+    ${vialStrip(cross, st, g, gi, color)}
     <div class="aging-events">${evs.length ? evs.map(e=>`
       <div class="aging-ev"><span class="d">${fmtDT(new Date(e.date))} · ${e.deaths||0}✝${e.censored?` · ${e.censored} cens.`:''}${e.flipped?' · 🔄':''}${e.note?' · '+esc(e.note):''}</span>
       <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="${t('aging.evDelete')}" onclick="delAging('${cross.id}',${gi},${g.events.indexOf(e)})">✕</button></div>`).join('') : `<div class="hint">${t('aging.noRecords')}</div>`}</div>
@@ -3793,7 +3950,11 @@ function agingPanel(cross, st){
     const ks = groups.map(g=>({ g, gi:cohortIndex(cross,g), km:kmCurve(cross,st,g),
                                 color:sexColor(COHORT_BASE, g.sex), dash:SEX_DASH[g.sex]||'' }));
     const maxLife = Math.max(...ks.map(k=>k.km.maxLife||0));
-    body = survChart(ks)
+    /* where a vial was left out, the whole cohort is drawn faint behind the curve in use, so
+       what the exclusion did is visible instead of implied */
+    const ghosts = ks.filter(k=> vialsOf(k.g).some(v=> v.excluded))
+      .map(k=> ({ km: kmCurve(cross, st, { ...k.g, vialList:null }), color:k.color, dash:'3 3', faint:true }));
+    body = survChart(ghosts.concat(ks))
       + (maxLife?`<div class="hint" style="margin:-4px 0 10px">${t('aging.maxObs',{d:maxLife})}</div>`:'')
       + ks.map(k=> cohortBlock(cross, st, k, true)).join('');
   }
@@ -4514,8 +4675,11 @@ function exportCohortCSV(id, gi=0){
      frailty/mixed models) instead of only being eyeballed. Flies logged before the cohort was
      split by vial carry an empty vial rather than a guessed one. */
   const vl = vialsOf(a);
-  const rows = [vl.length ? ['day','status','status_label','vial'] : ['day','status','status_label']];
-  const put = (day, st_, lab, vial) => rows.push(vl.length ? [day,st_,lab,vial||''] : [day,st_,lab]);
+  /* every fly is exported, excluded vials included and flagged: dropping rows silently would
+     hide from the analysis what the app decided on screen */
+  const out = new Set(vl.filter(v=> v.excluded).map(v=> v.label));
+  const rows = [vl.length ? ['day','status','status_label','vial','excluded'] : ['day','status','status_label']];
+  const put = (day, st_, lab, vial) => rows.push(vl.length ? [day,st_,lab,vial||'',(vial&&out.has(vial))?1:0] : [day,st_,lab]);
   let deaths=0, cens=0;
   a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date)).forEach(e=>{
     const day = Math.max((new Date(e.date)-ecl)/86400000, 0).toFixed(2);

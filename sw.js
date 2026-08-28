@@ -3,7 +3,11 @@
    - The HTML (navigation): NETWORK first, cache as fallback → online you always get the
      latest version; offline, it opens the last one saved.
    - Icons / manifest / fonts: CACHE first, refreshed in the background.
-   Bump VERSION whenever you want to force a clean update. */
+   VERSION only names the cache bucket. Bumping it drops the stored copies and fetches them
+   again -- which the app itself never needs, since the HTML is network-first and a normal
+   reload always brings the latest code. Bump it when one of the ASSETS below changes (icons,
+   manifest), or to force every installed PWA to drop its offline copy. NOT on every deploy:
+   it is not a release number, and the released version lives in CITATION.cff / Zenodo. */
 const VERSION = 'v15';
 const CACHE = 'drosotracker-' + VERSION;
 const ASSETS = [

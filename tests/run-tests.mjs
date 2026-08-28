@@ -51,13 +51,14 @@ const code = [
   grabConst('SEX_ORDER'),
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('eclosionOverrideDays'),
   grabFn('ensureAging'), grabFn('cohortGroups'), grabFn('hasCohort'), grabFn('cohortIndex'), grabFn('cohortAt'), grabFn('agingEvents'),
+  grabFn('vialsOf'), grabFn('hasVials'), grabFn('vialTally'), grabFn('vialUnassigned'), grabFn('vialGroup'), grabFn('activeGroup'), grabFn('splitVials'),
   grabFn('kmCurve'), grabFn('computeT50FromCounts'),
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
   grabFn('loadLabRef'), grabFn('saveLabRef'), grabFn('isLabRef'), grabFn('labFactorValue'), grabFn('calibInfoFor'),
   grabFn('lgamma'), grabFn('gammincQ'), grabFn('chiSqUpper'), grabFn('quadFormSolve'), grabFn('logRankTest'),
   grabConst('SURV_SHAPE'), grabFn('normInv'), grabFn('logRankPlan'), grabFn('timeToMortality'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, SEX_ORDER, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, eclosionOverrideDays, ensureAging, cohortGroups, hasCohort, cohortIndex, cohortAt, agingEvents, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, SEX_ORDER, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, eclosionOverrideDays, ensureAging, cohortGroups, hasCohort, cohortIndex, cohortAt, agingEvents, vialsOf, hasVials, vialTally, vialUnassigned, vialGroup, activeGroup, splitVials, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -201,6 +202,95 @@ group('Separate ♀/♂ cohorts in one record', () => {
   ok(M.kmCurve(c, st, gs[0]).alive === 15 && M.kmCurve(c, st, gs[1]).alive === 10, 'the alive count is per cohort');
   ok(M.agingEvents(c).length === 2, 'events from all cohorts are seen together (fresh-food reminder)');
   ok(!M.hasCohort({ aging: { groups: [{ sex: 'F', startN: null, events: [] }] } }), 'a row with no N does not count as a loaded cohort');
+});
+
+/* ================= 2c) FOLLOWING A COHORT VIAL BY VIAL ================= */
+/* A cohort split into vials: each check carries its breakdown in e.perVial and the totals are
+ * its sum, so the curve is fed by exactly the same field as an undivided cohort. Leaving a
+ * vial out has to take its flies AND its deaths out together — the risk set and the events
+ * must never fall out of step, which is how an exclusion would silently bend the curve. */
+const mkVialCross = (vials, checks) => ({
+  aging: {
+    groups: [{
+      sex: 'F', vials: vials.length,
+      startN: vials.reduce((s, v) => s + v.startN, 0),
+      vialList: vials.map(v => ({ label: v.label, startN: v.startN, ...(v.excluded ? { excluded: v.excluded } : {}) })),
+      events: checks.map(ch => ({
+        date: new Date(ECL + ch.day * 86400000).toISOString(),
+        deaths: Object.values(ch.perVial).reduce((s, x) => s + (x.deaths || 0), 0),
+        censored: Object.values(ch.perVial).reduce((s, x) => s + (x.censored || 0), 0),
+        perVial: ch.perVial,
+      })),
+    }],
+  },
+});
+const VIALS = [{ label: 'V1', startN: 20 }, { label: 'V2', startN: 20 }, { label: 'V3', startN: 20 }];
+const CHECKS = [
+  { day: 10, perVial: { V1: { deaths: 1, censored: 0 }, V3: { deaths: 6, censored: 1 } } },
+  { day: 20, perVial: { V1: { deaths: 2, censored: 0 }, V2: { deaths: 2, censored: 0 }, V3: { deaths: 7, censored: 0 } } },
+];
+
+group('Per-vial cohorts — split, tally and the vial view', () => {
+  ok(M.splitVials(100, 5).every(v => v.startN === 20), '100 flies in 5 vials → 20 each');
+  const odd = M.splitVials(97, 5);
+  ok(odd.reduce((s, v) => s + v.startN, 0) === 97, 'an uneven split still adds up to N (97)');
+  ok(odd.map(v => v.startN).join(',') === '20,20,19,19,19', 'the remainder lands on the first vials');
+
+  const g = M.ensureAging(mkVialCross(VIALS, CHECKS)).groups[0];
+  ok(M.hasVials(g) && M.vialsOf(g).length === 3, 'the cohort reports its 3 vials');
+  const t3 = M.vialTally(g, M.vialsOf(g)[2]);
+  ok(t3.deaths === 13 && t3.censored === 1 && t3.alive === 6, 'V3: 13 dead + 1 censored of 20 → 6 alive');
+  const t2 = M.vialTally(g, M.vialsOf(g)[1]);
+  ok(t2.deaths === 2 && t2.alive === 18, 'a vial absent from a check counts as zero, not as missing');
+  ok(M.vialGroup(g, ['V1', 'V2']).startN === 40, 'a subset of vials carries the N of those vials only');
+  ok(M.vialUnassigned(g).deaths === 0, 'with every check broken down, nothing is left unassigned');
+});
+
+group('Per-vial cohorts — leaving a vial out moves flies and deaths together', () => {
+  const withV3 = M.ensureAging(mkVialCross(VIALS, CHECKS)).groups[0];
+  const out = M.ensureAging(mkVialCross(
+    VIALS.map(v => v.label === 'V3' ? { ...v, excluded: { reason: 'mould', day: 21 } } : v), CHECKS)).groups[0];
+  const act = M.activeGroup(out);
+  ok(act.startN === 40, 'the excluded vial takes its 20 flies out of N');
+  ok(act.events[0].deaths === 1 && act.events[0].censored === 0, 'and its deaths out of that check (7 → 1)');
+  ok(act.events[1].deaths === 4, 'and out of the next one (11 → 4)');
+  ok(withV3.startN === 60 && withV3.events[1].deaths === 11, 'the stored cohort is untouched: excluding is a view');
+
+  /* the curve of the cohort minus V3 must be the curve of the vials that remain, exactly */
+  const viaExclusion = M.kmCurve(mkVialCross(
+    VIALS.map(v => v.label === 'V3' ? { ...v, excluded: { reason: 'mould', day: 21 } } : v), CHECKS), st);
+  const viaSubset = M.kmCurve({ aging: { groups: [] } }, st, M.vialGroup(withV3, ['V1', 'V2']));
+  const last = km => km.points[km.points.length - 1].surv;
+  ok(near(last(viaExclusion), last(viaSubset)), 'excluding V3 == analysing V1+V2 (same survival)');
+  ok(viaExclusion.median === viaSubset.median, 'excluding V3 == analysing V1+V2 (same median)');
+  ok(viaExclusion.alive === 35 && viaSubset.alive === 35, 'both count 35 alive of the 40 remaining');
+
+  /* and it has to actually change the answer: V3 was the sick vial */
+  const full = M.kmCurve(mkVialCross(VIALS, CHECKS), st);
+  ok(full.alive === 41 && full.deaths === 18, 'the whole cohort: 18 dead + 1 censored of 60 → 41 alive');
+  ok(last(full) < last(viaExclusion), 'with the sick vial in, estimated survival is lower');
+});
+
+group('Per-vial cohorts — history logged before the split is never guessed at', () => {
+  const g = M.ensureAging({
+    aging: {
+      groups: [{
+        sex: 'F', startN: 60, vials: 3,
+        vialList: [{ label: 'V1', startN: 20 }, { label: 'V2', startN: 20 },
+                   { label: 'V3', startN: 20, excluded: { reason: 'food', day: 30 } }],
+        events: [
+          { date: new Date(ECL + 5 * 86400000).toISOString(), deaths: 3, censored: 0 },   // pooled, pre-split
+          { date: new Date(ECL + 15 * 86400000).toISOString(), deaths: 4, censored: 0,
+            perVial: { V1: { deaths: 1, censored: 0 }, V3: { deaths: 3, censored: 0 } } },
+        ],
+      }],
+    },
+  }).groups[0];
+  ok(M.vialUnassigned(g).deaths === 3, 'the pooled check is reported as unassigned');
+  const act = M.activeGroup(g);
+  ok(act.events[0].deaths === 3, 'a check with no breakdown stays whole when a vial is excluded');
+  ok(act.events[1].deaths === 1, 'a check with a breakdown loses only the excluded vial');
+  ok(M.vialGroup(g, ['V1', 'V2']).events.length === 1, 'and it never leaks into a per-vial series');
 });
 
 /* ============================ 3) T50 FROM COUNTS (interpolation) ============================ */
