@@ -4,7 +4,7 @@
      latest version; offline, it opens the last one saved.
    - Icons / manifest / fonts: CACHE first, refreshed in the background.
    Bump VERSION whenever you want to force a clean update. */
-const VERSION = 'v14';
+const VERSION = 'v15';
 const CACHE = 'drosotracker-' + VERSION;
 const ASSETS = [
   './',

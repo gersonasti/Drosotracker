@@ -353,6 +353,44 @@
   .cf-row label .sw{width:9px;height:9px;border-radius:3px;flex:none}
   .cf-row input,.cf-row select{flex:1;min-width:0;padding:9px 11px;border-radius:11px;border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;background:var(--bg-2);color:var(--ink)}
   .cf-row.cf-head{gap:10px;margin-bottom:-2px}
+  /* --- Following a cohort vial by vial --- */
+  .cf-byvial{display:flex;align-items:center;gap:8px;font-size:.83rem;font-weight:700;color:var(--ink-soft);cursor:pointer;margin-top:2px}
+  .cf-byvial input{width:16px;height:16px;flex:none;accent-color:var(--lav)}
+  .cf-split-row + .cf-split-row{margin-top:10px}
+  .cf-split-h{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--ink-soft);margin-bottom:5px}
+  .cf-split-h .sw{width:9px;height:9px;border-radius:3px;flex:none}
+  .cf-split-sum{margin-left:auto;font-variant-numeric:tabular-nums}
+  .cf-split-sum.bad{color:#d98162}
+  .cf-split-in{display:flex;flex-wrap:wrap;gap:6px}
+  .cf-split-in label{display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--ink-soft);font-weight:700}
+  .cf-split-in input{width:52px;padding:6px 7px;border-radius:9px;border:1.5px solid var(--line);
+    font-family:'Nunito';font-size:.85rem;background:var(--bg-2);color:var(--ink);text-align:center}
+  /* the counting table in the log modal: the rows scroll, the header and total do not */
+  .vial-tab{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg-2)}
+  .vial-th,.vial-tot{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:.72rem;font-weight:700;
+    color:var(--ink-soft);background:var(--bg-1)}
+  .vial-th span,.vial-tot span{flex:1;text-align:center}
+  .vial-th .vl,.vial-tot .vl{flex:none;width:74px;text-align:left}
+  .vial-rows{max-height:44vh;overflow:auto}
+  .vial-in{display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px dashed var(--line)}
+  .vial-in:last-child{border-bottom:none}
+  .vial-in .vl{flex:none;width:74px;font-size:.8rem;font-weight:700;color:var(--ink)}
+  .vial-in .vl i{font-style:normal;font-weight:600;color:var(--ink-soft);font-size:.74rem}
+  .vial-in input{flex:1;min-width:0;padding:7px 8px;border-radius:9px;border:1.5px solid var(--line);
+    font-family:'Nunito';font-size:.9rem;background:var(--bg-2);color:var(--ink);text-align:center}
+  .vial-in.spent .vl{color:var(--ink-soft)}
+  .vial-in.over input{border-color:#d98162}
+  .vial-in.over .vl{color:#d98162}
+  /* the vial strip inside the aging panel */
+  .vial-toggle{background:none;border:none;padding:2px 0;margin:0 0 6px;font-family:'Nunito';font-size:.78rem;
+    font-weight:700;color:var(--lav);cursor:pointer}
+  .vial-list{display:none;margin-bottom:10px}
+  .vial-list.open{display:block}
+  .vial-row{display:flex;align-items:center;gap:8px;font-size:.78rem;padding:4px 2px}
+  .vial-row .vl{flex:none;width:32px;font-weight:700;color:var(--ink-soft)}
+  .vial-row .bar{flex:1;height:7px;border-radius:4px;background:var(--bg-1);overflow:hidden}
+  .vial-row .bar i{display:block;height:100%;border-radius:4px}
+  .vial-row .vn{flex:none;width:58px;text-align:right;color:var(--ink-soft);font-variant-numeric:tabular-nums}
   .cf-row.cf-head span{flex:1;min-width:0;font-size:.72rem;font-weight:700;color:var(--ink-soft);padding-left:2px}
   /* one cohort (♀ / ♂ / ⚥) inside the aging panel */
   .ag-group + .ag-group{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
@@ -1000,13 +1038,26 @@
         <label for="agingDate" data-i18n="agm.date">Check date and time</label>
         <input id="agingDate" type="datetime-local" required />
       </div>
-      <div class="field">
-        <label for="agingDeaths" data-i18n="agm.deaths">Dead flies at this check</label>
-        <input id="agingDeaths" type="number" min="0" step="1" value="0" />
+      <div id="agingSingle">
+        <div class="field">
+          <label for="agingDeaths" data-i18n="agm.deaths">Dead flies at this check</label>
+          <input id="agingDeaths" type="number" min="0" step="1" value="0" />
+        </div>
+        <div class="field">
+          <label for="agingCensored" data-i18n="agm.censored">Censored (escaped, stuck, accidents)</label>
+          <input id="agingCensored" type="number" min="0" step="1" value="0" />
+          <div class="hint" data-i18n="agm.censoredHint">Removed from the at-risk group without counting as deaths (Kaplan-Meier).</div>
+        </div>
       </div>
-      <div class="field">
-        <label for="agingCensored" data-i18n="agm.censored">Censored (escaped, stuck, accidents)</label>
-        <input id="agingCensored" type="number" min="0" step="1" value="0" />
+      <!-- Vial by vial: the list scrolls on its own so the header and the running total stay
+           in sight however many vials the cohort has -->
+      <div id="agingVials" class="field" style="display:none">
+        <label data-i18n="agm.perVial">Vial by vial</label>
+        <div class="vial-tab">
+          <div class="vial-th"><span class="vl"></span><span>✝</span><span>⊘</span></div>
+          <div class="vial-rows" id="agingVialRows"></div>
+          <div class="vial-tot" id="agingVialTot"></div>
+        </div>
         <div class="hint" data-i18n="agm.censoredHint">Removed from the at-risk group without counting as deaths (Kaplan-Meier).</div>
       </div>
       <div class="checkbox-row">
@@ -1019,7 +1070,7 @@
       </div>
       <div class="modal-actions">
         <button type="button" class="btn ghost" onclick="closeAging()" data-i18n="form.cancel">Cancel</button>
-        <button type="submit" class="btn" data-i18n="cohort.save">Save</button>
+        <button type="submit" class="btn" id="agingSaveBtn" data-i18n="cohort.save">Save</button>
       </div>
     </form>
   </div>
@@ -1415,7 +1466,7 @@ const I18N = {
     'surv.day0':'day 0','surv.dayN':'day {n}',
     'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Load flies','cohort.save':'Save','cohort.cancel':'Cancel',
     'cohort.hint':'Log the adult cohort to follow its survival curve (Kaplan-Meier). Recommended density: ≤25–30 flies/vial.','cohort.nPh':'e.g. 100','cohort.vialsPh':'optional',
-    'cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
+    'cohort.byVial':'Follow each vial separately','cohort.byVialRunning':'This cohort is already running, so what is split are the {n} flies alive today; the history logged so far stays in the curve untouched.','cohort.byVialNeeds':'Enter an N and 2 or more vials in a row to break it down.','aging.vialsN':'Vials ({n})','aging.vialUnassigned':'{n} logged before the split by vial (not assigned to any).','agm.perVial':'Vial by vial','agm.total':'total','al.vialSplit':'The vials of {sex} add up to {s} and the cohort has {n}. Adjust them so they match.','al.vialTooMany':'{v} only has {n} flies alive; it cannot lose more than that at one check.','al.vialNothing':'Nothing to log: enter the deaths or censors of at least one vial.','cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
     // real eclosion date
     'card.metaEclReal':'Eclosion (recorded)','tip.eclEdit':'Set the actual eclosion date: a treatment can bring it forward or push it back.',
     'ecl.title':'Eclosion date','ecl.sub':'{geno} · model estimate: {d}','ecl.date':'Observed eclosion (date and time)',
@@ -1602,7 +1653,7 @@ const I18N = {
     'surv.day0':'día 0','surv.dayN':'día {n}',
     'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Cargar moscas','cohort.save':'Guardar','cohort.cancel':'Cancelar',
     'cohort.hint':'Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.','cohort.nPh':'ej. 100','cohort.vialsPh':'opcional',
-    'cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
+    'cohort.byVial':'Seguir cada vial por separado','cohort.byVialRunning':'Esta cohorte ya viene andando, así que se reparten las {n} moscas vivas de hoy; lo cargado hasta acá queda en la curva tal como está.','cohort.byVialNeeds':'Poné un N y 2 o más viales en alguna fila para poder desglosarla.','aging.vialsN':'Viales ({n})','aging.vialUnassigned':'{n} cargadas antes de separar por vial (sin asignar a ninguno).','agm.perVial':'Vial por vial','agm.total':'total','al.vialSplit':'Los viales de {sex} suman {s} y la cohorte tiene {n}. Ajustalos para que coincidan.','al.vialTooMany':'{v} tiene sólo {n} moscas vivas; no puede perder más que eso en un recuento.','al.vialNothing':'No hay nada para registrar: cargá las muertes o censuras de al menos un vial.','cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
     'card.metaEclReal':'Eclosión (cargada)','tip.eclEdit':'Cargá la fecha real de eclosión: un tratamiento puede adelantarla o atrasarla.',
     'ecl.title':'Fecha de eclosión','ecl.sub':'{geno} · estimada por el modelo: {d}','ecl.date':'Eclosión observada (fecha y hora)',
     'ecl.hint':'Es el día 0 de la edad adulta y de la curva de supervivencia. Los estadios previos se reescalan en proporción.','ecl.reset':'Volver a la estimada',
@@ -3255,8 +3306,43 @@ function ensureAging(c){
     if(g.sex===undefined) g.sex = 'F';
     if(g.vials===undefined) g.vials = null;
     if(g.startN===undefined) g.startN = null;
+    if(g.vialList!==undefined && !Array.isArray(g.vialList)) delete g.vialList;
   });
   return a;
+}
+
+/* --- Following a cohort vial by vial (optional) ---
+   A sick vial (mould, dried food, a plug that fell, a mass escape) drags the whole survival
+   curve down, and pooled into a single count there is no way to tell it apart from a
+   genuinely short-lived genotype. When the cohort is followed vial by vial, g.vialList
+   defines them (label + how many flies each one started with) and every check keeps its
+   breakdown INSIDE the same event it already stored, in e.perVial, next to the totals.
+   The totals stay the single source of truth for the cohort's curve, so the Kaplan-Meier,
+   the event list, the export and the comparison all keep working untouched -- and a cohort
+   that was pooled before this was switched on simply has checks with no breakdown, which
+   the vial view reports as unassigned instead of guessing. */
+function vialsOf(g){ return Array.isArray(g && g.vialList) ? g.vialList : []; }
+function hasVials(g){ return vialsOf(g).length > 0; }
+/* what one vial has logged so far, and how many of its flies are still alive */
+function vialTally(g, v){
+  let deaths = 0, censored = 0;
+  g.events.forEach(e=>{
+    const pv = e.perVial && e.perVial[v.label];
+    if(!pv) return;
+    deaths += pv.deaths||0; censored += pv.censored||0;
+  });
+  return { deaths, censored, alive: Math.max((v.startN||0) - deaths - censored, 0) };
+}
+/* deaths and censors logged with no breakdown (before per-vial was switched on) */
+function vialUnassigned(g){
+  let deaths = 0, censored = 0;
+  g.events.forEach(e=>{ if(!e.perVial){ deaths += e.deaths||0; censored += e.censored||0; } });
+  return { deaths, censored };
+}
+/* splits N across n vials as evenly as it goes; the remainder lands on the first ones */
+function splitVials(total, n){
+  const t = Math.max(total||0, 0), base = Math.floor(t/n), rem = t % n;
+  return Array.from({length:n}, (_,i)=> ({ label:'V'+(i+1), startN: base + (i<rem ? 1 : 0) }));
 }
 /* the cohorts already loaded for a record, in ♀ ♂ ⚥ order */
 function cohortGroups(c){
@@ -3562,17 +3648,24 @@ function cohortForm(cross){
   const editing = editingCohort.has(cross.id);
   const bySex = {};
   a.groups.forEach(g=>{ if(bySex[g.sex]===undefined) bySex[g.sex] = g; });
+  const anyVials = SEX_ORDER.some(sex=> hasVials(bySex[sex]));
   const row = sex => {
     const g = bySex[sex] || {};
+    const sync = `renderVialSplit('${cross.id}')`;
     return `<div class="cf-row">
       <label><span class="sw" style="background:${sexColor(COHORT_BASE, sex)}"></span>${t(SEX_KEY[sex])}</label>
-      <input type="number" min="1" step="1" id="cohortN-${sex}-${cross.id}" value="${g.startN??''}" placeholder="${t('cohort.nPh')}" />
-      <input type="number" min="1" step="1" id="cohortV-${sex}-${cross.id}" value="${g.vials??''}" placeholder="${t('cohort.vialsPh')}" />
+      <input type="number" min="1" step="1" id="cohortN-${sex}-${cross.id}" value="${g.startN??''}" placeholder="${t('cohort.nPh')}" oninput="${sync}" />
+      <input type="number" min="1" step="1" id="cohortV-${sex}-${cross.id}" value="${g.vials??''}" placeholder="${t('cohort.vialsPh')}" oninput="${sync}" />
     </div>`;
   };
   return `<div class="cohort-form">
     <div class="cf-row cf-head"><label></label><span>${t('cohort.n')}</span><span>${t('cohort.vials')}</span></div>
     ${SEX_ORDER.map(row).join('')}
+    <label class="cf-byvial">
+      <input type="checkbox" id="cohortBV-${cross.id}"${anyVials?' checked':''} onchange="renderVialSplit('${cross.id}')" />
+      <span>${t('cohort.byVial')}</span>
+    </label>
+    <div id="cohortSplit-${cross.id}" class="cf-split"></div>
     <div class="hint">${t('cohort.rowHint')}</div>
     <div style="display:flex;gap:8px;margin-top:6px">
       <button class="mini-btn" style="flex:1" onclick="setCohort('${cross.id}')">${editing?t('cohort.save'):t('cohort.define')}</button>
@@ -3582,6 +3675,81 @@ function cohortForm(cross){
   </div>`;
 }
 
+/* The per-vial split under the cohort rows: one editable N per vial, prefilled with an even
+   share. On a cohort that is ALREADY RUNNING what gets split is how many flies are alive
+   today, not the original N -- the pooled history stays in the curve exactly as it is, and
+   the vials start counting from here. */
+function renderVialSplit(crossId){
+  const cross = crosses.find(x=>x.id===crossId); if(!cross) return;
+  const box = document.getElementById('cohortSplit-'+crossId);
+  const chk = document.getElementById('cohortBV-'+crossId);
+  if(!box || !chk) return;
+  if(!chk.checked){ box.innerHTML = ''; return; }
+  const bySex = {};
+  ensureAging(cross).groups.forEach(g=>{ if(bySex[g.sex]===undefined) bySex[g.sex] = g; });
+  const blocks = [];
+  SEX_ORDER.forEach(sex=>{
+    const nEl = document.getElementById(`cohortN-${sex}-${crossId}`);
+    const vEl = document.getElementById(`cohortV-${sex}-${crossId}`);
+    const n = parseInt((nEl||{}).value, 10), nv = parseInt((vEl||{}).value, 10);
+    if(!(n>0) || !(nv>1)) return;                        // one vial needs no breakdown
+    const g = bySex[sex];
+    let used = 0;
+    if(g) g.events.forEach(e=> used += (e.deaths||0) + (e.censored||0));
+    const running = used > 0;
+    const pool = running ? Math.max((g.startN||n) - used, 0) : n;
+    /* keep what is already on screen (or saved) when the number of vials has not changed,
+       so adjusting an uneven split by hand is not undone by every keystroke */
+    const shown = [...box.querySelectorAll(`input[data-sex="${sex}"]`)].map(i=> parseInt(i.value,10)||0);
+    const saved = vialsOf(g).map(v=> v.startN);
+    const base = shown.length===nv ? shown : (saved.length===nv ? saved : splitVials(pool, nv).map(v=>v.startN));
+    const sum = base.reduce((s,v)=>s+v, 0);
+    blocks.push(`<div class="cf-split-row">
+      <div class="cf-split-h"><span class="sw" style="background:${sexColor(COHORT_BASE, sex)}"></span>${t(SEX_KEY[sex])}
+        <span class="cf-split-sum${sum===pool?'':' bad'}">${sum}/${pool}</span></div>
+      <div class="cf-split-in">${base.map((sN,i)=>`
+        <label><span>V${i+1}</span><input type="number" min="0" step="1" data-sex="${sex}" data-vi="${i}"
+          value="${sN}" oninput="renderVialSplitSums('${crossId}')" /></label>`).join('')}</div>
+      ${running?`<div class="hint" style="margin:2px 0 0">${t('cohort.byVialRunning',{n:pool})}</div>`:''}
+    </div>`);
+  });
+  box.innerHTML = blocks.length ? blocks.join('') : `<div class="hint">${t('cohort.byVialNeeds')}</div>`;
+}
+/* only refreshes the ♀/♂ "adds up to" counters, so typing never rebuilds the inputs */
+function renderVialSplitSums(crossId){
+  const box = document.getElementById('cohortSplit-'+crossId); if(!box) return;
+  box.querySelectorAll('.cf-split-row').forEach(rowEl=>{
+    const ins = [...rowEl.querySelectorAll('input[data-sex]')];
+    const sum = ins.reduce((s,i)=> s + (parseInt(i.value,10)||0), 0);
+    const out = rowEl.querySelector('.cf-split-sum'); if(!out) return;
+    const pool = parseInt(out.textContent.split('/')[1], 10);
+    out.textContent = `${sum}/${pool}`;
+    out.classList.toggle('bad', sum!==pool);
+  });
+}
+/* How each vial is doing, folded away so the panel stays as short as it is today. What it is
+   for is spotting the odd one out: a vial well below the others is the one worth walking to
+   the incubator to look at. */
+function vialStrip(g, color){
+  const vl = vialsOf(g);
+  if(!vl.length) return '';
+  const rows = vl.map(v=>{
+    const tl = vialTally(g, v);
+    const pct = v.startN ? Math.round(tl.alive / v.startN * 100) : 0;
+    return `<div class="vial-row"><span class="vl">${esc(v.label)}</span>
+      <span class="bar"><i style="width:${pct}%;background:${color}"></i></span>
+      <span class="vn">${tl.alive}/${v.startN}</span></div>`;
+  }).join('');
+  const un = vialUnassigned(g);
+  const unRow = (un.deaths || un.censored)
+    ? `<div class="hint" style="margin:6px 0 0">${t('aging.vialUnassigned',{n:un.deaths+un.censored})}</div>` : '';
+  return `<button class="vial-toggle" onclick="toggleVialList(this)">▸ ${t('aging.vialsN',{n:vl.length})}</button>
+    <div class="vial-list">${rows}${unRow}</div>`;
+}
+function toggleVialList(btn){
+  const open = btn.nextElementSibling.classList.toggle('open');
+  btn.textContent = btn.textContent.replace(open?'▸':'▾', open?'▾':'▸');
+}
 /* One cohort's block inside the panel: metrics, density, median and its events */
 function cohortBlock(cross, st, k, showDel){
   const { g, gi, km, color } = k;
@@ -3607,6 +3775,7 @@ function cohortBlock(cross, st, k, showDel){
       km.median!=null ? t('aging.median',{d:km.median}) : t('aging.medianNone'),
     ].filter(Boolean).join(' · ')}</div>
     ${densHigh?`<div class="hint" style="margin:0 0 10px;color:#d98162;font-weight:700">${t('aging.densHigh',{d:densStr})}</div>`:''}
+    ${vialStrip(g, color)}
     <div class="aging-events">${evs.length ? evs.map(e=>`
       <div class="aging-ev"><span class="d">${fmtDT(new Date(e.date))} · ${e.deaths||0}✝${e.censored?` · ${e.censored} cens.`:''}${e.flipped?' · 🔄':''}${e.note?' · '+esc(e.note):''}</span>
       <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="${t('aging.evDelete')}" onclick="delAging('${cross.id}',${gi},${g.events.indexOf(e)})">✕</button></div>`).join('') : `<div class="hint">${t('aging.noRecords')}</div>`}</div>
@@ -3979,6 +4148,8 @@ function restorePanels(){
     const btn = [...card.querySelectorAll('.timeline-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleMore'));
     if(btn){ openPanel(card.querySelector('.timeline'), false); const ip=card.querySelector('.info-panel'); if(ip) openPanel(ip, false); btn.textContent=t('card.less'); }
   });
+  // the per-vial split is filled in after the markup lands, since it reads the N/vials on screen
+  document.querySelectorAll('[id^="cohortSplit-"]').forEach(box=> renderVialSplit(box.id.slice('cohortSplit-'.length)));
   updateGridAlign();
 }
 /* New generation: form preloaded with the same genotype/purpose/temperature,
@@ -4051,6 +4222,24 @@ function setCohort(id){
     rows.push({ sex, n, vials: v>0 ? v : null });
   });
   if(bad || !rows.some(r=>r.n)){ alert(t('al.cohortAny')); return; }
+  /* per-vial breakdown: only where there is more than one vial, and only if it adds up */
+  const byVial = !!(document.getElementById('cohortBV-'+id)||{}).checked;
+  const split = document.getElementById('cohortSplit-'+id);
+  let mismatch = null;
+  rows.forEach(r=>{
+    if(!byVial || !r.n || !(r.vials>1) || !split) return;
+    const ins = [...split.querySelectorAll(`input[data-sex="${r.sex}"]`)];
+    if(ins.length !== r.vials) return;
+    const g = a.groups.find(x=>x.sex===r.sex);
+    let used = 0;
+    if(g) g.events.forEach(e=> used += (e.deaths||0) + (e.censored||0));
+    const pool = used>0 ? Math.max((g.startN||r.n) - used, 0) : r.n;
+    const vals = ins.map(i=> parseInt(i.value,10)||0);
+    const sum = vals.reduce((s,v)=>s+v, 0);
+    if(sum !== pool){ mismatch = t('al.vialSplit',{s:sum, n:pool, sex:t(SEX_KEY[r.sex])}); return; }
+    r.vialList = vals.map((sN,i)=> ({ label:'V'+(i+1), startN:sN }));
+  });
+  if(mismatch){ alert(mismatch); return; }
   const kept = [];   // emptied rows that can NOT be removed this way (they already have counts entered)
   rows.forEach(r=>{
     const g = a.groups.find(x=>x.sex===r.sex);
@@ -4062,6 +4251,8 @@ function setCohort(id){
     }
     if(g){ g.startN = r.n; g.vials = r.vials; }
     else a.groups.push({ sex:r.sex, startN:r.n, vials:r.vials, events:[] });
+    const gg = g || a.groups[a.groups.length-1];
+    if(r.vialList) gg.vialList = r.vialList; else delete gg.vialList;   // turning it off keeps the logged breakdowns
   });
   editingCohort.delete(id); openAgingIds.add(id);
   save(crosses); render();
@@ -4087,7 +4278,43 @@ function openAging(id, gi=0){
   document.getElementById('agingDeaths').value = 0;
   document.getElementById('agingCensored').value = 0;
   document.getElementById('agingFlip').checked = true;
+  /* one row per vial when the cohort is followed that way; the flies still alive in each
+     vial are shown next to it, both to count against and to catch a slip on the spot */
+  const vials = g ? vialsOf(g) : [];
+  document.getElementById('agingSingle').style.display = vials.length ? 'none' : '';
+  document.getElementById('agingVials').style.display  = vials.length ? '' : 'none';
+  if(vials.length){
+    document.getElementById('agingVialRows').innerHTML = vials.map((v,i)=>{
+      const alive = vialTally(g, v).alive;
+      const inp = k => `<input type="number" min="0" step="1" value="0" data-vi="${i}" data-k="${k}"
+        data-alive="${alive}" oninput="agingVialTotals()" onkeydown="agingVialKey(event)" />`;
+      return `<div class="vial-in${alive?'':' spent'}">
+        <span class="vl">${esc(v.label)} <i>(${alive})</i></span>${inp('deaths')}${inp('censored')}</div>`;
+    }).join('');
+    agingVialTotals();
+  }
   document.getElementById('agingOverlay').classList.add('open');
+}
+/* running total under the table, and a flag on any vial asked for more flies than it has left */
+function agingVialTotals(){
+  let d = 0, c = 0;
+  document.querySelectorAll('#agingVialRows .vial-in').forEach(row=>{
+    const ins = row.querySelectorAll('input');
+    const dv = parseInt(ins[0].value,10)||0, cv = parseInt(ins[1].value,10)||0;
+    row.classList.toggle('over', dv + cv > (parseInt(ins[0].dataset.alive,10)||0));
+    d += dv; c += cv;
+  });
+  document.getElementById('agingVialTot').innerHTML =
+    `<span class="vl">${t('agm.total')}</span><span>${d} ✝</span><span>${c} ⊘</span>`;
+}
+/* Enter walks DOWN the column being filled, so a whole cohort is logged without leaving the keys */
+function agingVialKey(e){
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  const ins = [...document.querySelectorAll('#agingVialRows input')];
+  const next = ins[ins.indexOf(e.target) + 2];
+  if(next){ next.focus(); next.select(); }
+  else document.getElementById('agingSaveBtn').focus();
 }
 function closeAging(){ document.getElementById('agingOverlay').classList.remove('open'); }
 function saveAgingEntry(e){
@@ -4095,13 +4322,32 @@ function saveAgingEntry(e){
   const [id, giRaw] = document.getElementById('agingId').value.split('#');
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const g = cohortAt(c, parseInt(giRaw)||0); if(!g) return;
-  g.events.push({
+  const vials = vialsOf(g);
+  const ev = {
     date: document.getElementById('agingDate').value,
     deaths: parseInt(document.getElementById('agingDeaths').value)||0,
     censored: parseInt(document.getElementById('agingCensored').value)||0,
     flipped: document.getElementById('agingFlip').checked,
     note: document.getElementById('agingNote').value.trim(),
-  });
+  };
+  if(vials.length){
+    /* the breakdown rides along inside the event, and the totals are its sum, so the cohort
+       curve is fed by exactly the same field as always */
+    const perVial = {}; let d = 0, cen = 0, over = null;
+    document.querySelectorAll('#agingVialRows .vial-in').forEach((row,i)=>{
+      const ins = row.querySelectorAll('input');
+      const dv = parseInt(ins[0].value,10)||0, cv = parseInt(ins[1].value,10)||0;
+      const alive = parseInt(ins[0].dataset.alive,10)||0;
+      const v = vials[i]; if(!v) return;
+      if(dv + cv > alive) over = t('al.vialTooMany',{v:v.label, n:alive});
+      if(dv || cv) perVial[v.label] = { deaths:dv, censored:cv };
+      d += dv; cen += cv;
+    });
+    if(over){ alert(over); return; }
+    if(!d && !cen && !ev.flipped && !ev.note){ alert(t('al.vialNothing')); return; }
+    ev.deaths = d; ev.censored = cen; ev.perVial = perVial;
+  }
+  g.events.push(ev);
   openAgingIds.add(id);
   save(crosses); render(); closeAging();
 }
@@ -4264,16 +4510,38 @@ function exportCohortCSV(id, gi=0){
   const a = cohortAt(c, gi);
   if(!a || a.startN==null){ alert(t('al.defineCohort')); return; }
   const st = computeState(c); const ecl = st.eclosionDate;
-  const rows = [['day','status','status_label']];
+  /* the vial travels with every fly, so the clustering can be modelled (stratified log-rank,
+     frailty/mixed models) instead of only being eyeballed. Flies logged before the cohort was
+     split by vial carry an empty vial rather than a guessed one. */
+  const vl = vialsOf(a);
+  const rows = [vl.length ? ['day','status','status_label','vial'] : ['day','status','status_label']];
+  const put = (day, st_, lab, vial) => rows.push(vl.length ? [day,st_,lab,vial||''] : [day,st_,lab]);
   let deaths=0, cens=0;
   a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date)).forEach(e=>{
     const day = Math.max((new Date(e.date)-ecl)/86400000, 0).toFixed(2);
-    for(let i=0;i<(e.deaths||0);i++){ rows.push([day,1,'death']); deaths++; }
-    for(let i=0;i<(e.censored||0);i++){ rows.push([day,0,'censored']); cens++; }
+    if(vl.length && e.perVial){
+      vl.forEach(v=>{
+        const pv = e.perVial[v.label]; if(!pv) return;
+        for(let i=0;i<(pv.deaths||0);i++){ put(day,1,'death',v.label); deaths++; }
+        for(let i=0;i<(pv.censored||0);i++){ put(day,0,'censored',v.label); cens++; }
+      });
+      return;
+    }
+    for(let i=0;i<(e.deaths||0);i++){ put(day,1,'death'); deaths++; }
+    for(let i=0;i<(e.censored||0);i++){ put(day,0,'censored'); cens++; }
   });
   const alive = Math.max(a.startN-deaths-cens, 0);
   const curDay = Math.max(st.adultAge, 0).toFixed(2);
-  for(let i=0;i<alive;i++){ rows.push([curDay,0,'censored']); }  // alive = censored at the current age
+  if(vl.length){
+    let left = alive;
+    vl.forEach(v=>{                                   // still alive = censored at today's age, in its vial
+      const n = Math.min(vialTally(a, v).alive, left);
+      for(let i=0;i<n;i++) put(curDay,0,'censored',v.label);
+      left -= n;
+    });
+    for(let i=0;i<left;i++) put(curDay,0,'censored');  // any not accounted for by a vial
+  }
+  else for(let i=0;i<alive;i++){ put(curDay,0,'censored'); }
   const slug = (c.name||c.genotype||'cohort').replace(/[^\p{L}\p{N}._-]+/gu,'_').replace(/^_+|_+$/g,'').slice(0,40) || 'cohort';
   downloadBlob(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}),
     `drosotracker-lifespan-${slug}${a.sex?'-'+a.sex:''}-${new Date().toISOString().slice(0,10)}.csv`);
