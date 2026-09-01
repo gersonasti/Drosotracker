@@ -2206,9 +2206,15 @@ function setConfirmSkipped(key){ try{ localStorage.setItem('drosotrack.skipConfi
    gesture: the dialog flashes by and the entry is gone, exactly as if nothing had been asked.
    Every button is inert for a moment after it opens, so deleting always takes a second,
    deliberate tap. */
-const CONFIRM_GUARD_MS = 500;
+/* The two answers are not guarded alike. "Delete" waits half a second, because the harm of a
+   ghost tap landing on it is irreversible. "Cancel" and the backdrop wait only long enough to
+   absorb a synthetic duplicate click: a reflexive Cancel -- the ✕ was a slip, undo it NOW --
+   arrives well inside half a second, and swallowing it reads as a broken button. The worst a
+   ghost tap on Cancel can do is close the dialog, and the ✕ is right there to tap again. */
+const CONFIRM_GUARD_MS  = 500;   // before "Delete" can be taken
+const CONFIRM_CANCEL_MS = 150;   // before "Cancel" or the backdrop can dismiss it
 let _confirmCb = null, _confirmDontAskKey = null, _confirmOpenedAt = 0;
-function confirmIsSettling(){ return Date.now() - _confirmOpenedAt < CONFIRM_GUARD_MS; }
+function confirmIsSettling(ms){ return Date.now() - _confirmOpenedAt < (ms || CONFIRM_GUARD_MS); }
 function askConfirm(message, onYes, okKey, dontAskKey){
   _confirmCb = onYes;
   _confirmDontAskKey = dontAskKey || null;
@@ -2220,7 +2226,7 @@ function askConfirm(message, onYes, okKey, dontAskKey){
   document.getElementById('confirmOverlay').classList.add('open');
 }
 function closeConfirm(){
-  if(confirmIsSettling()) return;   // the tap that opened it must not dismiss it either
+  if(confirmIsSettling(CONFIRM_CANCEL_MS)) return;   // only a synthetic duplicate of the opening tap is ignored
   document.getElementById('confirmOverlay').classList.remove('open'); _confirmCb = null; _confirmDontAskKey = null;
 }
 function doConfirm(){
@@ -5952,7 +5958,16 @@ document.getElementById('recTaskListOverlay').addEventListener('click',e=>{
 document.getElementById('recTaskFormOverlay').addEventListener('click',e=>{
   if(e.target.id==='recTaskFormOverlay') closeRecTaskForm();
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); closeImportChoice(); closeInstallNotice(); closeStorageNotice(); closeRecTaskList(); closeRecTaskForm(); } });
+/* Escape closes whatever is open. The survival dialogs (discard, rename, confirm, compare,
+   sample size, eclosion) are closed innermost-first, so an Escape from the discard dialog
+   that sits on top of a count leaves the count where it was. */
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){
+  if(document.getElementById('vialExOverlay').classList.contains('open')){ closeExcludeVial(); return; }
+  if(document.getElementById('vialNameOverlay').classList.contains('open')){ closeRenameVial(); return; }
+  if(document.getElementById('confirmOverlay').classList.contains('open')){ closeConfirm(); return; }
+  closeForm(); closeAging(); closePlan(); closeLabModal(); closeMenu(); closeTutorial(); closeImportChoice(); closeInstallNotice(); closeStorageNotice(); closeRecTaskList(); closeRecTaskForm();
+  closeCompare(); closeStatPlan(); closeEcl();
+} });
 /* close the data menu on an outside click. While the tutorial is running, the tour engine
    itself controls when the "More ▾" menu opens and closes (see tourResetToBaseline); without
    this guard, the click on the tour's "Continue"/"Back" bubbles up here and closes the menu
