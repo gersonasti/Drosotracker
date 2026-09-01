@@ -382,6 +382,8 @@
   .vial-in input{flex:1;min-width:0;padding:7px 8px;border-radius:9px;border:1.5px solid var(--line);
     font-family:'Nunito';font-size:.9rem;background:var(--bg-2);color:var(--ink);text-align:center}
   .vial-in.spent .vl{color:var(--ink-soft)}
+  .vial-in.gone .vl{color:var(--ink-soft);opacity:.6;text-decoration:line-through}
+  .vial-in.gone .ghost{flex:1;text-align:center;font-size:.76rem;color:var(--ink-soft);opacity:.75}
   .vial-in.over input{border-color:#d98162}
   .vial-in.over .vl{color:#d98162}
   /* the vial strip inside the aging panel */
@@ -1513,7 +1515,7 @@ const I18N = {
     'surv.day0':'day 0','surv.dayN':'day {n}',
     'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Load flies','cohort.save':'Save','cohort.cancel':'Cancel',
     'cohort.hint':'Log the adult cohort to follow its survival curve (Kaplan-Meier). Recommended density: ≤25–30 flies/vial.','cohort.nPh':'e.g. 100','cohort.vialsPh':'optional',
-    'aging.vialsOut1':'1 vial left out','aging.vialsOutN':'{n} vials left out','aging.vialApart':'stands apart from the rest (p = {p})','aging.vialShift':'median {a} d → {b} d without it','aging.vialApartHint':'A flag is a reason to go and look at the vial, not to drop it: with one test per vial some cross 0.05 on chance alone.','vex.mode':'What should happen to what this vial has already contributed?','vex.mode.censor':'Censor the vial','vex.mode.censorHint':'It counted while it was fine: the deaths already logged stay in, and the {n} flies it still has leave the risk set as of today. For a cause with a date and nothing to do with lifespan — it spilled, they escaped, you took it for another assay.','vex.mode.drop':'Remove the vial entirely','vex.mode.dropHint':'As if {v} had never existed: its flies and all its deaths come out of the curve. For contamination, where you know when you SAW it, not when it started.','vex.wasCensored':'censored on day {d}','vex.wasDropped':'removed entirely (day {d})','al.vexNoMode':'Choose what happens to what the vial already contributed: censor it, or remove it entirely.','vex.title':'Leave this vial out','vex.reason':'Why is it being left out?','vex.note':'Detail (optional)','vex.notePh':'e.g. mould on the food from day 22','vex.save':'Leave it out','vex.exclude':'leave out','vex.undo':'put back','vex.onDay':'day {d}','vex.warn':'Decide this on something you saw in the vial, not on how the curve looks. It is written down with the day and reported alongside the result.','vex.r.mould':'Contamination / mould','vex.r.food':'Food dried out or collapsed','vex.r.plug':'Plug fell out or came loose','vex.r.escape':'Mass escape','vex.r.other':'Other','cohort.byVial':'Follow each vial separately','cohort.byVialRunning':'This cohort is already running, so what is split are the {n} flies alive today; the history logged so far stays in the curve untouched.','cohort.byVialNeeds':'Enter an N and 2 or more vials in a row to break it down.','aging.vialsN':'Vials ({n})','aging.vialUnassigned':'{n} logged before the split by vial (not assigned to any).','agm.perVial':'Vial by vial','agm.total':'total','agm.editTitle':'Edit this check','agm.saveEdit':'Save changes','al.vialSplit':'The vials of {sex} add up to {s} and the cohort has {n}. Adjust them so they match.','al.vialTooMany':'{v} only has {n} flies alive; it cannot lose more than that at one check.','al.vialNothing':'Nothing to log: enter the deaths or censors of at least one vial.','cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
+    'aging.vialsOut1':'1 vial left out','aging.vialsOutN':'{n} vials left out','aging.vialApart':'stands apart from the rest (p = {p})','aging.vialShift':'median {a} d → {b} d without it','aging.vialApartHint':'A flag is a reason to go and look at the vial, not to drop it: with one test per vial some cross 0.05 on chance alone.','vex.mode':'What should happen to what this vial has already contributed?','vex.mode.censor':'Censor the vial','vex.mode.censorHint':'It counted while it was fine: the deaths already logged stay in, and the {n} flies it still has leave the risk set as of today. For a cause with a date and nothing to do with lifespan — it spilled, they escaped, you took it for another assay.','vex.mode.drop':'Remove the vial entirely','vex.mode.dropHint':'As if {v} had never existed: its flies and all its deaths come out of the curve. For contamination, where you know when you SAW it, not when it started.','vex.wasCensored':'censored on day {d}','vex.wasDropped':'removed entirely (day {d})','al.vexNoMode':'Choose what happens to what the vial already contributed: censor it, or remove it entirely.','vex.title':'Leave this vial out','vex.reason':'Why is it being left out?','vex.note':'Detail (optional)','vex.notePh':'e.g. mould on the food from day 22','vex.save':'Leave it out','vex.exclude':'leave out','vex.undo':'put back','vex.onDay':'day {d}','vex.warn':'Decide this on something you saw in the vial, not on how the curve looks. It is written down with the day and reported alongside the result.','vex.r.mould':'Contamination / mould','vex.r.food':'Food dried out or collapsed','vex.r.plug':'Plug fell out or came loose','vex.r.escape':'Mass escape','vex.r.other':'Other','cohort.byVial':'Follow each vial separately','cohort.byVialRunning':'This cohort is already running, so what is split are the {n} flies alive today; the history logged so far stays in the curve untouched.','cohort.byVialNeeds':'Enter an N and 2 or more vials in a row to break it down.','aging.vialsN':'Vials ({n})','aging.vialUnassigned':'{n} logged before the split by vial (not assigned to any).','agm.perVial':'Vial by vial','agm.total':'total','agm.vialGone':'discarded','agm.editTitle':'Edit this check','agm.saveEdit':'Save changes','al.vialSplit':'The vials of {sex} add up to {s} and the cohort has {n}. Adjust them so they match.','al.vialTooMany':'{v} only has {n} flies alive; it cannot lose more than that at one check.','al.vialNothing':'Nothing to log: enter the deaths or censors of at least one vial.','cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
     // real eclosion date
     'card.metaEclReal':'Eclosion (recorded)','tip.eclEdit':'Set the actual eclosion date: a treatment can bring it forward or push it back.',
     'ecl.title':'Eclosion date','ecl.sub':'{geno} · model estimate: {d}','ecl.date':'Observed eclosion (date and time)',
@@ -1700,7 +1702,7 @@ const I18N = {
     'surv.day0':'día 0','surv.dayN':'día {n}',
     'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Cargar moscas','cohort.save':'Guardar','cohort.cancel':'Cancelar',
     'cohort.hint':'Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.','cohort.nPh':'ej. 100','cohort.vialsPh':'opcional',
-    'aging.vialsOut1':'1 vial excluido','aging.vialsOutN':'{n} viales excluidos','aging.vialApart':'se aparta del resto (p = {p})','aging.vialShift':'mediana {a} d → {b} d sin él','aging.vialApartHint':'La marca es motivo para ir a mirar el vial, no para descartarlo: con un test por vial, alguno cruza 0,05 por puro azar.','vex.mode':'¿Qué pasa con lo que este vial ya aportó?','vex.mode.censor':'Censurar el vial','vex.mode.censorHint':'Contó mientras estuvo bien: las muertes ya cargadas se conservan y las {n} moscas que le quedan salen del grupo en riesgo con fecha de hoy. Para una causa con fecha y ajena a la longevidad — se volcó, se escaparon, lo retiraste para otro ensayo.','vex.mode.drop':'Eliminar el vial por completo','vex.mode.dropHint':'Como si {v} nunca hubiera existido: salen sus moscas y todas sus muertes de la curva. Para contaminación, donde sabés cuándo la VISTE, no cuándo empezó.','vex.wasCensored':'censurado el día {d}','vex.wasDropped':'eliminado por completo (día {d})','al.vexNoMode':'Elegí qué pasa con lo que el vial ya aportó: censurarlo, o eliminarlo por completo.','vex.title':'Dejar este vial afuera','vex.reason':'¿Por qué se deja afuera?','vex.note':'Detalle (opcional)','vex.notePh':'ej. hongo en la comida desde el día 22','vex.save':'Dejarlo afuera','vex.exclude':'dejar afuera','vex.undo':'reincorporar','vex.onDay':'día {d}','vex.warn':'Decidilo por algo que viste en el vial, no por cómo se ve la curva. Queda registrado con el día y se reporta junto al resultado.','vex.r.mould':'Contaminación / hongo','vex.r.food':'Comida seca o colapsada','vex.r.plug':'Se salió o aflojó el tapón','vex.r.escape':'Escape masivo','vex.r.other':'Otro','cohort.byVial':'Seguir cada vial por separado','cohort.byVialRunning':'Esta cohorte ya viene andando, así que se reparten las {n} moscas vivas de hoy; lo cargado hasta acá queda en la curva tal como está.','cohort.byVialNeeds':'Poné un N y 2 o más viales en alguna fila para poder desglosarla.','aging.vialsN':'Viales ({n})','aging.vialUnassigned':'{n} cargadas antes de separar por vial (sin asignar a ninguno).','agm.perVial':'Vial por vial','agm.total':'total','agm.editTitle':'Editar este recuento','agm.saveEdit':'Guardar cambios','al.vialSplit':'Los viales de {sex} suman {s} y la cohorte tiene {n}. Ajustalos para que coincidan.','al.vialTooMany':'{v} tiene sólo {n} moscas vivas; no puede perder más que eso en un recuento.','al.vialNothing':'No hay nada para registrar: cargá las muertes o censuras de al menos un vial.','cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
+    'aging.vialsOut1':'1 vial excluido','aging.vialsOutN':'{n} viales excluidos','aging.vialApart':'se aparta del resto (p = {p})','aging.vialShift':'mediana {a} d → {b} d sin él','aging.vialApartHint':'La marca es motivo para ir a mirar el vial, no para descartarlo: con un test por vial, alguno cruza 0,05 por puro azar.','vex.mode':'¿Qué pasa con lo que este vial ya aportó?','vex.mode.censor':'Censurar el vial','vex.mode.censorHint':'Contó mientras estuvo bien: las muertes ya cargadas se conservan y las {n} moscas que le quedan salen del grupo en riesgo con fecha de hoy. Para una causa con fecha y ajena a la longevidad — se volcó, se escaparon, lo retiraste para otro ensayo.','vex.mode.drop':'Eliminar el vial por completo','vex.mode.dropHint':'Como si {v} nunca hubiera existido: salen sus moscas y todas sus muertes de la curva. Para contaminación, donde sabés cuándo la VISTE, no cuándo empezó.','vex.wasCensored':'censurado el día {d}','vex.wasDropped':'eliminado por completo (día {d})','al.vexNoMode':'Elegí qué pasa con lo que el vial ya aportó: censurarlo, o eliminarlo por completo.','vex.title':'Dejar este vial afuera','vex.reason':'¿Por qué se deja afuera?','vex.note':'Detalle (opcional)','vex.notePh':'ej. hongo en la comida desde el día 22','vex.save':'Dejarlo afuera','vex.exclude':'dejar afuera','vex.undo':'reincorporar','vex.onDay':'día {d}','vex.warn':'Decidilo por algo que viste en el vial, no por cómo se ve la curva. Queda registrado con el día y se reporta junto al resultado.','vex.r.mould':'Contaminación / hongo','vex.r.food':'Comida seca o colapsada','vex.r.plug':'Se salió o aflojó el tapón','vex.r.escape':'Escape masivo','vex.r.other':'Otro','cohort.byVial':'Seguir cada vial por separado','cohort.byVialRunning':'Esta cohorte ya viene andando, así que se reparten las {n} moscas vivas de hoy; lo cargado hasta acá queda en la curva tal como está.','cohort.byVialNeeds':'Poné un N y 2 o más viales en alguna fila para poder desglosarla.','aging.vialsN':'Viales ({n})','aging.vialUnassigned':'{n} cargadas antes de separar por vial (sin asignar a ninguno).','agm.perVial':'Vial por vial','agm.total':'total','agm.vialGone':'descartado','agm.editTitle':'Editar este recuento','agm.saveEdit':'Guardar cambios','al.vialSplit':'Los viales de {sex} suman {s} y la cohorte tiene {n}. Ajustalos para que coincidan.','al.vialTooMany':'{v} tiene sólo {n} moscas vivas; no puede perder más que eso en un recuento.','al.vialNothing':'No hay nada para registrar: cargá las muertes o censuras de al menos un vial.','cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
     'card.metaEclReal':'Eclosión (cargada)','tip.eclEdit':'Cargá la fecha real de eclosión: un tratamiento puede adelantarla o atrasarla.',
     'ecl.title':'Fecha de eclosión','ecl.sub':'{geno} · estimada por el modelo: {d}','ecl.date':'Eclosión observada (fecha y hora)',
     'ecl.hint':'Es el día 0 de la edad adulta y de la curva de supervivencia. Los estadios previos se reescalan en proporción.','ecl.reset':'Volver a la estimada',
@@ -4511,6 +4513,16 @@ function openAging(id, gi=0, ei=null){
   if(vials.length){
     document.getElementById('agingVialRows').innerHTML = vials.map((v,i)=>{
       const was = (old && old.perVial && old.perVial[v.label]) || null;
+      /* A discarded vial is not in the rack any more, so it takes no counts. It still gets a
+         row, greyed out: the rows line up with the vials in front of you, and a gap would
+         read as a mislabel. What it had contributed to the check being edited is shown and
+         kept -- discarding a vial does not rewrite what it did while it was there. */
+      if(v.excluded){
+        const shown = was ? `${was.deaths||0} ✝ · ${was.censored||0} ⊘ · ` : '';
+        return `<div class="vial-in gone" data-vi="${i}" data-d="${was?was.deaths||0:0}" data-c="${was?was.censored||0:0}">
+          <span class="vl">${esc(v.label)}</span>
+          <span class="ghost">${shown}${t('agm.vialGone')}</span></div>`;
+      }
       const alive = vialTally(g, v).alive + (was ? (was.deaths||0) + (was.censored||0) : 0);
       const val = k => was ? (was[k]||0) : 0;
       const inp = k => `<input type="number" min="0" step="1" value="${val(k)}" data-vi="${i}" data-k="${k}"
@@ -4527,6 +4539,10 @@ function agingVialTotals(){
   let d = 0, c = 0;
   document.querySelectorAll('#agingVialRows .vial-in').forEach(row=>{
     const ins = row.querySelectorAll('input');
+    if(!ins.length){                                     // a discarded vial: carried, not editable
+      d += parseInt(row.dataset.d,10)||0; c += parseInt(row.dataset.c,10)||0;
+      return;
+    }
     const dv = parseInt(ins[0].value,10)||0, cv = parseInt(ins[1].value,10)||0;
     row.classList.toggle('over', dv + cv > (parseInt(ins[0].dataset.alive,10)||0));
     d += dv; c += cv;
@@ -4551,6 +4567,7 @@ function saveAgingEntry(e){
   const g = cohortAt(c, parseInt(giRaw)||0); if(!g) return;
   const ei = eiRaw!=null && eiRaw!=='' ? parseInt(eiRaw) : null;   // editing an existing check
   if(ei!=null && !g.events[ei]) return;
+  const old = ei!=null ? g.events[ei] : null;
   const vials = vialsOf(g);
   const ev = {
     date: document.getElementById('agingDate').value,
@@ -4563,11 +4580,19 @@ function saveAgingEntry(e){
     /* the breakdown rides along inside the event, and the totals are its sum, so the cohort
        curve is fed by exactly the same field as always */
     const perVial = {}; let d = 0, cen = 0, over = null;
-    document.querySelectorAll('#agingVialRows .vial-in').forEach((row,i)=>{
+    /* by data-vi, never by the row's position: a discarded vial still has a row but no inputs,
+       so counting positions would shift every vial below it onto the wrong one */
+    document.querySelectorAll('#agingVialRows .vial-in').forEach(row=>{
+      const v = vials[parseInt(row.dataset.vi ?? row.querySelector('input')?.dataset.vi, 10)];
+      if(!v) return;
       const ins = row.querySelectorAll('input');
+      if(!ins.length){                       // discarded: whatever it logged back then is kept as it was
+        const was = old && old.perVial && old.perVial[v.label];
+        if(was){ perVial[v.label] = { ...was }; d += was.deaths||0; cen += was.censored||0; }
+        return;
+      }
       const dv = parseInt(ins[0].value,10)||0, cv = parseInt(ins[1].value,10)||0;
       const alive = parseInt(ins[0].dataset.alive,10)||0;
-      const v = vials[i]; if(!v) return;
       if(dv + cv > alive) over = t('al.vialTooMany',{v:v.label, n:alive});
       if(dv || cv) perVial[v.label] = { deaths:dv, censored:cv };
       d += dv; cen += cv;
