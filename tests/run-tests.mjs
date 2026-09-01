@@ -51,14 +51,14 @@ const code = [
   grabConst('SEX_ORDER'),
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('eclosionOverrideDays'),
   grabFn('ensureAging'), grabFn('cohortGroups'), grabFn('hasCohort'), grabFn('cohortIndex'), grabFn('cohortAt'), grabFn('agingEvents'),
-  grabFn('vialsOf'), grabFn('hasVials'), grabFn('vialTally'), grabFn('vialUnassigned'), grabFn('vialGroup'), grabFn('activeGroup'), grabFn('splitVials'),
+  grabFn('vialsOf'), grabFn('hasVials'), grabFn('vialTally'), grabFn('vialUnassigned'), grabFn('vialGroup'), grabFn('activeGroup'), grabFn('vialLeftAt'), grabFn('splitVials'),
   grabFn('kmCurve'), grabFn('computeT50FromCounts'),
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
   grabFn('loadLabRef'), grabFn('saveLabRef'), grabFn('isLabRef'), grabFn('labFactorValue'), grabFn('calibInfoFor'),
   grabFn('lgamma'), grabFn('gammincQ'), grabFn('chiSqUpper'), grabFn('quadFormSolve'), grabFn('logRankTest'),
   grabConst('SURV_SHAPE'), grabFn('normInv'), grabFn('logRankPlan'), grabFn('timeToMortality'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, SEX_ORDER, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, eclosionOverrideDays, ensureAging, cohortGroups, hasCohort, cohortIndex, cohortAt, agingEvents, vialsOf, hasVials, vialTally, vialUnassigned, vialGroup, activeGroup, splitVials, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, SEX_ORDER, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, eclosionOverrideDays, ensureAging, cohortGroups, hasCohort, cohortIndex, cohortAt, agingEvents, vialsOf, hasVials, vialTally, vialUnassigned, vialGroup, activeGroup, vialLeftAt, splitVials, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -291,6 +291,48 @@ group('Per-vial cohorts — history logged before the split is never guessed at'
   ok(act.events[0].deaths === 3, 'a check with no breakdown stays whole when a vial is excluded');
   ok(act.events[1].deaths === 1, 'a check with a breakdown loses only the excluded vial');
   ok(M.vialGroup(g, ['V1', 'V2']).events.length === 1, 'and it never leaks into a per-vial series');
+});
+
+group('Per-vial cohorts — censoring a vial vs removing it entirely', () => {
+  /* V3 counts for the first check and goes at day 15, between the two checks.
+   * censor: its 2 early deaths stay, its 17 survivors are censored on day 15, N stays 60.
+   * drop:   nothing of V3 ever counted, N is 40. */
+  const CH = [
+    { day: 10, perVial: { V1:{deaths:1,censored:0}, V2:{deaths:1,censored:0}, V3:{deaths:2,censored:1} } },
+    { day: 20, perVial: { V1:{deaths:2,censored:0}, V2:{deaths:1,censored:0} } },
+  ];
+  const at = day => new Date(ECL + day * 86400000).toISOString();
+  const mk = exc => M.ensureAging(mkVialCross(
+    VIALS.map(v => v.label === 'V3' ? { ...v, excluded: exc } : v), CH)).groups[0];
+
+  const cen = M.activeGroup(mk({ mode:'censor', reason:'escape', date: at(15), day: 15 }));
+  ok(cen.startN === 60, 'censoring keeps the vial in N: it was part of the cohort');
+  ok(cen.events[0].deaths === 4, 'the check it was still fine for is untouched (1+1+2)');
+  ok(cen.events[0].censored === 1, 'including the censor it logged itself');
+  const synth = cen.events.filter(e => e.date === at(15));
+  ok(synth.length === 1 && synth[0].censored === 17 && synth[0].deaths === 0,
+     'its 17 survivors (20 - 2 dead - 1 censored) leave the risk set on the day it went');
+  ok(cen.events.find(e => e.date === at(20)).deaths === 3, 'later checks carry only the vials that remain');
+
+  const dropped = M.activeGroup(mk({ mode:'drop', reason:'mould', date: at(15), day: 15 }));
+  ok(dropped.startN === 40, 'removing it entirely takes its 20 flies out of N');
+  ok(dropped.events[0].deaths === 2 && dropped.events[0].censored === 0,
+     'and its deaths out of the check it was in (4 → 2)');
+  ok(!dropped.events.some(e => e.date === at(15)), 'nothing is censored for a vial that never counted');
+
+  /* the two must give genuinely different curves, and each must equal its own hand-built cohort */
+  const kmCen = M.kmCurve(mkVialCross(VIALS.map(v => v.label==='V3'
+    ? { ...v, excluded:{ mode:'censor', reason:'escape', date: at(15), day: 15 } } : v), CH), st);
+  const kmDrop = M.kmCurve(mkVialCross(VIALS.map(v => v.label==='V3'
+    ? { ...v, excluded:{ mode:'drop', reason:'mould', date: at(15), day: 15 } } : v), CH), st);
+  ok(kmCen.deaths === 7 && kmDrop.deaths === 5, 'censoring keeps V3 2 deaths, removing it does not');
+  ok(kmCen.alive === 35 && kmDrop.alive === 35, 'both end with the 35 flies that are really there');
+  const S = km => km.points[km.points.length - 1].surv;
+  ok(!near(S(kmCen), S(kmDrop)), 'and the two answers are not the same estimate');
+  /* dropping V3 must match analysing V1+V2 on their own — the check that the risk set and the
+   * events never fall out of step */
+  const subset = M.kmCurve({ aging:{ groups:[] } }, st, M.vialGroup(M.ensureAging(mkVialCross(VIALS, CH)).groups[0], ['V1','V2']));
+  ok(near(S(kmDrop), S(subset)) && kmDrop.median === subset.median, 'removing V3 == analysing V1+V2');
 });
 
 /* ============================ 3) T50 FROM COUNTS (interpolation) ============================ */
