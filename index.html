@@ -385,6 +385,14 @@
   .vial-in.gone .vl{color:var(--ink-soft);opacity:.6;text-decoration:line-through}
   .vial-in.gone .ghost{flex:1;text-align:center;font-size:.76rem;color:var(--ink-soft);opacity:.75}
   .vial-in.over input{border-color:#d98162}
+  .vial-x{flex:none;width:24px;height:24px;border:none;border-radius:8px;background:none;cursor:pointer;
+    color:var(--ink-soft);font-family:'Nunito';font-size:.8rem;line-height:1}
+  .vial-x:hover{background:var(--bg-1);color:#d98162}
+  .vial-x.undo:hover{color:var(--lav)}
+  .vial-in{flex-wrap:wrap}
+  .vial-in.pending-out{background:var(--bg-1)}
+  .vial-in.pending-out .vl{text-decoration:line-through;opacity:.7}
+  .vial-in .pend{flex-basis:100%;font-size:.72rem;color:#d98162;font-weight:700;padding:0 0 2px 78px}
   .vial-in.over .vl{color:#d98162}
   /* the vial strip inside the aging panel */
   .vial-toggle{background:none;border:none;padding:2px 0;margin:0 0 6px;font-family:'Nunito';font-size:.78rem;
@@ -1536,7 +1544,7 @@ const I18N = {
     'surv.day0':'day 0','surv.dayN':'day {n}',
     'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Load flies','cohort.save':'Save','cohort.cancel':'Cancel',
     'cohort.hint':'Log the adult cohort to follow its survival curve (Kaplan-Meier). Recommended density: ≤25–30 flies/vial.','cohort.nPh':'e.g. 100','cohort.vialsPh':'optional',
-    'aging.vialsOut1':'1 vial left out','aging.vialsOutN':'{n} vials left out','aging.vialApart':'stands apart from the rest (p = {p})','aging.vialShift':'median {a} d → {b} d without it','aging.vialApartHint':'A flag is a reason to go and look at the vial, not to drop it: with one test per vial some cross 0.05 on chance alone.','vex.mode':'What should happen to what this vial has already contributed?','vex.mode.censor':'Censor the vial','vex.mode.censorHint':'It counted while it was fine: the deaths already logged stay in, and the {n} flies it still has leave the risk set as of today. For a cause with a date and nothing to do with lifespan — it spilled, they escaped, you took it for another assay.','vex.mode.drop':'Remove the vial entirely','vex.mode.dropHint':'As if {v} had never existed: its flies and all its deaths come out of the curve. For contamination, where you know when you SAW it, not when it started.','vex.wasCensored':'censored on day {d}','vex.wasDropped':'removed entirely (day {d})','al.vexNoMode':'Choose what happens to what the vial already contributed: censor it, or remove it entirely.','bk.title':'Weekly backup','bk.chip':'Download a backup','bk.ago':'last one {d} d ago','bk.never':'never done','bk.confirm':'Your records live only in this browser. The last backup was {d} days ago — download a fresh one now?','bk.confirmFirst':'Your records live only in this browser and no backup has been downloaded yet. Download one now?','bk.download':'Download','vn.title':'Rename this vial','vn.ph':'e.g. A-left, tube 3…','vn.hint':'The name is just what you see; the logged counts stay attached to the vial no matter what it is called. Leave it empty to go back to the default.','vn.taken':'Another vial in this cohort is already called "{n}".','vex.title':'Leave this vial out','vex.reason':'Why is it being left out?','vex.note':'Detail (optional)','vex.notePh':'e.g. mould on the food from day 22','vex.save':'Leave it out','vex.exclude':'leave out','vex.undo':'put back','vex.onDay':'day {d}','vex.warn':'Decide this on something you saw in the vial, not on how the curve looks. It is written down with the day and reported alongside the result.','vex.r.mould':'Contamination / mould','vex.r.food':'Food dried out or collapsed','vex.r.plug':'Plug fell out or came loose','vex.r.escape':'Mass escape','vex.r.other':'Other','cohort.byVial':'Follow each vial separately','cohort.byVialRunning':'This cohort is already running, so what is split are the {n} flies alive today; the history logged so far stays in the curve untouched.','cohort.byVialNeeds':'Enter an N and 2 or more vials in a row to break it down.','cohort.byVialFrozen':'These vials already have logged counts, so the breakdown cannot be redone. The box above only switches whether they are used.','aging.vialsN':'Vials ({n})','aging.vialUnassigned':'{n} logged before the split by vial (not assigned to any).','agm.perVial':'Vial by vial','agm.total':'total','agm.vialGone':'discarded','agm.editTitle':'Edit this check','agm.saveEdit':'Save changes','al.vialSplit':'The vials of {sex} add up to {s} and the cohort has {n}. Adjust them so they match.','al.vialTooMany':'{v} only has {n} flies alive; it cannot lose more than that at one check.','al.vialNothing':'Nothing to log: enter the deaths or censors of at least one vial.','al.vialNFrozen':'While the vials are in use, the cohort N is the sum of their N ({n}). To change it, correct the counts instead.','cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
+    'aging.vialsOut1':'1 vial left out','aging.vialsOutN':'{n} vials left out','aging.vialApart':'stands apart from the rest (p = {p})','aging.vialShift':'median {a} d → {b} d without it','aging.vialApartHint':'A flag is a reason to go and look at the vial, not to drop it: with one test per vial some cross 0.05 on chance alone.','vex.mode':'What should happen to what this vial has already contributed?','vex.mode.censorHintCheck':'It counted while it was fine: the deaths logged in this check stay in, and the {n} flies left in it leave the risk set on THIS check’s date. For a cause with a date and nothing to do with lifespan — it spilled, they escaped, you took it for another assay.','vex.mode.censor':'Censor the vial','vex.mode.censorHint':'It counted while it was fine: the deaths already logged stay in, and the {n} flies it still has leave the risk set as of today. For a cause with a date and nothing to do with lifespan — it spilled, they escaped, you took it for another assay.','vex.mode.drop':'Remove the vial entirely','vex.mode.dropHint':'As if {v} had never existed: its flies and all its deaths come out of the curve. For contamination, where you know when you SAW it, not when it started.','vex.wasCensored':'censored on day {d}','vex.wasDropped':'removed entirely (day {d})','al.vexNoMode':'Choose what happens to what the vial already contributed: censor it, or remove it entirely.','bk.title':'Weekly backup','bk.chip':'Download a backup','bk.ago':'last one {d} d ago','bk.never':'never done','bk.confirm':'Your records live only in this browser. The last backup was {d} days ago — download a fresh one now?','bk.confirmFirst':'Your records live only in this browser and no backup has been downloaded yet. Download one now?','bk.download':'Download','vn.title':'Rename this vial','vn.ph':'e.g. A-left, tube 3…','vn.hint':'The name is just what you see; the logged counts stay attached to the vial no matter what it is called. Leave it empty to go back to the default.','vn.taken':'Another vial in this cohort is already called "{n}".','vex.title':'Leave this vial out','vex.reason':'Why is it being left out?','vex.note':'Detail (optional)','vex.notePh':'e.g. mould on the food from day 22','vex.save':'Leave it out','vex.exclude':'leave out','vex.undo':'put back','vex.onDay':'day {d}','vex.warn':'Decide this on something you saw in the vial, not on how the curve looks. It is written down with the day and reported alongside the result.','vex.r.mould':'Contamination / mould','vex.r.food':'Food dried out or collapsed','vex.r.plug':'Plug fell out or came loose','vex.r.escape':'Mass escape','vex.r.other':'Other','cohort.byVial':'Follow each vial separately','cohort.byVialRunning':'This cohort is already running, so what is split are the {n} flies alive today; the history logged so far stays in the curve untouched.','cohort.byVialNeeds':'Enter an N and 2 or more vials in a row to break it down.','cohort.byVialFrozen':'These vials already have logged counts, so the breakdown cannot be redone. The box above only switches whether they are used.','aging.vialsN':'Vials ({n})','aging.vialUnassigned':'{n} logged before the split by vial (not assigned to any).','agm.perVial':'Vial by vial','agm.total':'total','agm.vialGone':'discarded','agm.discardHere':'Discard this vial as of this check','agm.undoDiscard':'Do not discard it after all','agm.editTitle':'Edit this check','agm.saveEdit':'Save changes','al.vialSplit':'The vials of {sex} add up to {s} and the cohort has {n}. Adjust them so they match.','al.vialTooMany':'{v} only has {n} flies alive; it cannot lose more than that at one check.','al.vialNothing':'Nothing to log: enter the deaths or censors of at least one vial.','al.vialNFrozen':'While the vials are in use, the cohort N is the sum of their N ({n}). To change it, correct the counts instead.','cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
     // real eclosion date
     'card.metaEclReal':'Eclosion (recorded)','tip.eclEdit':'Set the actual eclosion date: a treatment can bring it forward or push it back.',
     'ecl.title':'Eclosion date','ecl.sub':'{geno} · model estimate: {d}','ecl.date':'Observed eclosion (date and time)',
@@ -1723,7 +1731,7 @@ const I18N = {
     'surv.day0':'día 0','surv.dayN':'día {n}',
     'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Cargar moscas','cohort.save':'Guardar','cohort.cancel':'Cancelar',
     'cohort.hint':'Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.','cohort.nPh':'ej. 100','cohort.vialsPh':'opcional',
-    'aging.vialsOut1':'1 vial excluido','aging.vialsOutN':'{n} viales excluidos','aging.vialApart':'se aparta del resto (p = {p})','aging.vialShift':'mediana {a} d → {b} d sin él','aging.vialApartHint':'La marca es motivo para ir a mirar el vial, no para descartarlo: con un test por vial, alguno cruza 0,05 por puro azar.','vex.mode':'¿Qué pasa con lo que este vial ya aportó?','vex.mode.censor':'Censurar el vial','vex.mode.censorHint':'Contó mientras estuvo bien: las muertes ya cargadas se conservan y las {n} moscas que le quedan salen del grupo en riesgo con fecha de hoy. Para una causa con fecha y ajena a la longevidad — se volcó, se escaparon, lo retiraste para otro ensayo.','vex.mode.drop':'Eliminar el vial por completo','vex.mode.dropHint':'Como si {v} nunca hubiera existido: salen sus moscas y todas sus muertes de la curva. Para contaminación, donde sabés cuándo la VISTE, no cuándo empezó.','vex.wasCensored':'censurado el día {d}','vex.wasDropped':'eliminado por completo (día {d})','al.vexNoMode':'Elegí qué pasa con lo que el vial ya aportó: censurarlo, o eliminarlo por completo.','bk.title':'Backup semanal','bk.chip':'Descargar un backup','bk.ago':'último hace {d} d','bk.never':'nunca se hizo','bk.confirm':'Tus registros viven sólo en este navegador. El último backup fue hace {d} días — ¿descargar uno nuevo ahora?','bk.confirmFirst':'Tus registros viven sólo en este navegador y todavía no se descargó ningún backup. ¿Descargar uno ahora?','bk.download':'Descargar','vn.title':'Renombrar este vial','vn.ph':'ej. A-izq, tubo 3…','vn.hint':'El nombre es sólo lo que ves; los conteos quedan pegados al vial se llame como se llame. Dejalo vacío para volver al nombre por defecto.','vn.taken':'Otro vial de esta cohorte ya se llama "{n}".','vex.title':'Dejar este vial afuera','vex.reason':'¿Por qué se deja afuera?','vex.note':'Detalle (opcional)','vex.notePh':'ej. hongo en la comida desde el día 22','vex.save':'Dejarlo afuera','vex.exclude':'dejar afuera','vex.undo':'reincorporar','vex.onDay':'día {d}','vex.warn':'Decidilo por algo que viste en el vial, no por cómo se ve la curva. Queda registrado con el día y se reporta junto al resultado.','vex.r.mould':'Contaminación / hongo','vex.r.food':'Comida seca o colapsada','vex.r.plug':'Se salió o aflojó el tapón','vex.r.escape':'Escape masivo','vex.r.other':'Otro','cohort.byVial':'Seguir cada vial por separado','cohort.byVialRunning':'Esta cohorte ya viene andando, así que se reparten las {n} moscas vivas de hoy; lo cargado hasta acá queda en la curva tal como está.','cohort.byVialNeeds':'Poné un N y 2 o más viales en alguna fila para poder desglosarla.','cohort.byVialFrozen':'Estos viales ya tienen conteos cargados, así que el desglose no se puede rehacer. El casillero de arriba sólo decide si se usan o no.','aging.vialsN':'Viales ({n})','aging.vialUnassigned':'{n} cargadas antes de separar por vial (sin asignar a ninguno).','agm.perVial':'Vial por vial','agm.total':'total','agm.vialGone':'descartado','agm.editTitle':'Editar este recuento','agm.saveEdit':'Guardar cambios','al.vialSplit':'Los viales de {sex} suman {s} y la cohorte tiene {n}. Ajustalos para que coincidan.','al.vialTooMany':'{v} tiene sólo {n} moscas vivas; no puede perder más que eso en un recuento.','al.vialNothing':'No hay nada para registrar: cargá las muertes o censuras de al menos un vial.','al.vialNFrozen':'Mientras los viales están en uso, el N de la cohorte es la suma de sus N ({n}). Para cambiarlo, corregí los conteos.','cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
+    'aging.vialsOut1':'1 vial excluido','aging.vialsOutN':'{n} viales excluidos','aging.vialApart':'se aparta del resto (p = {p})','aging.vialShift':'mediana {a} d → {b} d sin él','aging.vialApartHint':'La marca es motivo para ir a mirar el vial, no para descartarlo: con un test por vial, alguno cruza 0,05 por puro azar.','vex.mode':'¿Qué pasa con lo que este vial ya aportó?','vex.mode.censorHintCheck':'Contó mientras estuvo bien: las muertes de este recuento se conservan y las {n} moscas que le quedan salen del grupo en riesgo con la fecha de ESTE recuento. Para una causa con fecha y ajena a la longevidad — se volcó, se escaparon, lo retiraste para otro ensayo.','vex.mode.censor':'Censurar el vial','vex.mode.censorHint':'Contó mientras estuvo bien: las muertes ya cargadas se conservan y las {n} moscas que le quedan salen del grupo en riesgo con fecha de hoy. Para una causa con fecha y ajena a la longevidad — se volcó, se escaparon, lo retiraste para otro ensayo.','vex.mode.drop':'Eliminar el vial por completo','vex.mode.dropHint':'Como si {v} nunca hubiera existido: salen sus moscas y todas sus muertes de la curva. Para contaminación, donde sabés cuándo la VISTE, no cuándo empezó.','vex.wasCensored':'censurado el día {d}','vex.wasDropped':'eliminado por completo (día {d})','al.vexNoMode':'Elegí qué pasa con lo que el vial ya aportó: censurarlo, o eliminarlo por completo.','bk.title':'Backup semanal','bk.chip':'Descargar un backup','bk.ago':'último hace {d} d','bk.never':'nunca se hizo','bk.confirm':'Tus registros viven sólo en este navegador. El último backup fue hace {d} días — ¿descargar uno nuevo ahora?','bk.confirmFirst':'Tus registros viven sólo en este navegador y todavía no se descargó ningún backup. ¿Descargar uno ahora?','bk.download':'Descargar','vn.title':'Renombrar este vial','vn.ph':'ej. A-izq, tubo 3…','vn.hint':'El nombre es sólo lo que ves; los conteos quedan pegados al vial se llame como se llame. Dejalo vacío para volver al nombre por defecto.','vn.taken':'Otro vial de esta cohorte ya se llama "{n}".','vex.title':'Dejar este vial afuera','vex.reason':'¿Por qué se deja afuera?','vex.note':'Detalle (opcional)','vex.notePh':'ej. hongo en la comida desde el día 22','vex.save':'Dejarlo afuera','vex.exclude':'dejar afuera','vex.undo':'reincorporar','vex.onDay':'día {d}','vex.warn':'Decidilo por algo que viste en el vial, no por cómo se ve la curva. Queda registrado con el día y se reporta junto al resultado.','vex.r.mould':'Contaminación / hongo','vex.r.food':'Comida seca o colapsada','vex.r.plug':'Se salió o aflojó el tapón','vex.r.escape':'Escape masivo','vex.r.other':'Otro','cohort.byVial':'Seguir cada vial por separado','cohort.byVialRunning':'Esta cohorte ya viene andando, así que se reparten las {n} moscas vivas de hoy; lo cargado hasta acá queda en la curva tal como está.','cohort.byVialNeeds':'Poné un N y 2 o más viales en alguna fila para poder desglosarla.','cohort.byVialFrozen':'Estos viales ya tienen conteos cargados, así que el desglose no se puede rehacer. El casillero de arriba sólo decide si se usan o no.','aging.vialsN':'Viales ({n})','aging.vialUnassigned':'{n} cargadas antes de separar por vial (sin asignar a ninguno).','agm.perVial':'Vial por vial','agm.total':'total','agm.vialGone':'descartado','agm.discardHere':'Descartar este vial con la fecha de este recuento','agm.undoDiscard':'No descartarlo','agm.editTitle':'Editar este recuento','agm.saveEdit':'Guardar cambios','al.vialSplit':'Los viales de {sex} suman {s} y la cohorte tiene {n}. Ajustalos para que coincidan.','al.vialTooMany':'{v} tiene sólo {n} moscas vivas; no puede perder más que eso en un recuento.','al.vialNothing':'No hay nada para registrar: cargá las muertes o censuras de al menos un vial.','al.vialNFrozen':'Mientras los viales están en uso, el N de la cohorte es la suma de sus N ({n}). Para cambiarlo, corregí los conteos.','cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
     'card.metaEclReal':'Eclosión (cargada)','tip.eclEdit':'Cargá la fecha real de eclosión: un tratamiento puede adelantarla o atrasarla.',
     'ecl.title':'Fecha de eclosión','ecl.sub':'{geno} · estimada por el modelo: {d}','ecl.date':'Eclosión observada (fecha y hora)',
     'ecl.hint':'Es el día 0 de la edad adulta y de la curva de supervivencia. Los estadios previos se reescalan en proporción.','ecl.reset':'Volver a la estimada',
@@ -3951,6 +3959,26 @@ function vialStrip(cross, st, g, gi, color){
 }
 /* Leaving a vial out and putting it back. Both are reversible and neither deletes a thing:
    what changes is which vials the curve is built from. */
+/* Discards marked from inside the count table, held until the check is saved so they can be
+   dated by it. Keyed by vial label. */
+let _agingPendingEx = {};
+function askExcludeVialInCheck(vi){
+  const [id, giRaw] = document.getElementById('agingId').value.split('#');
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const g = cohortAt(c, parseInt(giRaw)||0);
+  const v = vialsOf(g)[vi]; if(!v) return;
+  /* what it would have left after this check: the deaths already typed in count against it */
+  const row = document.querySelector(`#agingVialRows input[data-vi="${vi}"]`);
+  const rowEl = row ? row.closest('.vial-in') : null;
+  const ins = rowEl ? rowEl.querySelectorAll('input') : [];
+  const typed = ins.length ? (parseInt(ins[0].value,10)||0) + (parseInt(ins[1].value,10)||0) : 0;
+  const left = Math.max((parseInt((ins[0]||{}).dataset?.alive,10)||0) - typed, 0);
+  openExcludeModal({ pending:true, label:v.label }, c, g, v, left, true);
+}
+function undoDiscardInCheck(label){
+  delete _agingPendingEx[label];
+  renderAgingVialRows(true);
+}
 /* Renaming: display only. Names must not collide within the cohort, or the strip and the
    count table would show two rows that read identically. */
 let _vnTarget = null;
@@ -3983,16 +4011,20 @@ let _vexTarget = null;
 function askExcludeVial(id, gi, vi){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const g = cohortAt(c, gi); const v = vialsOf(g)[vi]; if(!v) return;
-  _vexTarget = { id, gi, vi };
+  openExcludeModal({ id, gi, vi }, c, g, v, vialTally(g, v).alive, false);
+}
+/* Shared by both ways in: the vial strip (dated today) and the ✕ inside a check (dated by
+   the check). `inCheck` only changes the wording, since what the date will be differs. */
+function openExcludeModal(target, c, g, v, left, inCheck){
+  _vexTarget = target;
   document.getElementById('vialExSub').textContent =
     [c.genotype||'', t(SEX_KEY[g.sex]), vialName(v)].filter(Boolean).join(' · ');
   document.getElementById('vialExForm').reset();
   /* nothing preselected: which of the two it is changes the curve, so it is a choice to make
      rather than a default to accept */
-  const left = vialTally(g, v).alive;
   document.getElementById('vialExModes').innerHTML = ['censor','drop'].map(m=>
     `<label class="vex-opt vex-mode"><input type="radio" name="vexMode" value="${m}" />
-      <span><b>${t('vex.mode.'+m)}</b><i>${t('vex.mode.'+m+'Hint', {n:left, v:vialName(v)})}</i></span></label>`).join('');
+      <span><b>${t('vex.mode.'+m)}</b><i>${t('vex.mode.'+m+(m==='censor'&&inCheck?'HintCheck':'Hint'), {n:left, v:vialName(v)})}</i></span></label>`).join('');
   document.getElementById('vialExReasons').innerHTML = VIAL_REASONS.map((r,i)=>
     `<label class="vex-opt"><input type="radio" name="vexReason" value="${r}"${i===0?' checked':''} /><span>${t('vex.r.'+r)}</span></label>`).join('');
   document.getElementById('vialExOverlay').classList.add('open');
@@ -4001,12 +4033,23 @@ function closeExcludeVial(){ document.getElementById('vialExOverlay').classList.
 function saveExcludeVial(e){
   e.preventDefault();
   if(!_vexTarget) return;
-  const { id, gi, vi } = _vexTarget;
-  const c = crosses.find(x=>x.id===id); if(!c) return;
-  const g = cohortAt(c, gi); const v = vialsOf(g)[vi]; if(!v) return;
   const mode = document.querySelector('#vialExModes input[name="vexMode"]:checked');
   if(!mode){ alert(t('al.vexNoMode')); return; }
   const picked = document.querySelector('#vialExReasons input[name="vexReason"]:checked');
+  /* marked from inside a check: held until the check is saved, which is what dates it */
+  if(_vexTarget.pending){
+    _agingPendingEx[_vexTarget.label] = {
+      mode: mode.value,
+      reason: picked ? picked.value : 'other',
+      note: document.getElementById('vialExNote').value.trim(),
+    };
+    closeExcludeVial();
+    renderAgingVialRows(true);
+    return;
+  }
+  const { id, gi, vi } = _vexTarget;
+  const c = crosses.find(x=>x.id===id); if(!c) return;
+  const g = cohortAt(c, gi); const v = vialsOf(g)[vi]; if(!v) return;
   v.excluded = {
     mode: mode.value,
     reason: picked ? picked.value : 'other',
@@ -4599,6 +4642,7 @@ function openAging(id, gi=0, ei=null){
   const old = (ei!=null && g) ? g.events[ei] : null;
   if(ei!=null && !old) return;
   document.getElementById('agingForm').reset();
+  _agingPendingEx = {};                       // discards marked in this check, applied on save
   document.getElementById('agingId').value = `${id}#${gi}${old?'#'+ei:''}`;
   document.getElementById('agingTitle').textContent = t(old ? 'agm.editTitle' : 'agm.title');
   document.getElementById('agingSaveBtn').textContent = t(old ? 'agm.saveEdit' : 'cohort.save');
@@ -4614,10 +4658,24 @@ function openAging(id, gi=0, ei=null){
      check took off it -- otherwise correcting 7 deaths down to 5 would be judged against a
      vial that has already had those 7 subtracted. */
   const vials = g ? vialsOf(g) : [];
+  _agingCtx = { g, old };
   document.getElementById('agingSingle').style.display = vials.length ? 'none' : '';
   document.getElementById('agingVials').style.display  = vials.length ? '' : 'none';
-  if(vials.length){
-    document.getElementById('agingVialRows').innerHTML = vials.map((v,i)=>{
+  if(vials.length) renderAgingVialRows(false);
+  document.getElementById('agingOverlay').classList.add('open');
+}
+/* The per-vial rows of the count table. Split out from openAging so marking or undoing a
+   discard can redraw them without resetting the rest of the form. */
+let _agingCtx = null;
+function renderAgingVialRows(keepTyped){
+  if(!_agingCtx) return;
+  const { g, old } = _agingCtx;
+  const box = document.getElementById('agingVialRows');
+  const typed = keepTyped ? [...box.querySelectorAll('.vial-in')].map(r=>{
+    const ins = [...r.querySelectorAll('input')];
+    return ins.length===2 ? [ins[0].value, ins[1].value] : null;
+  }) : null;
+  box.innerHTML = vialsOf(g).map((v,i)=>{
       const was = (old && old.perVial && old.perVial[v.label]) || null;
       /* A discarded vial is not in the rack any more, so it takes no counts. It still gets a
          row, greyed out: the rows line up with the vials in front of you, and a gap would
@@ -4633,12 +4691,22 @@ function openAging(id, gi=0, ei=null){
       const val = k => was ? (was[k]||0) : 0;
       const inp = k => `<input type="number" min="0" step="1" value="${val(k)}" data-vi="${i}" data-k="${k}"
         data-alive="${alive}" oninput="agingVialTotals()" onkeydown="agingVialKey(event)" />`;
-      return `<div class="vial-in${alive?'':' spent'}">
-        <span class="vl">${esc(vialName(v))} <i>(${alive})</i></span>${inp('deaths')}${inp('censored')}</div>`;
-    }).join('');
-    agingVialTotals();
-  }
-  document.getElementById('agingOverlay').classList.add('open');
+      /* the ✕ discards the vial AS PART OF THIS CHECK, so it is dated by the check rather than
+         by the moment you happen to be typing: the day the vial went is exactly the day you
+         found it, which for a censored vial is the day its survivors leave the risk set */
+      const pend = _agingPendingEx[v.label];
+      return `<div class="vial-in${alive?'':' spent'}${pend?' pending-out':''}">
+        <span class="vl">${esc(vialName(v))} <i>(${alive})</i></span>${inp('deaths')}${inp('censored')}
+        ${pend
+          ? `<button type="button" class="vial-x undo" title="${esc(t('agm.undoDiscard'))}" onclick="undoDiscardInCheck('${v.label}')">↺</button>`
+          : `<button type="button" class="vial-x" title="${esc(t('agm.discardHere'))}" onclick="askExcludeVialInCheck(${i})">✕</button>`}
+        ${pend?`<span class="pend">${t('vex.mode.'+pend.mode)} · ${t('vex.r.'+pend.reason)}</span>`:''}</div>`;
+  }).join('');
+  if(typed) box.querySelectorAll('.vial-in').forEach((r,i)=>{
+    const ins = r.querySelectorAll('input');
+    if(typed[i] && ins.length===2){ ins[0].value = typed[i][0]; ins[1].value = typed[i][1]; }
+  });
+  agingVialTotals();
 }
 /* running total under the table, and a flag on any vial asked for more flies than it has left */
 function agingVialTotals(){
@@ -4708,6 +4776,20 @@ function saveAgingEntry(e){
     ev.deaths = d; ev.censored = cen; ev.perVial = perVial;
   }
   if(ei!=null) g.events[ei] = ev; else g.events.push(ev);
+  /* discards marked with the ✕ in the table take the DATE OF THIS CHECK, not of this moment:
+     the day the vial went is the day you found it. For a censored vial that is the day its
+     survivors leave the risk set, and this check's own deaths are already counted off it. */
+  const pending = Object.keys(_agingPendingEx);
+  if(pending.length){
+    const when = new Date(ev.date);
+    const ecl = computeState(c).eclosionDate;
+    const day = Math.max(Math.floor((when - ecl)/86400000), 0);
+    pending.forEach(label=>{
+      const v = vialsOf(g).find(x=> x.label===label); if(!v) return;
+      v.excluded = { ..._agingPendingEx[label], date: when.toISOString(), day };
+    });
+    _agingPendingEx = {};
+  }
   openAgingIds.add(id);
   save(crosses); render(); closeAging();
 }
