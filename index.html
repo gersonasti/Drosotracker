@@ -324,9 +324,11 @@
   .card-title{word-break:break-word}
   /* collapsible sections per experiment */
   .exp-group{margin-bottom:24px}
-  .exp-head{width:100%;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;background:none;padding:4px 2px 14px;font-family:'Poppins';font-weight:700;font-size:1.15rem;color:var(--ink)}
+  .exp-head-row{display:flex;align-items:center;gap:8px}
+  .exp-head{flex:1;min-width:0;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;background:none;padding:4px 2px 14px;font-family:'Poppins';font-weight:700;font-size:1.15rem;color:var(--ink)}
   .exp-count{background:var(--lav-soft);color:var(--lav);font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:999px}
   .exp-arrow{margin-left:auto;color:var(--ink-soft);font-size:1rem}
+  .exp-del{flex:none;margin-bottom:10px}
 
   /* ---------- Panel envejecimiento ---------- */
   .aging-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
@@ -340,6 +342,7 @@
   .aging-ev{display:flex;align-items:center;gap:8px;font-size:.8rem;padding:6px 4px;border-bottom:1px dashed var(--line)}
   .aging-ev:last-child{border-bottom:none}
   .aging-ev .d{flex:1;color:var(--ink-soft)}
+  .aging-ev a{flex:none;color:var(--lav);font-weight:700;text-decoration:none;font-size:.75rem}
   .cohort-set{display:flex;gap:8px;align-items:center}
   .cohort-set input{flex:1;padding:9px 12px;border-radius:11px;border:1.5px solid var(--line);font-family:'Nunito';font-size:.9rem;background:var(--bg-2);color:var(--ink)}
   .mini-btn{border:none;cursor:pointer;background:var(--lav);color:#fff;font-weight:700;padding:9px 14px;border-radius:11px;font-family:'Nunito';font-size:.82rem;white-space:nowrap}
@@ -1040,7 +1043,7 @@
 <!-- Modal envejecimiento -->
 <div class="overlay" id="agingOverlay">
   <div class="modal">
-    <h2 data-i18n="agm.title">Log flip / count</h2>
+    <h2 id="agingTitle" data-i18n="agm.title">Log flip / count</h2>
     <div class="sub" id="agingSub"></div>
     <form id="agingForm" onsubmit="saveAgingEntry(event)">
       <input type="hidden" id="agingId" />
@@ -1464,7 +1467,7 @@ const I18N = {
     'notice.model':'<b>Model update:</b> the development model was recalibrated from published data (Powsner 1935, 15–28 °C). Predicted times shifted a little; mainly, adult emergence is now ~1 day earlier at 20–28 °C, while pupation barely changes. Your saved records already show the updated dates.','notice.dismiss':'Got it',
     'tip.plan':'Plan backward: work out when to set one up to reach a stage by a target date, and see upcoming events.','tip.data':'Back up or restore your data, export survival CSVs, or import your lab\'s genotype list.','tip.more':'More actions: Plan, Calibrate, and data (backup, CSV export, lab database).','tip.settings':'Settings: change the app language (English / Spanish).','tip.newCross':'Add a new record: genotype, date and incubation temperature.',
     'tip.exportBackup':'Download all your records as a JSON file (backup or move to another device).','tip.importBackup':'Load records from a JSON backup (replaces the current ones).','tip.exportSurvival':'Export aging-cohort survival data (one row per fly) for GraphPad Prism / R.','tip.importLab':'Load your lab\'s genotype list from a CSV/TSV to autocomplete genotypes; the same file can also be used to create recurring tasks if it has the columns for it.','tip.recTasks':'Create or manage chores that repeat on a schedule (stock flips, cleaning…) with a responsible person who can rotate.',
-    'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.deletePair':'Delete both parental records of this cross.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
+    'tip.edit':'Edit this record.','tip.delete':'Delete this record.','tip.deletePair':'Delete both parental records of this cross.','tip.deleteExp':'Delete this whole experiment: every record in this section, in one go.','tip.newGen':'Start the next generation: same genotype and objective, clock reset to now.','tip.newGenOff':'Available once the record has been set up.','tip.timeline':'Show the full development timeline with estimated dates for each stage.','tip.more2':'Show the development timeline and extra details (container, adult count, notes).','tip.aging':'Aging cohort: track the survival curve (Kaplan-Meier) of the adult flies.','tip.markParents':'Mark the parents as removed (clears the "Remove parents" reminder).',
     'stat.active':'active records','stat.nextEcl':'next eclosion',
     'tasks.title':'Pending tasks','tasks.empty':'No pending tasks 🎉','task.markDone':'Mark as done','task.unmark':'Unmark','task.remove':'Remove',
     'foot.tagline':'Tracks the <i>Drosophila melanogaster</i> life cycle, tasks and lifespan.',
@@ -1500,7 +1503,7 @@ const I18N = {
     'surv.day0':'day 0','surv.dayN':'day {n}',
     'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Load flies','cohort.save':'Save','cohort.cancel':'Cancel',
     'cohort.hint':'Log the adult cohort to follow its survival curve (Kaplan-Meier). Recommended density: ≤25–30 flies/vial.','cohort.nPh':'e.g. 100','cohort.vialsPh':'optional',
-    'aging.vialsOut1':'1 vial left out','aging.vialsOutN':'{n} vials left out','aging.vialApart':'stands apart from the rest (p = {p})','aging.vialShift':'median {a} d → {b} d without it','aging.vialApartHint':'A flag is a reason to go and look at the vial, not to drop it: with one test per vial some cross 0.05 on chance alone.','vex.title':'Leave this vial out','vex.reason':'Why is it being left out?','vex.note':'Detail (optional)','vex.notePh':'e.g. mould on the food from day 22','vex.save':'Leave it out','vex.exclude':'leave out','vex.undo':'put back','vex.onDay':'day {d}','vex.warn':'Decide this on something you saw in the vial, not on how the curve looks. It is written down with the day and reported alongside the result.','vex.r.mould':'Contamination / mould','vex.r.food':'Food dried out or collapsed','vex.r.plug':'Plug fell out or came loose','vex.r.escape':'Mass escape','vex.r.other':'Other','cohort.byVial':'Follow each vial separately','cohort.byVialRunning':'This cohort is already running, so what is split are the {n} flies alive today; the history logged so far stays in the curve untouched.','cohort.byVialNeeds':'Enter an N and 2 or more vials in a row to break it down.','aging.vialsN':'Vials ({n})','aging.vialUnassigned':'{n} logged before the split by vial (not assigned to any).','agm.perVial':'Vial by vial','agm.total':'total','al.vialSplit':'The vials of {sex} add up to {s} and the cohort has {n}. Adjust them so they match.','al.vialTooMany':'{v} only has {n} flies alive; it cannot lose more than that at one check.','al.vialNothing':'Nothing to log: enter the deaths or censors of at least one vial.','cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
+    'aging.vialsOut1':'1 vial left out','aging.vialsOutN':'{n} vials left out','aging.vialApart':'stands apart from the rest (p = {p})','aging.vialShift':'median {a} d → {b} d without it','aging.vialApartHint':'A flag is a reason to go and look at the vial, not to drop it: with one test per vial some cross 0.05 on chance alone.','vex.title':'Leave this vial out','vex.reason':'Why is it being left out?','vex.note':'Detail (optional)','vex.notePh':'e.g. mould on the food from day 22','vex.save':'Leave it out','vex.exclude':'leave out','vex.undo':'put back','vex.onDay':'day {d}','vex.warn':'Decide this on something you saw in the vial, not on how the curve looks. It is written down with the day and reported alongside the result.','vex.r.mould':'Contamination / mould','vex.r.food':'Food dried out or collapsed','vex.r.plug':'Plug fell out or came loose','vex.r.escape':'Mass escape','vex.r.other':'Other','cohort.byVial':'Follow each vial separately','cohort.byVialRunning':'This cohort is already running, so what is split are the {n} flies alive today; the history logged so far stays in the curve untouched.','cohort.byVialNeeds':'Enter an N and 2 or more vials in a row to break it down.','aging.vialsN':'Vials ({n})','aging.vialUnassigned':'{n} logged before the split by vial (not assigned to any).','agm.perVial':'Vial by vial','agm.total':'total','agm.editTitle':'Edit this check','agm.saveEdit':'Save changes','al.vialSplit':'The vials of {sex} add up to {s} and the cohort has {n}. Adjust them so they match.','al.vialTooMany':'{v} only has {n} flies alive; it cannot lose more than that at one check.','al.vialNothing':'Nothing to log: enter the deaths or censors of at least one vial.','cohort.rowHint':'Load females and males at the same time to follow each one\'s survival curve separately, or use Mixed for a single pooled cohort. Leave blank whichever you are not using.','cohort.del':'Remove this cohort',
     // real eclosion date
     'card.metaEclReal':'Eclosion (recorded)','tip.eclEdit':'Set the actual eclosion date: a treatment can bring it forward or push it back.',
     'ecl.title':'Eclosion date','ecl.sub':'{geno} · model estimate: {d}','ecl.date':'Observed eclosion (date and time)',
@@ -1585,7 +1588,7 @@ const I18N = {
     'al.cohortKeep':'The {s} cohort already has entries logged, so it was kept. To remove it (with everything logged), use the ✕ next to its name.','import.choiceMsg':'You have {n} current records and the backup has {m}. What do you want to do?','import.merge':'Add to current records','import.replace':'Replace all records','al.imported':'Imported {n} records.','al.importFail':'Import failed: {e}',
     'err.notList':'The file does not contain a list of records.','err.empty':'The file contains no records.','err.badFormat':'{bad} of {total} entries are not in the expected format (valid genotype, date and temperature). Nothing was imported.',
     'al.noCohorts':'No aging cohorts with data to export.','al.defineCohort':'Define the cohort before exporting.','al.genoForCross':'Enter the genotype to create the record.','al.geno':'Enter the genotype.',
-    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','confirm.delete':'Delete','confirm.dontAskAgain':'Don\'t show this again','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.delCohort':'Remove the {s} cohort and everything logged for it? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
+    'al.noLabDB':'No lab database loaded.','cf.clearLabDB':'Clear the lab database ({n} genotypes)?','al.readFail':'Couldn\'t read the file: {e}','al.labImported':'Lab database imported: {n} genotypes.','cf.deleteCross':'Delete the record "{name}"? This can\'t be undone.','cf.deleteExp':'Delete the experiment "{name}" and its {n} records? This can\'t be undone.','cf.deleteExpOne':'Delete the experiment "{name}" and its only record? This can\'t be undone.','cf.deleteExpShared':'Delete the experiment "{name}"? Records to delete: {n}. Records that only lose this tag (they also belong to other experiments): {k}.','cf.deleteExpNone':'Delete the {n} records with no experiment? This can\'t be undone.','cf.deleteExpNoneOne':'Delete the record with no experiment? This can\'t be undone.','confirm.delete':'Delete','confirm.dontAskAgain':'Don\'t show this again','cf.dismissTask':'Remove this task from the list?','cf.delAging':'Delete this logged entry? This can\'t be undone.','cf.delCohort':'Remove the {s} cohort and everything logged for it? This can\'t be undone.','cf.clearCalib':'Clear this genotype\'s calibration? All its observations will be removed.','confirm.clearAll':'Clear all','cf.clearAll':'Delete the records? ({n})','al.noRecords':'There are no records to clear.',
     // tutorial guiado
     'menu.tutorial':'Starter tutorial','tip.tutorial':'An interactive guided tour of the basics: creating a new record (genetic cross example), planning an experiment backward, and comparing cohorts (Kaplan-Meier).',
     'menu.tutorialAdvanced':'Advanced tutorial','tip.tutorialAdvanced':'A guided tour of the less common features: importing/exporting data, Google Calendar sync, sample size, and reporting a bug.',
@@ -1656,7 +1659,7 @@ const I18N = {
     'notice.model':'<b>Modelo actualizado:</b> el modelo de desarrollo se recalibró con datos publicados (Powsner 1935, 15–28 °C). Los tiempos estimados cambiaron un poco; sobre todo, la eclosión de adultos se adelanta ~1 día a 20–28 °C, mientras que la pupación casi no cambia. Tus registros guardados ya muestran las fechas actualizadas.','notice.dismiss':'Entendido',
     'tip.plan':'Planificá hacia atrás: calculá cuándo montarlo para llegar a un estadio en una fecha, y mirá los próximos eventos.','tip.data':'Respaldá o restaurá tus datos, exportá CSV de supervivencia, o importá la base de genotipos de tu lab.','tip.more':'Más acciones: Planificar, Calibrar y datos (backup, exportar CSV, base del lab).','tip.settings':'Ajustes: cambiá el idioma de la app (inglés / español).','tip.newCross':'Agregá un registro nuevo: genotipo, fecha y temperatura de incubación.',
     'tip.exportBackup':'Descargá todos tus registros como archivo JSON (backup o pasarlos a otro dispositivo).','tip.importBackup':'Cargá registros desde un backup JSON (reemplaza los actuales).','tip.exportSurvival':'Exportá los datos de supervivencia de las cohortes (una fila por mosca) para GraphPad Prism / R.','tip.importLab':'Cargá la lista de genotipos de tu lab desde un CSV/TSV para autocompletar genotipos; el mismo archivo también se puede usar para crear tareas recurrentes si tiene esas columnas.','tip.recTasks':'Creá o gestioná tareas que se repiten con una frecuencia (repique de stock, limpieza…) con un responsable que puede rotar.',
-    'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.deletePair':'Eliminar los dos registros parentales de esta cruza.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
+    'tip.edit':'Editar este registro.','tip.delete':'Eliminar este registro.','tip.deletePair':'Eliminar los dos registros parentales de esta cruza.','tip.deleteExp':'Eliminar el experimento entero: todos los registros de esta sección, de una sola vez.','tip.newGen':'Iniciar la próxima generación: mismo genotipo y objetivo, reloj a cero (ahora).','tip.newGenOff':'Disponible cuando se monte el registro.','tip.timeline':'Mostrar la cronología completa del desarrollo con las fechas estimadas de cada estadio.','tip.more2':'Mostrá la cronología de desarrollo y los detalles (recipiente, adultos, notas).','tip.aging':'Cohorte de envejecimiento: seguí la curva de supervivencia (Kaplan-Meier) de los adultos.','tip.markParents':'Marcar los parentales como retirados (quita el aviso "Retirar parentales").',
     'stat.active':'registros activos','stat.nextEcl':'próxima eclosión',
     'tasks.title':'Tareas pendientes','tasks.empty':'Sin tareas pendientes 🎉','task.markDone':'Marcar como hecha','task.unmark':'Desmarcar','task.remove':'Quitar',
     'foot.tagline':'Sigue el ciclo de vida, las tareas y la longevidad de <i>Drosophila melanogaster</i>.',
@@ -1687,7 +1690,7 @@ const I18N = {
     'surv.day0':'día 0','surv.dayN':'día {n}',
     'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Cargar moscas','cohort.save':'Guardar','cohort.cancel':'Cancelar',
     'cohort.hint':'Registrá la cohorte adulta para seguir su curva de supervivencia (Kaplan-Meier). Densidad recomendada: ≤25–30 moscas/vial.','cohort.nPh':'ej. 100','cohort.vialsPh':'opcional',
-    'aging.vialsOut1':'1 vial excluido','aging.vialsOutN':'{n} viales excluidos','aging.vialApart':'se aparta del resto (p = {p})','aging.vialShift':'mediana {a} d → {b} d sin él','aging.vialApartHint':'La marca es motivo para ir a mirar el vial, no para descartarlo: con un test por vial, alguno cruza 0,05 por puro azar.','vex.title':'Dejar este vial afuera','vex.reason':'¿Por qué se deja afuera?','vex.note':'Detalle (opcional)','vex.notePh':'ej. hongo en la comida desde el día 22','vex.save':'Dejarlo afuera','vex.exclude':'dejar afuera','vex.undo':'reincorporar','vex.onDay':'día {d}','vex.warn':'Decidilo por algo que viste en el vial, no por cómo se ve la curva. Queda registrado con el día y se reporta junto al resultado.','vex.r.mould':'Contaminación / hongo','vex.r.food':'Comida seca o colapsada','vex.r.plug':'Se salió o aflojó el tapón','vex.r.escape':'Escape masivo','vex.r.other':'Otro','cohort.byVial':'Seguir cada vial por separado','cohort.byVialRunning':'Esta cohorte ya viene andando, así que se reparten las {n} moscas vivas de hoy; lo cargado hasta acá queda en la curva tal como está.','cohort.byVialNeeds':'Poné un N y 2 o más viales en alguna fila para poder desglosarla.','aging.vialsN':'Viales ({n})','aging.vialUnassigned':'{n} cargadas antes de separar por vial (sin asignar a ninguno).','agm.perVial':'Vial por vial','agm.total':'total','al.vialSplit':'Los viales de {sex} suman {s} y la cohorte tiene {n}. Ajustalos para que coincidan.','al.vialTooMany':'{v} tiene sólo {n} moscas vivas; no puede perder más que eso en un recuento.','al.vialNothing':'No hay nada para registrar: cargá las muertes o censuras de al menos un vial.','cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
+    'aging.vialsOut1':'1 vial excluido','aging.vialsOutN':'{n} viales excluidos','aging.vialApart':'se aparta del resto (p = {p})','aging.vialShift':'mediana {a} d → {b} d sin él','aging.vialApartHint':'La marca es motivo para ir a mirar el vial, no para descartarlo: con un test por vial, alguno cruza 0,05 por puro azar.','vex.title':'Dejar este vial afuera','vex.reason':'¿Por qué se deja afuera?','vex.note':'Detalle (opcional)','vex.notePh':'ej. hongo en la comida desde el día 22','vex.save':'Dejarlo afuera','vex.exclude':'dejar afuera','vex.undo':'reincorporar','vex.onDay':'día {d}','vex.warn':'Decidilo por algo que viste en el vial, no por cómo se ve la curva. Queda registrado con el día y se reporta junto al resultado.','vex.r.mould':'Contaminación / hongo','vex.r.food':'Comida seca o colapsada','vex.r.plug':'Se salió o aflojó el tapón','vex.r.escape':'Escape masivo','vex.r.other':'Otro','cohort.byVial':'Seguir cada vial por separado','cohort.byVialRunning':'Esta cohorte ya viene andando, así que se reparten las {n} moscas vivas de hoy; lo cargado hasta acá queda en la curva tal como está.','cohort.byVialNeeds':'Poné un N y 2 o más viales en alguna fila para poder desglosarla.','aging.vialsN':'Viales ({n})','aging.vialUnassigned':'{n} cargadas antes de separar por vial (sin asignar a ninguno).','agm.perVial':'Vial por vial','agm.total':'total','agm.editTitle':'Editar este recuento','agm.saveEdit':'Guardar cambios','al.vialSplit':'Los viales de {sex} suman {s} y la cohorte tiene {n}. Ajustalos para que coincidan.','al.vialTooMany':'{v} tiene sólo {n} moscas vivas; no puede perder más que eso en un recuento.','al.vialNothing':'No hay nada para registrar: cargá las muertes o censuras de al menos un vial.','cohort.rowHint':'Cargá hembras y machos a la vez para seguir la curva de cada uno por separado, o usá Mixto si van todos juntos en una sola cohorte. Dejá vacío el que no uses.','cohort.del':'Quitar esta cohorte',
     'card.metaEclReal':'Eclosión (cargada)','tip.eclEdit':'Cargá la fecha real de eclosión: un tratamiento puede adelantarla o atrasarla.',
     'ecl.title':'Fecha de eclosión','ecl.sub':'{geno} · estimada por el modelo: {d}','ecl.date':'Eclosión observada (fecha y hora)',
     'ecl.hint':'Es el día 0 de la edad adulta y de la curva de supervivencia. Los estadios previos se reescalan en proporción.','ecl.reset':'Volver a la estimada',
@@ -1766,7 +1769,7 @@ const I18N = {
     'al.cohortKeep':'La cohorte de {s} ya tiene conteos cargados, así que se conservó. Para quitarla (con todo lo cargado) usá la ✕ que está al lado de su nombre.','import.choiceMsg':'Tenés {n} registros cargados y el backup trae {m}. ¿Qué querés hacer?','import.merge':'Sumar a los registros actuales','import.replace':'Reemplazar todos los registros','al.imported':'Importados {n} registros.','al.importFail':'No se pudo importar: {e}',
     'err.notList':'El archivo no contiene una lista de registros.','err.empty':'El archivo no contiene ningún registro.','err.badFormat':'{bad} de {total} entradas no tienen el formato esperado (genotipo, fecha y temperatura válidos). No se importó nada.',
     'al.noCohorts':'No hay cohortes de envejecimiento con datos para exportar.','al.defineCohort':'Definí la cohorte antes de exportar.','al.genoForCross':'Escribí el genotipo para crear el registro.','al.geno':'Escribí el genotipo.',
-    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','confirm.dontAskAgain':'No volver a mostrar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.delCohort':'¿Quitar la cohorte de {s} y todo lo cargado en ella? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
+    'al.noLabDB':'No hay base del laboratorio cargada.','cf.clearLabDB':'¿Borrar la base del laboratorio ({n} genotipos)?','al.readFail':'No se pudo leer el archivo: {e}','al.labImported':'Base del laboratorio importada: {n} genotipos.','cf.deleteCross':'¿Eliminar el registro "{name}"? Esta acción no se puede deshacer.','cf.deleteExp':'¿Eliminar el experimento "{name}" y sus {n} registros? Esta acción no se puede deshacer.','cf.deleteExpOne':'¿Eliminar el experimento "{name}" y su único registro? Esta acción no se puede deshacer.','cf.deleteExpShared':'¿Eliminar el experimento "{name}"? Registros que se borran: {n}. Registros que solo pierden esta etiqueta (pertenecen también a otros experimentos): {k}.','cf.deleteExpNone':'¿Eliminar los {n} registros sin experimento? Esta acción no se puede deshacer.','cf.deleteExpNoneOne':'¿Eliminar el registro sin experimento? Esta acción no se puede deshacer.','confirm.delete':'Eliminar','confirm.dontAskAgain':'No volver a mostrar','cf.dismissTask':'¿Quitar esta tarea de la lista?','cf.delAging':'¿Borrar este registro de conteo? Esta acción no se puede deshacer.','cf.delCohort':'¿Quitar la cohorte de {s} y todo lo cargado en ella? Esta acción no se puede deshacer.','cf.clearCalib':'¿Borrar la calibración de este genotipo? Se quitan todas sus observaciones.','confirm.clearAll':'Vaciar todo','cf.clearAll':'¿Borrar los registros? ({n})','al.noRecords':'No hay registros para vaciar.',
     // tutorial guiado
     'menu.tutorial':'Tutorial inicial','tip.tutorial':'Un recorrido interactivo por lo básico: crear un registro nuevo (con el ejemplo de una cruza genética), planificar un experimento hacia atrás, y comparar cohortes (Kaplan-Meier).',
     'menu.tutorialAdvanced':'Tutorial avanzado','tip.tutorialAdvanced':'Un recorrido guiado por las funciones menos frecuentes: importar/exportar datos, sincronización con Google Calendar, tamaño muestral, y cómo reportar un error.',
@@ -3935,6 +3938,7 @@ function cohortBlock(cross, st, k, showDel){
     ${vialStrip(cross, st, g, gi, color)}
     <div class="aging-events">${evs.length ? evs.map(e=>`
       <div class="aging-ev"><span class="d">${fmtDT(new Date(e.date))} · ${e.deaths||0}✝${e.censored?` · ${e.censored} cens.`:''}${e.flipped?' · 🔄':''}${e.note?' · '+esc(e.note):''}</span>
+      <a href="#" onclick="openAging('${cross.id}',${gi},${g.events.indexOf(e)});return false">${t('aging.edit')}</a>
       <button class="icon-btn" style="width:24px;height:24px;font-size:.8rem" title="${t('aging.evDelete')}" onclick="delAging('${cross.id}',${gi},${g.events.indexOf(e)})">✕</button></div>`).join('') : `<div class="hint">${t('aging.noRecords')}</div>`}</div>
     <button class="mini-btn" style="margin-top:12px;width:100%" onclick="openAging('${cross.id}',${gi})">${t('aging.addRecord')}</button>
     <button class="mini-btn" style="margin-top:8px;width:100%;background:var(--mint-soft);color:#3fae8c" onclick="exportCohortCSV('${cross.id}',${gi})">${t('aging.exportCohort')}</button>
@@ -4201,10 +4205,13 @@ function render(){
     const title = exp==='__calib__' ? t('obj.calibrate') : exp==='__none__' ? t('group.none') : esc(exp);
     const open = !collapsedExps.has(exp);
     return `<section class="exp-group">
-      <button class="exp-head" onclick="toggleExp(${i})">
-        <span class="exp-name">${title}</span><span class="exp-count">${cards.length}</span>
-        <span class="exp-arrow">${open?'▴':'▾'}</span>
-      </button>
+      <div class="exp-head-row">
+        <button class="exp-head" onclick="toggleExp(${i})">
+          <span class="exp-name">${title}</span><span class="exp-count">${cards.length}</span>
+          <span class="exp-arrow">${open?'▴':'▾'}</span>
+        </button>
+        ${exp==='__calib__' ? '' : `<button class="icon-btn exp-del" data-tip="${esc(t('tip.deleteExp'))}" onclick="delExpGroup(${i})">✕</button>`}
+      </div>
       <div class="grid" style="${open?'':'display:none'}">${renderCardsWithPairs(cards)}</div>
     </section>`;
   }).join('');
@@ -4429,25 +4436,38 @@ function delCohort(id, gi){
     ensureAging(c).groups.splice(gi,1); save(crosses); render();
   });
 }
-function openAging(id, gi=0){
+/* Logs a check, or edits one already logged (ei = its index in g.events). Miscounting a vial
+   at the bench is ordinary, and correcting it used to mean deleting the whole check and
+   entering every vial again. */
+function openAging(id, gi=0, ei=null){
   const c = crosses.find(x=>x.id===id);
   const g = cohortAt(c, gi);
+  const old = (ei!=null && g) ? g.events[ei] : null;
+  if(ei!=null && !old) return;
   document.getElementById('agingForm').reset();
-  document.getElementById('agingId').value = `${id}#${gi}`;
+  document.getElementById('agingId').value = `${id}#${gi}${old?'#'+ei:''}`;
+  document.getElementById('agingTitle').textContent = t(old ? 'agm.editTitle' : 'agm.title');
+  document.getElementById('agingSaveBtn').textContent = t(old ? 'agm.saveEdit' : 'cohort.save');
   document.getElementById('agingSub').textContent = [c.genotype||'', g?t(SEX_KEY[g.sex]):''].filter(Boolean).join(' · ');
-  document.getElementById('agingDate').value = toLocalInput(new Date());
-  document.getElementById('agingDeaths').value = 0;
-  document.getElementById('agingCensored').value = 0;
-  document.getElementById('agingFlip').checked = true;
+  document.getElementById('agingDate').value = old ? toLocalInput(new Date(old.date)) : toLocalInput(new Date());
+  document.getElementById('agingDeaths').value = old ? (old.deaths||0) : 0;
+  document.getElementById('agingCensored').value = old ? (old.censored||0) : 0;
+  document.getElementById('agingFlip').checked = old ? !!old.flipped : true;
+  document.getElementById('agingNote').value = old ? (old.note||'') : '';
   /* one row per vial when the cohort is followed that way; the flies still alive in each
-     vial are shown next to it, both to count against and to catch a slip on the spot */
+     vial are shown next to it, both to count against and to catch a slip on the spot.
+     While editing, what the vial had available is what is alive now PLUS whatever this very
+     check took off it -- otherwise correcting 7 deaths down to 5 would be judged against a
+     vial that has already had those 7 subtracted. */
   const vials = g ? vialsOf(g) : [];
   document.getElementById('agingSingle').style.display = vials.length ? 'none' : '';
   document.getElementById('agingVials').style.display  = vials.length ? '' : 'none';
   if(vials.length){
     document.getElementById('agingVialRows').innerHTML = vials.map((v,i)=>{
-      const alive = vialTally(g, v).alive;
-      const inp = k => `<input type="number" min="0" step="1" value="0" data-vi="${i}" data-k="${k}"
+      const was = (old && old.perVial && old.perVial[v.label]) || null;
+      const alive = vialTally(g, v).alive + (was ? (was.deaths||0) + (was.censored||0) : 0);
+      const val = k => was ? (was[k]||0) : 0;
+      const inp = k => `<input type="number" min="0" step="1" value="${val(k)}" data-vi="${i}" data-k="${k}"
         data-alive="${alive}" oninput="agingVialTotals()" onkeydown="agingVialKey(event)" />`;
       return `<div class="vial-in${alive?'':' spent'}">
         <span class="vl">${esc(v.label)} <i>(${alive})</i></span>${inp('deaths')}${inp('censored')}</div>`;
@@ -4480,9 +4500,11 @@ function agingVialKey(e){
 function closeAging(){ document.getElementById('agingOverlay').classList.remove('open'); }
 function saveAgingEntry(e){
   e.preventDefault();
-  const [id, giRaw] = document.getElementById('agingId').value.split('#');
+  const [id, giRaw, eiRaw] = document.getElementById('agingId').value.split('#');
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const g = cohortAt(c, parseInt(giRaw)||0); if(!g) return;
+  const ei = eiRaw!=null && eiRaw!=='' ? parseInt(eiRaw) : null;   // editing an existing check
+  if(ei!=null && !g.events[ei]) return;
   const vials = vialsOf(g);
   const ev = {
     date: document.getElementById('agingDate').value,
@@ -4508,7 +4530,7 @@ function saveAgingEntry(e){
     if(!d && !cen && !ev.flipped && !ev.note){ alert(t('al.vialNothing')); return; }
     ev.deaths = d; ev.censored = cen; ev.perVial = perVial;
   }
-  g.events.push(ev);
+  if(ei!=null) g.events[ei] = ev; else g.events.push(ev);
   openAgingIds.add(id);
   save(crosses); render(); closeAging();
 }
@@ -5571,6 +5593,31 @@ function delCrossPair(pairId){
   const label = female && male ? female.genotype+' × '+male.genotype : pair[0].genotype;
   askConfirm(t('cf.deleteCross',{name:label}), ()=>{
     crosses = crosses.filter(c=>c.pairId!==pairId);
+    save(crosses); render();
+  });
+}
+/* Deletes a whole experiment section in one go, instead of card by card. A record that also
+   belongs to OTHER experiments is NOT deleted: it only loses this experiment's tag, so it stays
+   under its remaining sections. */
+function delExpGroup(i){
+  const exp = _expOrder[i]; if(exp==null || exp==='__calib__') return;
+  const inGroup = crosses.filter(c=> !c.calib && (exp==='__none__'
+    ? !(c.experiments && c.experiments.length)
+    : (c.experiments||[]).includes(exp)));
+  if(!inGroup.length) return;
+  const shared = exp==='__none__' ? [] : inGroup.filter(c=> (c.experiments||[]).length > 1);
+  const sharedIds = new Set(shared.map(c=>c.id));
+  const doomed = inGroup.filter(c=> !sharedIds.has(c.id));
+  const n = doomed.length;
+  const msg = exp==='__none__' ? t(n===1 ? 'cf.deleteExpNoneOne' : 'cf.deleteExpNone', {n})
+    : shared.length ? t('cf.deleteExpShared',{name:exp, n, k:shared.length})
+    : t(n===1 ? 'cf.deleteExpOne' : 'cf.deleteExp', {name:exp, n});
+  askConfirm(msg, ()=>{
+    const doomedIds = new Set(doomed.map(c=>c.id));
+    const doomedPairs = new Set(doomed.map(c=>c.pairId).filter(Boolean));   // a ♀/♂ pair goes as a unit
+    crosses = crosses.filter(c=> sharedIds.has(c.id) || (!doomedIds.has(c.id) && !(c.pairId && doomedPairs.has(c.pairId))));
+    shared.forEach(c=>{ c.experiments = (c.experiments||[]).filter(x=>x!==exp); });
+    collapsedExps.delete(exp);
     save(crosses); render();
   });
 }
