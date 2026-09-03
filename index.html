@@ -1538,8 +1538,8 @@ const I18N = {
     'card.viewTimeline':'View timeline ▾','card.hideTimeline':'Hide timeline ▴','card.more':'More ▾','card.less':'Less ▴','card.timelineH':'Timeline','card.detailsH':'Details','tl.eclosionAdult':'Eclosion → Adult','tl.inProgress':'in progress','tl.agingDay':'day {d} of aging',
     // envejecimiento
     'aging.toggle':'Aging ▾','aging.mAlive':'alive','aging.mSurv':'survival','aging.mAge':'cohort age',
-    'aging.sexF':'♀ Females','aging.sexM':'♂ Males','aging.sexMixed':'⚥ Mixed','aging.vials':'vials','aging.censored':'censored','aging.edit':'edit',
-    'aging.densHigh':'⚠ High density ({d}/vial) · recommended ≤25–30/vial','aging.median':'Median survival: <b>{d} d</b>','aging.medianNone':'Median: — (still >50% alive)','aging.maxObs':'Max observed: <b>{d} d</b>',
+    'aging.sexF':'♀ Females','aging.sexM':'♂ Males','aging.sexMixed':'⚥ Mixed','aging.vial':'vial','aging.vials':'vials','aging.censored':'censored','aging.edit':'edit',
+    'aging.densHigh':'⚠ High density ({d}/vial) · recommended ≤25–30/vial','aging.median':'Median survival: <b>{d} d</b>','aging.medianNone':'Median: — (still >50% alive)','aging.maxLife':'Maximum lifespan: <b>{d} d</b>',
     'aging.noRecords':'No records yet.','aging.evDelete':'Delete','aging.addRecord':'+ Log flip / count','aging.exportCohort':'⬇ Export survival table (CSV)',
     'surv.day0':'day 0','surv.dayN':'day {n}',
     'cohort.n':'Initial N','cohort.sex':'Sex','cohort.vials':'Vials','cohort.define':'Load flies','cohort.save':'Save','cohort.cancel':'Cancel',
@@ -1725,8 +1725,8 @@ const I18N = {
     'card.newGen':'↪ Nueva generación','card.newGenTitle':'Crear la próxima generación (mismo genotipo y objetivo, reloj a cero)','card.newGenDisabled':'Disponible cuando se monte el registro',
     'card.viewTimeline':'Ver cronología ▾','card.hideTimeline':'Ocultar cronología ▴','card.more':'Más ▾','card.less':'Menos ▴','card.timelineH':'Cronología','card.detailsH':'Detalles','tl.eclosionAdult':'Eclosión → Adulto','tl.inProgress':'en curso','tl.agingDay':'día {d} de envejecimiento',
     'aging.toggle':'Envejecimiento ▾','aging.mAlive':'vivos','aging.mSurv':'supervivencia','aging.mAge':'edad cohorte',
-    'aging.sexF':'♀ Hembras','aging.sexM':'♂ Machos','aging.sexMixed':'⚥ Mixto','aging.vials':'viales','aging.censored':'censurados','aging.edit':'editar',
-    'aging.densHigh':'⚠ Densidad alta ({d}/vial) · recomendado ≤25–30/vial','aging.median':'Mediana de supervivencia: <b>{d} d</b>','aging.medianNone':'Mediana: — (aún >50% vivos)','aging.maxObs':'Máx. observado: <b>{d} d</b>',
+    'aging.sexF':'♀ Hembras','aging.sexM':'♂ Machos','aging.sexMixed':'⚥ Mixto','aging.vial':'vial','aging.vials':'viales','aging.censored':'censurados','aging.edit':'editar',
+    'aging.densHigh':'⚠ Densidad alta ({d}/vial) · recomendado ≤25–30/vial','aging.median':'Mediana de supervivencia: <b>{d} d</b>','aging.medianNone':'Mediana: — (aún >50% vivos)','aging.maxLife':'Longevidad máxima: <b>{d} d</b>',
     'aging.noRecords':'Sin registros todavía.','aging.evDelete':'Borrar','aging.addRecord':'+ Registrar pase / conteo','aging.exportCohort':'⬇ Exportar tabla de supervivencia (CSV)',
     'surv.day0':'día 0','surv.dayN':'día {n}',
     'cohort.n':'N inicial','cohort.sex':'Sexo','cohort.vials':'Viales','cohort.define':'Cargar moscas','cohort.save':'Guardar','cohort.cancel':'Cancelar',
@@ -4102,10 +4102,12 @@ function cohortBlock(cross, st, k, showDel){
       <div class="m"><b>${Math.floor(st.adultAge)} d</b><span>${t('aging.mAge')}</span></div>
     </div>
     <div class="hint" style="margin:-4px 0 ${densHigh?'4px':'10px'}">${[
-      nVials ? `${nVials} ${t('aging.vials')} · ${densStr}/vial` : '',
+      nVials ? `${nVials} ${t(nVials===1?'aging.vial':'aging.vials')} · ${densStr}/vial` : '',
       gone.length ? t(gone.length===1?'aging.vialsOut1':'aging.vialsOutN',{n:gone.length}) : '',
       km.censored ? `${km.censored} ${t('aging.censored')}` : '',
       km.median!=null ? t('aging.median',{d:km.median}) : t('aging.medianNone'),
+      /* the age of the last death is only a lifespan once nobody is left to outlive it */
+      km.alive===0 && km.maxLife ? t('aging.maxLife',{d:km.maxLife}) : '',
     ].filter(Boolean).join(' · ')}</div>
     ${densHigh?`<div class="hint" style="margin:0 0 10px;color:#d98162;font-weight:700">${t('aging.densHigh',{d:densStr})}</div>`:''}
     ${vialStrip(cross, st, g, gi, color)}
@@ -4126,13 +4128,11 @@ function agingPanel(cross, st){
   } else {
     const ks = groups.map(g=>({ g, gi:cohortIndex(cross,g), km:kmCurve(cross,st,g),
                                 color:sexColor(COHORT_BASE, g.sex), dash:SEX_DASH[g.sex]||'' }));
-    const maxLife = Math.max(...ks.map(k=>k.km.maxLife||0));
     /* where a vial was left out, the whole cohort is drawn faint behind the curve in use, so
        what the exclusion did is visible instead of implied */
     const ghosts = ks.filter(k=> vialsOf(k.g).some(v=> v.excluded))
       .map(k=> ({ km: kmCurve(cross, st, { ...k.g, vialList:null }), color:k.color, dash:'3 3', faint:true }));
     body = survChart(ghosts.concat(ks))
-      + (maxLife?`<div class="hint" style="margin:-4px 0 10px">${t('aging.maxObs',{d:maxLife})}</div>`:'')
       + ks.map(k=> cohortBlock(cross, st, k, true)).join('');
   }
   return `<button class="timeline-btn" onclick="toggleAging('${cross.id}', this)" data-tip="${esc(t('tip.aging'))}">${t('aging.toggle')}</button>
