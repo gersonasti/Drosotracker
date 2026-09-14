@@ -512,6 +512,16 @@
   @media (min-width:700px){ .modal{max-width:760px} }
   .modal h2{font-size:1.3rem;margin-bottom:4px;text-align:center}
   .modal .sub{color:var(--ink-soft);font-size:.86rem;margin-bottom:20px}
+  /* Which cohort a check is being logged for, in plain sight: logging a count on the wrong
+     genotype, condition or sex is the slip this is here to prevent. The genotype gets a row of
+     its own because real ones run long (w1118; UAS-tau/+; elav-GAL4). */
+  .check-who{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 20px}
+  .check-who > div{background:var(--bg-2);border:1.5px solid var(--line);border-radius:14px;padding:9px 13px;min-width:0}
+  .check-who .cw-geno{grid-column:1 / -1}
+  .check-who span{display:block;font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft)}
+  .check-who b{display:block;margin-top:2px;font-family:'Poppins',sans-serif;font-weight:600;font-size:1rem;color:var(--ink);overflow-wrap:anywhere}
+  .check-who .cw-geno b{font-size:1.2rem}
+  .check-who .cw-sex{border-left:6px solid var(--cw-sex, var(--line))}
   .field{margin-bottom:16px}
   .field label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--ink)}
   .field input{
@@ -1062,7 +1072,7 @@
 <div class="overlay" id="agingOverlay">
   <div class="modal">
     <h2 id="agingTitle" data-i18n="agm.title">Log flip / count</h2>
-    <div class="sub" id="agingSub"></div>
+    <div class="check-who" id="agingSub"></div>
     <form id="agingForm" onsubmit="saveAgingEntry(event)">
       <input type="hidden" id="agingId" />
       <div class="field">
@@ -1602,7 +1612,7 @@ const I18N = {
     'plan.rMain':'Set it up on<br><b>{date}</b>','plan.rDetail':'At {t} °C, reaching <b>{stage}</b> takes ~{d} d from egg-lay.','plan.rVirgin':' Virgin window ~{h} h after eclosion.',
     'plan.rPast':'⚠ That date has passed: you can\'t make it in time at that temperature.','plan.rUpdate':'✓ Update planned record','plan.rCreate':'+ Create record with this date',
     // modal envejecimiento
-    'agm.title':'Log flip / count','agm.date':'Check date and time','agm.deaths':'Dead flies at this check','agm.censored':'Censored (escaped, stuck, accidents)',
+    'agm.title':'Log flip / count','agm.whoGeno':'Genotype','agm.whoCond':'Condition','agm.whoSex':'Sex','agm.date':'Check date and time','agm.deaths':'Dead flies at this check','agm.censored':'Censored (escaped, stuck, accidents)',
     'agm.censoredHint':'Removed from the at-risk group without counting as deaths (Kaplan-Meier).','agm.flip':'Flipped the cohort to fresh food','agm.note':'Note (optional)','agm.notePh':'e.g. females, 2 vials','agm.sub':'{geno} · cohort day {d}',
     // lab database import
     'lab.title':'Import lab database','lab.col':'Which column has the genotype?','lab.colHint':'The first row is assumed to be the column headers.','lab.preview':'Preview','lab.cancel':'Cancel','lab.import':'Import',
@@ -1785,7 +1795,7 @@ const I18N = {
     'plan.onDay':'El día','plan.temp':'Temperatura (°C)','plan.calc':'Calcular fecha de montaje','plan.close':'Cerrar','plan.noEvents':'No hay eventos próximos.','agenda.eclosion':'Eclosión',
     'plan.rMain':'Montalo el<br><b>{date}</b>','plan.rDetail':'A {t} °C, llegar a <b>{stage}</b> tarda ~{d} d desde la puesta.','plan.rVirgin':' Ventana de vírgenes ~{h} h tras la eclosión.',
     'plan.rPast':'⚠ Esa fecha ya pasó: no llegás a tiempo a esa temperatura.','plan.rUpdate':'✓ Actualizar registro planificado','plan.rCreate':'+ Crear registro con esta fecha',
-    'agm.title':'Registrar pase / conteo','agm.date':'Fecha y hora del control','agm.deaths':'Moscas muertas en este control','agm.censored':'Censuradas (escapadas, pegadas, accidentes)',
+    'agm.title':'Registrar pase / conteo','agm.whoGeno':'Genotipo','agm.whoCond':'Condición','agm.whoSex':'Sexo','agm.date':'Fecha y hora del control','agm.deaths':'Moscas muertas en este control','agm.censored':'Censuradas (escapadas, pegadas, accidentes)',
     'agm.censoredHint':'Se descuentan del grupo en riesgo sin contar como muerte (Kaplan-Meier).','agm.flip':'Pasé la cohorte a comida fresca','agm.note':'Nota (opcional)','agm.notePh':'ej. hembras, 2 viales','agm.sub':'{geno} · día {d} de cohorte',
     'lab.title':'Importar base del lab','lab.col':'¿Qué columna tiene el genotipo?','lab.colHint':'Se asume que la primera fila son los títulos de las columnas.','lab.preview':'Vista previa','lab.cancel':'Cancelar','lab.import':'Importar',
     'lab.sub':'{file} · {n} filas. Elegí la columna del genotipo abajo.','lab.noCol':'La columna elegida no tiene genotipos.','lab.loaded':'Base del lab: {n} genotipos','lab.clear':'Borrar','lab.colN':'Columna {n}','err.labFormat':'Se espera una fila de títulos + al menos una fila de datos.',
@@ -4667,7 +4677,11 @@ function openAging(id, gi=0, ei=null){
   document.getElementById('agingId').value = `${id}#${gi}${old?'#'+ei:''}`;
   document.getElementById('agingTitle').textContent = t(old ? 'agm.editTitle' : 'agm.title');
   document.getElementById('agingSaveBtn').textContent = t(old ? 'agm.saveEdit' : 'cohort.save');
-  document.getElementById('agingSub').textContent = [c.genotype||'', g?t(SEX_KEY[g.sex]):''].filter(Boolean).join(' · ');
+  const conds = (c.conditions||[]).filter(Boolean);
+  document.getElementById('agingSub').innerHTML =
+    `<div class="cw-geno"><span>${t('agm.whoGeno')}</span><b>${esc(c.genotype||'—')}</b></div>
+     <div class="cw-cond"><span>${t('agm.whoCond')}</span><b>${conds.length ? esc(conds.join(' · ')) : '—'}</b></div>
+     <div class="cw-sex" style="--cw-sex:${g ? sexColor(COHORT_BASE, g.sex) : 'var(--line)'}"><span>${t('agm.whoSex')}</span><b>${g ? t(SEX_KEY[g.sex]) : '—'}</b></div>`;
   document.getElementById('agingDate').value = old ? toLocalInput(new Date(old.date)) : toLocalInput(new Date());
   document.getElementById('agingDeaths').value = old ? (old.deaths||0) : 0;
   document.getElementById('agingCensored').value = old ? (old.censored||0) : 0;
