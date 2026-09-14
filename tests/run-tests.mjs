@@ -52,13 +52,14 @@ const code = [
   grabFn('totalDays'), grabFn('stageBounds'), grabFn('eclosionOverrideDays'),
   grabFn('ensureAging'), grabFn('cohortGroups'), grabFn('hasCohort'), grabFn('cohortIndex'), grabFn('cohortAt'), grabFn('agingEvents'),
   grabFn('vialsOf'), grabFn('hasVials'), grabFn('vialTally'), grabFn('vialUnassigned'), grabFn('vialGroup'), grabFn('activeGroup'), grabFn('vialLeftAt'), grabFn('splitVials'),
-  grabFn('kmCurve'), grabFn('computeT50FromCounts'),
+  grabFn('cohortDay'), grabFn('cohortToday'), grabFn('kmCurve'), grabFn('computeT50FromCounts'),
+  grabFn('parseCross'), grabFn('csvCell'), grabFn('vialName'), grabFn('idPart'), grabFn('cohortBaseId'), grabFn('vialId'), grabFn('uniqueCohortIds'), grabFn('localDateStr'), grabFn('cohortFlyRows'), grabFn('flyCells'),
   grabFn('loadCalib'), grabFn('saveCalib'), grabFn('normGeno'), grabFn('obsFactor'), grabFn('obsSigmaT0Days'), grabFn('obsSigmaFactor'), grabFn('obsBatch'), grabFn('calibInfo'), grabFn('calibFactorValue'), grabFn('addCalibObs'),
   grabFn('loadLabRef'), grabFn('saveLabRef'), grabFn('isLabRef'), grabFn('labFactorValue'), grabFn('calibInfoFor'),
   grabFn('lgamma'), grabFn('gammincQ'), grabFn('chiSqUpper'), grabFn('quadFormSolve'), grabFn('logRankTest'),
   grabConst('SURV_SHAPE'), grabFn('normInv'), grabFn('logRankPlan'), grabFn('timeToMortality'),
 ].join('\n');
-const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, SEX_ORDER, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, eclosionOverrideDays, ensureAging, cohortGroups, hasCohort, cohortIndex, cohortAt, agingEvents, vialsOf, hasVials, vialTally, vialUnassigned, vialGroup, activeGroup, vialLeftAt, splitVials, kmCurve, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
+const M = new Function(code + '\nreturn { T0, DEGREE_DAYS, REF_TOTAL, STAGES, SEX_ORDER, CALIB_MIN, CALIB_SIGMA_T50, CALIB_SIGMA_BATCH, CALIB_PRIOR_SD, CALIB_SIGMA_T0_CROSSDAY, CALIB_SIGMA_T0_UNKNOWN, SURV_SHAPE, totalDays, stageBounds, eclosionOverrideDays, ensureAging, cohortGroups, hasCohort, cohortIndex, cohortAt, agingEvents, vialsOf, hasVials, vialTally, vialUnassigned, vialGroup, activeGroup, vialLeftAt, splitVials, cohortDay, cohortToday, kmCurve, cohortBaseId, vialId, uniqueCohortIds, localDateStr, cohortFlyRows, flyCells, computeT50FromCounts, loadCalib, saveCalib, calibInfo, calibFactorValue, obsSigmaT0Days, obsSigmaFactor, obsBatch, normGeno, obsFactor, addCalibObs, loadLabRef, saveLabRef, isLabRef, labFactorValue, calibInfoFor, lgamma, gammincQ, chiSqUpper, quadFormSolve, logRankTest, normInv, logRankPlan, timeToMortality };')();
 
 /* ---- mini framework ---- */
 let pass = 0, fail = 0;
@@ -333,6 +334,70 @@ group('Per-vial cohorts — censoring a vial vs removing it entirely', () => {
    * events never fall out of step */
   const subset = M.kmCurve({ aging:{ groups:[] } }, st, M.vialGroup(M.ensureAging(mkVialCross(VIALS, CH)).groups[0], ['V1','V2']));
   ok(near(S(kmDrop), S(subset)) && kmDrop.median === subset.median, 'removing V3 == analysing V1+V2');
+});
+
+/* ================= 2d) THE COHORT DAY AND THE SURVIVAL FILE ================= */
+/* A check is scored on a calendar day, not at an hour: the day of a check has to be the same
+ * whole number whether the vial was flipped at 9:00 or at 23:30, and the curve on screen and
+ * the exported file must count it the same way. */
+group('Cohort day — whole calendar days, whatever the hour', () => {
+  const eclL = new Date(2026, 8, 1, 18, 0);                     // eclosed 1 Sep at 18:00 local
+  ok(M.cohortDay(new Date(2026, 8, 12, 9, 0), eclL) === 11, 'a check on 12 Sep in the morning is day 11');
+  ok(M.cohortDay(new Date(2026, 8, 12, 23, 30), eclL) === 11, 'and still day 11 late at night');
+  ok(M.cohortDay(new Date(2026, 8, 2, 8, 0), eclL) === 1, 'the next morning is day 1, even with under 24 h elapsed');
+  ok(M.cohortDay(new Date(2026, 7, 30), eclL) === 0, 'a date before eclosion clamps to day 0');
+  ok(M.cohortToday({ eclosionDate: eclL, adultAge: 10.7 }) === 11, 'today (1 Sep 18:00 + 10.7 d = 12 Sep) is day 11');
+
+  /* two checks on the same day at different hours are one time point of the curve */
+  const base = new Date(2026, 8, 1, 12, 0).getTime();
+  const c = { aging: { startN: 10, sex: 'F', vials: 1, events: [
+    { date: new Date(base + 5 * 86400000 - 2 * 3600000).toISOString(), deaths: 1, censored: 0 },
+    { date: new Date(base + 5 * 86400000 + 3 * 3600000).toISOString(), deaths: 1, censored: 0 },
+  ] } };
+  const km = M.kmCurve(c, { eclosionDate: new Date(base), adultAge: 8 });
+  ok(km.points.length === 3 && km.points[1].day === 5, 'both land on day 5 as a single step (plus day 0 and today)');
+  ok(near(km.points[1].surv, 0.8), 'with both deaths together: S = 0.8');
+  ok(Number.isInteger(km.points[2].day) && km.points[2].day === 8, 'the curve runs on to today as a whole day too');
+});
+
+group('Survival file — one id per vial, rows vial by vial and in date order', () => {
+  const cross = { id: 'c1', genotype: 'Canton-S', conditions: ['CBD'], crossDate: '2026-08-01T10:00' };
+  ok(M.cohortBaseId(cross, { sex: 'F' }) === 'Canton-S_CBD_F', 'genotype_condition_sex');
+  ok(M.vialId('Canton-S_CBD_F', { label: 'V1' }) === 'Canton-S_CBD_F_V1', 'plus the vial: Canton-S_CBD_F_V1');
+  ok(M.vialId('Canton-S_CBD_F', { label: 'V1', name: 'rack 2' }) === 'Canton-S_CBD_F_rack-2', 'a renamed vial carries its name, spaces as -');
+  ok(M.cohortBaseId({ genotype: 'w1118 ; UAS_tau', conditions: ['CBD', '10 uM'] }, { sex: 'M' }) === 'w1118-;-UAS-tau_CBD+10-uM_M',
+     "'_' is only ever the separator, so the id splits back into its parts");
+  ok(M.cohortBaseId({ genotype: 'Canton-S', conditions: [] }, { sex: 'F' }) === 'Canton-S_F', 'no condition: that part is skipped');
+
+  /* a repeat of the same experiment must not share ids with the first one */
+  const rep = { id: 'c2', genotype: 'Canton-S', conditions: ['CBD'], crossDate: '2026-09-01T10:00' };
+  const other = { id: 'c3', genotype: 'Canton-S', conditions: ['EtOH'], crossDate: '2026-08-01T10:00' };
+  const ks = [cross, rep, other].map(c => ({ c, g: { sex: 'F' }, base: M.cohortBaseId(c, { sex: 'F' }) }));
+  M.uniqueCohortIds(ks);
+  ok(ks[0].id === 'Canton-S_CBD_F_2026-08-01' && ks[1].id === 'Canton-S_CBD_F_2026-09-01', 'two CBD records get their setup dates');
+  ok(ks[2].id === 'Canton-S_EtOH_F', 'a record with nothing to clash with keeps the plain id');
+  const twin = [cross, { ...rep, crossDate: cross.crossDate }].map(c => ({ c, g: { sex: 'F' }, base: 'X' }));
+  M.uniqueCohortIds(twin);
+  ok(twin[0].id !== twin[1].id, 'set up the same day too: they are numbered instead');
+
+  /* the rows: checks logged out of order, a vial list, a death and a censor on the same day */
+  const g = M.ensureAging(mkVialCross(VIALS, [
+    { day: 20, perVial: { V1: { deaths: 1, censored: 0 }, V2: { deaths: 1, censored: 0 } } },
+    { day: 10, perVial: { V1: { deaths: 0, censored: 1 }, V2: { deaths: 2, censored: 0 } } },
+    { day: 10, perVial: { V1: { deaths: 1, censored: 0 } } },
+  ])).groups[0];
+  const rows = M.cohortFlyRows({}, g, st);
+  ok(rows.length === 60, 'every fly of the 60 is a row');
+  const vials = rows.map(r => r.v.label);
+  ok(vials.join() === [...vials].sort().join(), 'rows come vial by vial: all of V1, then V2, then V3');
+  const v1 = rows.filter(r => r.v.label === 'V1');
+  ok(v1.every((r, i) => i === 0 || r.day >= v1[i - 1].day), 'inside a vial, in date order');
+  ok(v1[0].day === 10 && v1[0].status === 1 && v1[1].status === 0, 'on the same day, the death before the censor');
+  ok(rows.every(r => Number.isInteger(r.day)), 'every day is a whole number');
+  ok(v1[v1.length - 1].day === 25 && v1.filter(r => r.day === 25).length === 17, "V1's 17 survivors are censored today, day 25");
+  const cells = M.flyCells(v1[0]);
+  ok(cells[0] === 'V1' && cells[1] === M.localDateStr(new Date(ECL + 10 * 86400000)) && cells[2] === 10,
+     'a row reads vial, date of the check, day');
 });
 
 /* ============================ 3) T50 FROM COUNTS (interpolation) ============================ */

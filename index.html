@@ -2938,7 +2938,7 @@ function buildReminders(cross, st, now=new Date()){
       if(daysSinceFlip >= 2) push(t('rem.comida'), 'action', true, false, 'comida');
     }
     /* AVISO: edad */
-    if(ageD >= 1) push(t('rem.edad',{d:Math.floor(ageD)}), 'success', false);
+    if(ageD >= 1) push(t('rem.edad',{d:cohortToday(st)}), 'success', false);
   }
   return out;
 }
@@ -3164,7 +3164,7 @@ function card(cross){
   const dayLine = st.planned
     ? `<div class="day-line">${t('card.setupIn',{h:fmtH(st.daysToCross*24)})}</div>`
     : st.isAdult
-    ? `<div class="day-line">${t('card.postEcl',{d:Math.round(st.adultAge)})}</div>`
+    ? `<div class="day-line">${t('card.postEcl',{d:cohortToday(st)})}</div>`
     : `<div class="day-line">${t('card.dayOf',{d:Math.round(st.elapsedDays),t:Math.ceil(st.total)})}</div>`;
 
   // Notices/tasks live in the "Pending tasks" panel, not on the card (the "Set up in Xh"
@@ -3184,7 +3184,7 @@ function card(cross){
   const tlAdult = `<div class="tl-item ${st.isAdult?'now':''}">
     <div class="tl-dot" style="background:var(--pink)"></div>
     <div class="tl-body"><div class="tl-name">${t('tl.eclosionAdult')}</div>
-    <div class="tl-date">${fmtDate(eclDate)}${st.isAdult?' · '+t('tl.agingDay',{d:Math.floor(st.adultAge)}):''}</div></div></div>`;
+    <div class="tl-date">${fmtDate(eclDate)}${st.isAdult?' · '+t('tl.agingDay',{d:cohortToday(st)}):''}</div></div></div>`;
 
   // "Details" panel: extra data that does not belong in the card's compact view
   const contLabel = cross.container ? t('cont.'+cross.container) : '';
@@ -3269,7 +3269,7 @@ function pairMiniBlock(cross, roleLabel){
   const ti = tempInfo(cross.temp);
   const start = parseCross(cross);
   const eclDate = addDays(start, st.total);
-  const dayLine = st.isAdult ? t('card.postEcl',{d:Math.round(st.adultAge)}) : t('card.dayOf',{d:Math.round(st.elapsedDays),t:Math.ceil(st.total)});
+  const dayLine = st.isAdult ? t('card.postEcl',{d:cohortToday(st)}) : t('card.dayOf',{d:Math.round(st.elapsedDays),t:Math.ceil(st.total)});
   return `<div class="pair-half">
     <div class="pair-half-top">
       <span class="pair-role">${esc(roleLabel)}</span>
@@ -3542,6 +3542,21 @@ function cohortAt(c, gi){ return ensureAging(c).groups[gi] || null; }
 /* every event of the record (for the fresh-food reminder, which does not distinguish sex) */
 function agingEvents(c){ return c && c.aging ? cohortGroups(c).flatMap(g=>g.events) : []; }
 
+/* The cohort day of a moment: whole calendar days from the eclosion date to that date, whatever
+   the hour of either. A check done on the 12th is day 11 of a cohort that eclosed on the 1st,
+   morning or night -- the day a lab writes on the sheet. The curve, the log-rank, the discards
+   and the exported files all count days with this, so a file always agrees with the screen. */
+function cohortDay(when, ecl){
+  const b = new Date(when), a = new Date(ecl);
+  if(!isFinite(b) || !isFinite(a)) return NaN;
+  const mid = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  return Math.max(Math.round((mid(b) - mid(a)) / 86400000), 0);   // round: immune to DST hours
+}
+/* the cohort day it is today, for a computed state */
+function cohortToday(st){
+  return cohortDay(st.eclosionDate.getTime() + Math.max(st.adultAge, 0)*86400000, st.eclosionDate);
+}
+
 /* Kaplan-Meier estimator: S(t)=Π(1 - d_i/n_i), with censoring reducing the group at risk.
    `g` = the cohort (group) to plot; without it, the record's first one. */
 function kmCurve(cross, st, g){
@@ -3552,8 +3567,8 @@ function kmCurve(cross, st, g){
   grp.events.forEach(e=>{
     const dt = new Date(e.date).getTime();
     if(!isFinite(dt)) return;   // ignore events with no valid date (imported/old data) → avoids NaN in the curve
-    const day = Math.max((dt-ecl)/86400000, 0);
-    const k = day.toFixed(3);
+    const day = cohortDay(dt, ecl);
+    const k = day;
     (byDay[k] = byDay[k] || {day, d:0, c:0});
     byDay[k].d += e.deaths||0;
     byDay[k].c += e.censored||0;
@@ -3566,7 +3581,7 @@ function kmCurve(cross, st, g){
     n -= (t.d + t.c);
     points.push({day:t.day, surv:Math.max(S,0)});
   });
-  const curDay = Math.max(st.adultAge, 0);
+  const curDay = cohortToday(st);
   if(curDay > points[points.length-1].day) points.push({day:curDay, surv:Math.max(S,0)});
   const deaths = grp.events.reduce((s,e)=>s+(e.deaths||0),0);
   const censored = grp.events.reduce((s,e)=>s+(e.censored||0),0);
@@ -3651,7 +3666,7 @@ function cohortSeries(cross, g){
   const ecl=computeState(cross).eclosionDate, byDay={};
   grp.events.forEach(e=>{
     const dt=new Date(e.date).getTime(); if(!isFinite(dt)||!ecl) return;
-    const day=Math.max((dt-ecl)/86400000,0), k=day.toFixed(3);
+    const day=cohortDay(dt, ecl), k=day;
     (byDay[k]=byDay[k]||{day,d:0,c:0}); byDay[k].d+=e.deaths||0; byDay[k].c+=e.censored||0;
   });
   return { times:Object.values(byDay).sort((x,y)=>x.day-y.day), n0:grp.startN||0 };
@@ -4061,7 +4076,7 @@ function saveExcludeVial(e){
     reason: picked ? picked.value : 'other',
     note: document.getElementById('vialExNote').value.trim(),
     date: new Date().toISOString(),
-    day: Math.max(Math.floor(computeState(c).adultAge), 0),   // cohort day it was taken out on
+    day: cohortToday(computeState(c)),   // cohort day it was taken out on
   };
   openAgingIds.add(id);
   save(crosses); render(); closeExcludeVial();
@@ -4099,7 +4114,7 @@ function cohortBlock(cross, st, k, showDel){
     <div class="aging-metrics">
       <div class="m"><b>${km.alive}/${act.startN}</b><span>${t('aging.mAlive')}</span></div>
       <div class="m"><b>${pct}%</b><span>${t('aging.mSurv')}</span></div>
-      <div class="m"><b>${Math.floor(st.adultAge)} d</b><span>${t('aging.mAge')}</span></div>
+      <div class="m"><b>${cohortToday(st)} d</b><span>${t('aging.mAge')}</span></div>
     </div>
     <div class="hint" style="margin:-4px 0 ${densHigh?'4px':'10px'}">${[
       nVials ? `${nVials} ${t(nVials===1?'aging.vial':'aging.vials')} · ${densStr}/vial` : '',
@@ -4789,7 +4804,7 @@ function saveAgingEntry(e){
   if(pending.length){
     const when = new Date(ev.date);
     const ecl = computeState(c).eclosionDate;
-    const day = Math.max(Math.floor((when - ecl)/86400000), 0);
+    const day = cohortDay(when, ecl);
     pending.forEach(label=>{
       const v = vialsOf(g).find(x=> x.label===label); if(!v) return;
       v.excluded = { ..._agingPendingEx[label], date: when.toISOString(), day };
@@ -4940,90 +4955,135 @@ function importCalibJSON(e){
   r.readAsText(f);
   e.target.value='';
 }
-/* CSV ready for GraphPad Prism / R (one row per fly: day + status 1=death 0=censored) */
+/* CSV ready for GraphPad Prism / R: one row per fly (day + status 1=death 0=censored), grouped
+   vial by vial and in date order inside each vial, so the same file also reads as a log. */
 function exportSurvivalCSV(){
   /* built on the same per-fly rows as the per-cohort export, so a vial's discard shows up
      identically in both files instead of this one quietly ignoring it */
-  const rows = [['cross_id','cross_name','genotype','condition','sex','vials','day','status','status_label',...VIAL_CSV_COLS]];
-  let any = false;
+  const cohorts = [];
   crosses.forEach(c=>{
     if(!hasCohort(c)) return;
     const st = computeState(c);
+    cohortGroups(c).forEach(g=> cohorts.push({ c, g, st, base: cohortBaseId(c, g) }));
+  });
+  if(!cohorts.length){ alert(t('al.noCohorts')); return; }
+  uniqueCohortIds(cohorts);
+  /* one genotype, then its conditions, then sex, read as one block (stable: ♀ before ♂ stays) */
+  const byName = new Intl.Collator('en', { numeric:true, sensitivity:'base' });
+  cohorts.sort((x,y)=> byName.compare(x.id, y.id));
+  const rows = [SURV_CSV_HEAD];
+  cohorts.forEach(({ c, g, st, id })=>{
     const cond = csvCell((c.conditions||[]).join('; '));
-    cohortGroups(c).forEach(g=>{     // one row per fly, with its sex (separate ♀/♂ cohorts)
-      cohortFlyRows(c, g, st).forEach(r=>{
-        rows.push([c.id, csvCell(c.name||''), csvCell(c.genotype||''), cond, g.sex||'', g.vials||'', ...r]);
-        any = true;
-      });
+    cohortFlyRows(c, g, st).forEach(r=>{
+      rows.push([csvCell(vialId(id, r.v)), csvCell(c.genotype||''), cond, g.sex||'',
+        ...flyCells(r), csvCell(c.name||''), c.id]);
     });
   });
-  if(!any){ alert(t('al.noCohorts')); return; }
   downloadBlob(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}),
     `drosotracker-supervivencia-${new Date().toISOString().slice(0,10)}.csv`);
   closeMenu();
 }
-/* Exports ONLY one cross's cohort (one row per fly: day + status 1=death 0=censored),
-   ready for survival analysis in GraphPad Prism / R */
-/* One row per fly of one cohort: [day, status, status_label, vial, excluded]. Shared by the
-   per-cohort export and the all-records export, so the two files can never drift apart.
-   Every fly is exported: dropping rows silently would hide from the analysis what the app
-   decided on screen. `excluded` marks only the vials taken out as if they had never existed,
-   so filtering excluded==0 reproduces the app's curve exactly -- a censored vial is NOT
-   marked (its flies do belong, up to the day it went, when its survivors are censored). */
+const SURV_CSV_HEAD = ['vial_id','genotype','condition','sex','vial','date','day','status','status_label',
+  'excluded','excluded_mode','excluded_day','excluded_reason','cross_name','cross_id'];
+/* One piece of an id: spaces become '-', and '_' is kept for the separator alone, so an id
+   like Canton-S_CBD_F_V1 always splits back into genotype, condition, sex and vial. */
+function idPart(s){ return String(s==null ? '' : s).trim().replace(/[\s_]+/g,'-'); }
+/* genotype_condition_sex of a cohort (several conditions join with '+'; a missing part is skipped) */
+function cohortBaseId(c, g){
+  return [idPart(c.genotype), (c.conditions||[]).map(idPart).filter(Boolean).join('+'), idPart(g.sex)]
+    .filter(Boolean).join('_') || 'cohort';
+}
+/* the id of a vial: its cohort's id plus the vial's name (flies logged with no vial keep the cohort's) */
+function vialId(cohortId, v){ return v ? cohortId + '_' + idPart(vialName(v)) : cohortId; }
+/* Two records can share genotype, condition and sex (a repeat of the experiment), and an id has
+   to tell them apart: only those get their setup date appended, and if that clashes too, a number. */
+function uniqueCohortIds(cohorts){
+  const ownersOf = key => [...new Set(cohorts.filter(k=> k.key===key).map(k=> k.c.id))];
+  cohorts.forEach(k=> k.key = k.base);
+  const shared = new Set(cohorts.map(k=> k.base).filter(b=> ownersOf(b).length > 1));
+  cohorts.forEach(k=>{ if(shared.has(k.base)) k.key = k.base + '_' + localDateStr(parseCross(k.c)); });
+  cohorts.forEach(k=>{
+    const owners = ownersOf(k.key);
+    k.id = owners.length > 1 ? k.key + '-' + (owners.indexOf(k.c.id) + 1) : k.key;
+  });
+}
+/* YYYY-MM-DD in local time (what Excel reads as a date, and the day the check was done here) */
+function localDateStr(d){
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+/* One fly of one cohort, as {when, day, ecl, status, label, v}. Shared by the per-cohort export
+   and the all-records export, so the two files can never drift apart. Every fly is exported:
+   dropping rows silently would hide from the analysis what the app decided on screen.
+   `excluded` marks only the vials taken out as if they had never existed, so filtering
+   excluded==0 reproduces the app's curve exactly -- a censored vial is NOT marked (its flies
+   do belong, up to the day it went, when its survivors are censored).
+   Rows come vial by vial (in the vial list's order, flies with no vial last) and by date
+   inside each vial, deaths before censors on the same day. */
 function cohortFlyRows(c, a, st){
   const ecl = st.eclosionDate;
   const vl = vialsOf(a);
   const rows = [];
-  /* A discarded vial documents itself: which way it went, on what cohort day, and why (the
-     raw reason key, stable across app languages, so files from the whole lab merge cleanly).
-     The vial column carries the display name -- what is written on the physical vial. */
-  const put = (day, st_, lab, v) => {
-    const ex = v && v.excluded;
-    rows.push([day, st_, lab, v ? csvCell(vialName(v)) : '',
-      (ex && ex.mode !== 'censor') ? 1 : 0,
-      ex ? ex.mode : '', ex ? ex.day : '', ex ? ex.reason : '']);
-  };
+  const put = (when, status, label, v) =>
+    rows.push({ when:new Date(when), day:cohortDay(when, ecl), ecl, status, label, v });
   let deaths=0, cens=0;
   a.events.slice().sort((x,y)=> new Date(x.date)-new Date(y.date)).forEach(e=>{
-    const day = Math.max((new Date(e.date)-ecl)/86400000, 0).toFixed(2);
     if(vl.length && e.perVial){
       vl.forEach(v=>{
         const pv = e.perVial[v.label]; if(!pv) return;
-        for(let i=0;i<(pv.deaths||0);i++){ put(day,1,'death',v); deaths++; }
-        for(let i=0;i<(pv.censored||0);i++){ put(day,0,'censored',v); cens++; }
+        for(let i=0;i<(pv.deaths||0);i++){ put(e.date,1,'death',v); deaths++; }
+        for(let i=0;i<(pv.censored||0);i++){ put(e.date,0,'censored',v); cens++; }
       });
       return;
     }
-    for(let i=0;i<(e.deaths||0);i++){ put(day,1,'death'); deaths++; }
-    for(let i=0;i<(e.censored||0);i++){ put(day,0,'censored'); cens++; }
+    for(let i=0;i<(e.deaths||0);i++){ put(e.date,1,'death'); deaths++; }
+    for(let i=0;i<(e.censored||0);i++){ put(e.date,0,'censored'); cens++; }
   });
   const alive = Math.max(a.startN-deaths-cens, 0);
-  const curDay = Math.max(st.adultAge, 0).toFixed(2);
+  const today = ecl.getTime() + Math.max(st.adultAge, 0)*86400000;
   if(vl.length){
     let left = alive;
     vl.forEach(v=>{                                   // still alive = censored at today's age, in its vial
       const n = Math.min(vialTally(a, v).alive, left);
       /* a censored vial left the risk set the day it went, not today: its survivors are
          censored on that day, which is what makes the file agree with the curve on screen */
-      const day = (v.excluded && v.excluded.mode === 'censor')
-        ? Math.max((new Date(v.excluded.date)-ecl)/86400000, 0).toFixed(2) : curDay;
-      for(let i=0;i<n;i++) put(day,0,'censored',v);
+      const when = (v.excluded && v.excluded.mode === 'censor' && v.excluded.date) ? v.excluded.date : today;
+      for(let i=0;i<n;i++) put(when,0,'censored',v);
       left -= n;
     });
-    for(let i=0;i<left;i++) put(curDay,0,'censored');  // any not accounted for by a vial
+    for(let i=0;i<left;i++) put(today,0,'censored');  // any not accounted for by a vial
   }
-  else for(let i=0;i<alive;i++){ put(curDay,0,'censored'); }
-  return rows;
+  else for(let i=0;i<alive;i++){ put(today,0,'censored'); }
+  const order = r => r.v ? vl.indexOf(r.v) : vl.length;
+  return rows.sort((x,y)=> order(x)-order(y) || x.day-y.day || x.when-y.when || y.status-x.status);
 }
-const VIAL_CSV_COLS = ['vial','excluded','excluded_mode','excluded_day','excluded_reason'];
+/* vial, date, day, status, status_label and the discard columns of one fly row. A discarded
+   vial documents itself: which way it went, on what cohort day, and why (the raw reason key,
+   stable across app languages, so files from the whole lab merge cleanly). The vial column
+   carries the display name -- what is written on the physical vial. */
+function flyCells(r){
+  const ex = r.v && r.v.excluded;
+  const exDay = !ex ? '' : ex.date ? cohortDay(ex.date, r.ecl) : (ex.day!=null ? ex.day : '');
+  return [r.v ? csvCell(vialName(r.v)) : '', isFinite(r.when) ? localDateStr(r.when) : '',
+    isFinite(r.day) ? r.day : '', r.status, r.label,
+    (ex && ex.mode !== 'censor') ? 1 : 0, ex ? (ex.mode||'') : '', exDay, ex ? csvCell(ex.reason||'') : ''];
+}
+/* Exports ONLY one cross's cohort: the all-records columns minus the ones that would repeat
+   the same value on every row */
 function exportCohortCSV(id, gi=0){
   const c = crosses.find(x=>x.id===id); if(!c) return;
   const a = cohortAt(c, gi);
   if(!a || a.startN==null){ alert(t('al.defineCohort')); return; }
   const st = computeState(c);
   const hasVl = vialsOf(a).length > 0;
-  const rows = [hasVl ? ['day','status','status_label',...VIAL_CSV_COLS] : ['day','status','status_label']];
-  cohortFlyRows(c, a, st).forEach(r=> rows.push(hasVl ? r : r.slice(0,3)));
+  const base = cohortBaseId(c, a);
+  const rows = [hasVl
+    ? ['vial_id','vial','date','day','status','status_label','excluded','excluded_mode','excluded_day','excluded_reason']
+    : ['date','day','status','status_label']];
+  cohortFlyRows(c, a, st).forEach(r=>{
+    const cells = flyCells(r);
+    rows.push(hasVl ? [csvCell(vialId(base, r.v)), ...cells] : cells.slice(1,5));
+  });
   const slug = (c.name||c.genotype||'cohort').replace(/[^\p{L}\p{N}._-]+/gu,'_').replace(/^_+|_+$/g,'').slice(0,40) || 'cohort';
   downloadBlob(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}),
     `drosotracker-lifespan-${slug}${a.sex?'-'+a.sex:''}-${new Date().toISOString().slice(0,10)}.csv`);
